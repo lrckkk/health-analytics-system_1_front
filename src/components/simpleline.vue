@@ -252,6 +252,7 @@
 <!--}-->
 <!--</style>-->
 
+
 <template>
   <div class="line-chart-container">
     <el-card class="chart-card futuristic-card">

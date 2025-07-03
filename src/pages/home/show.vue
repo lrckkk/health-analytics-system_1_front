@@ -10,6 +10,7 @@
         y-field="count"
     />
   </div>
+
     <div style="flex: 1; ">
     <simpleline
         :chart-data="medicalData2"

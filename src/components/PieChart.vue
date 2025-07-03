@@ -242,6 +242,7 @@
 <!--}-->
 <!--</style>-->
 
+
 <template>
   <div class="pie-chart-container">
     <el-card class="chart-card futuristic-card">

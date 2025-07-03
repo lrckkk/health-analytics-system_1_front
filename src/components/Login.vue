@@ -508,6 +508,7 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
   min-width: 0; /* 允许文本截断 */
 }
 
+
 .active-indicator {
   position: absolute;
   top: -5px;

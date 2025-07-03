@@ -1049,6 +1049,7 @@
 <!--</style>-->
 
 <template>
+
   <div class="multi-line-chart-container">
     <el-card class="chart-card futuristic-card">
       <template #header>
