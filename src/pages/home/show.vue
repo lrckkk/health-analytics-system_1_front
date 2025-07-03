@@ -1,21 +1,21 @@
 <template>
-  <div style="display: flex;">
-  <div>
+  <div style="display: flex; flex-wrap: nowrap; justify-content: space-between; ">
+    <div style="flex: 1;">
     <simpleline
         :chart-data="medicalData"
         title="医疗机构数量变化趋势"
-        height="300px"
-        width="400%"
+        height="200px"
+        width=100%
         x-field="year"
         y-field="count"
     />
   </div>
-  <div>
+    <div style="flex: 1; ">
     <simpleline
         :chart-data="medicalData2"
         title="病床机构数量变化趋势"
-        height="300px"
-        width="200%"
+        height="200px"
+        width=100%
         x-field="year"
         y-field="count"
     />
@@ -29,7 +29,7 @@
           :chart-data="salesData"
           title="年度销售趋势"
           x-field="month"
-          height="450px"
+          height="350px"
           :show-data-zoom="true"
           :show-legend="true"
           :smooth="true"
@@ -42,7 +42,7 @@
           title="市场份额分布"
           name-field="company"
           value-field="share"
-          height="450px"
+          height="350px"
           rose-type="radius"
       />
     </div>
@@ -51,10 +51,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+// import axios from 'axios'
 import Simpleline from '/src/components/simpleline.vue'
 import MultiLineChart from '/src/components/MutipleLineCharts.vue'
 import PieChart from '/src/components/PieChart.vue'
+import axios from "echarts-countries-js/starbucks/dep/echarts.js";
 
 
 const medicalData = ref([
@@ -63,7 +65,8 @@ const medicalData = ref([
   { year: '2017', count: 986649 },
   { year: '2018', count: 997433 },
   { year: '2019', count: 1007579 },
-  { year: '2020', count: 1022922 }
+  { year: '2020', count: 1022922 },
+  { year: '2021', count: 1340340 },
 ])
 const medicalData2 = ref([
   { year: '2015', count: 123024 },
@@ -95,4 +98,51 @@ const marketShareData = ref([
   { company: '公司D', share: 9.1 },
   { company: '其他', share: 6.9 }
 ])
+//
+// // 创建响应式数据
+// const medicalData = ref([])
+// const medicalData2 = ref([])
+// const salesData = ref([])
+// const marketShareData = ref([])
+//
+// // API基础URL
+// const API_BASE_URL = 'http://localhost:8080/api/charts'
+//
+// // 获取数据的方法
+// const fetchData = async () => {
+//   try {
+//     // 并行请求所有数据
+//     const [
+//       medicalResponse,
+//       bedResponse,
+//       salesResponse,
+//       marketShareResponse
+//     ] = await Promise.all([
+//       axios.get(`${API_BASE_URL}/medical-institutions`),
+//       axios.get(`${API_BASE_URL}/bed-institutions`),
+//       axios.get(`${API_BASE_URL}/sales`),
+//       axios.get(`${API_BASE_URL}/market-share`)
+//     ])
+//
+//     medicalData.value = medicalResponse.data
+//     medicalData2.value = bedResponse.data
+//     salesData.value = salesResponse.data
+//     marketShareData.value = marketShareResponse.data
+//   } catch (error) {
+//     console.error('获取图表数据失败:', error)
+//
+//   }
+// }
+//
+// // 组件挂载时获取数据
+// onMounted(() => {
+//   fetchData()
+// })
 </script>
+
+
+<style scoped>
+
+
+
+</style>

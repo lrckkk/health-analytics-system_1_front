@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Show from '../home/show.vue'
 import Province from "@/pages/user/province.vue";
-
+import LoginPage from '/src/components/Login.vue';
 // 您的路由定义
 const routes = [
     // 您的路由配置
@@ -18,6 +18,11 @@ const routes = [
         path: '/province',
         name: 'province',
         component: Province
+    },
+    {
+        name: 'Login',
+        path: '/login',
+        component: LoginPage
     },
 
 ]
