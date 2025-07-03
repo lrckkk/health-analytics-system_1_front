@@ -3,6 +3,7 @@
     <router-view></router-view>
     <div>{{selectedRegion}}</div>
     <button @click="goToTargetPage">跳转页面</button>
+    <button @click="goTocard">跳转卡片</button>/
 
     <div v-if="mapDataStore.isLoading" class="loading-overlay">加载数据中，请稍候...喵~</div>
     <div v-if="mapDataStore.error" class="error-message">加载数据失败：{{ mapDataStore.error }}，喵~</div>
@@ -38,6 +39,11 @@ export default {
       router.push({ name: 'Home' });
     };
 
+    //卡片实例
+    const goTocard = () => {
+      router.push({ name: 'Card' });
+    }
+
     // 在组件挂载时，如果数据没有加载过，就去加载它
     onMounted(() => {
       // 只有在数据未加载或者加载失败（需要重新加载）时才调用 fetchMapData
@@ -50,6 +56,7 @@ export default {
       handleRegionClick,
       selectedRegion,
       goToTargetPage,
+      goTocard,
       mapDataStore, // 将 store 暴露给模板，以便访问其 state
     };
   },

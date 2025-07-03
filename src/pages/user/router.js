@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Show from '../home/show.vue'
 import LoginPage from '/src/components/Login.vue';
 import Province from "@/pages/user/Province.vue";
+import Card from "@/pages/card/CardContainer.vue";
 
 
 // 您的路由定义
@@ -26,6 +27,11 @@ const routes = [
         path: '/login',
         component: LoginPage
     },
+    {
+        name: 'Card',
+        path: '/card',
+        component: Card
+    }
 
 ]
 
