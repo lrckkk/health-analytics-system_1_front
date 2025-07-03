@@ -15,10 +15,10 @@ request.interceptors.request.use(
         //     config.headers['Content-Type'] = 'application/x-www-form-urlencoded'
         // }
         // 自动带上token
-        const token = localStorage.getItem('jwt_token')
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`
-        }
+        // const token = localStorage.getItem('jwt_token')
+        // if (token) {
+        //     config.headers.Authorization = `Bearer ${token}`
+        // }
         return config
     },
 
