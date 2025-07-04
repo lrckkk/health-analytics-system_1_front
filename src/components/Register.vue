@@ -1,18 +1,19 @@
 <template>
-  <div class="login-container">
+
+  <div class="register-container">
     <div class="tech-background">
       <div class="bg-grid"></div>
       <div class="bg-particles"></div>
       <div class="bg-light-effect"></div>
     </div>
 
-    <el-card class="login-card futuristic-card">
-      <div class="login-header">
+    <el-card class="register-card futuristic-card">
+      <div class="register-header">
         <h2 class="futuristic-title">健康大数据应用创新研发中心</h2>
-        <p class="futuristic-subtitle">请登录系统以访问数据分析平台</p>
+        <p class="futuristic-subtitle">创建您的数据分析平台账号</p>
       </div>
 
-      <el-form :model="form" label-width="100px" class="login-form">
+      <el-form :model="form" label-width="100px" class="register-form">
         <!-- 用户名输入框 -->
         <el-form-item label="用户名" class="futuristic-form-item">
           <el-input
@@ -41,8 +42,36 @@
           </el-input>
         </el-form-item>
 
-        <!-- 角色选择框 -->
-        <el-form-item label="角色" class="futuristic-form-item">
+        <!-- 确认密码 -->
+        <el-form-item label="确认密码" class="futuristic-form-item">
+          <el-input
+              type="password"
+              v-model="form.confirmPassword"
+              placeholder="请再次输入密码"
+              show-password
+              class="futuristic-input"
+          >
+            <template #prefix>
+              <el-icon><Lock /></el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+
+        <!-- 邮箱 -->
+        <el-form-item label="电子邮箱" class="futuristic-form-item">
+          <el-input
+              v-model="form.email"
+              placeholder="请输入电子邮箱"
+              class="futuristic-input"
+          >
+            <template #prefix>
+              <el-icon><Message /></el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+
+        <!-- 角色选择框（包含所有角色） -->
+        <el-form-item label="注册身份" class="futuristic-form-item">
           <div class="role-selector">
             <div
                 v-for="role in roleOptions"
@@ -79,46 +108,35 @@
           </div>
         </el-form-item>
 
-        <!-- 数字证书（可选）-->
-        <el-form-item label="数字证书" class="futuristic-form-item">
-          <el-input
-              v-model="form.cert"
-              placeholder="输入数字证书"
-              class="futuristic-input"
-          >
-            <template #prefix>
-              <el-icon><Key /></el-icon>
-            </template>
-          </el-input>
+        <!-- 注册协议 -->
+        <el-form-item class="futuristic-form-item">
+          <el-checkbox v-model="form.agreed" class="agreement-checkbox">
+            我已阅读并同意<el-link type="primary" @click="showAgreement">《用户注册协议》</el-link>
+          </el-checkbox>
         </el-form-item>
 
-        <!-- 登录按钮 -->
+        <!-- 注册按钮 -->
         <el-form-item class="futuristic-form-item">
           <el-button
               type="primary"
-              @click="handleLogin"
+              @click="handleRegister"
               :loading="loading"
               class="futuristic-button"
           >
-            登录
+            立即注册
             <template #loading>
-              <span class="loading-text">验证中...</span>
+              <span class="loading-text">提交中...</span>
               <div class="button-loading-effect"></div>
             </template>
           </el-button>
         </el-form-item>
+
+        <!-- 已有账号登录 -->
         <el-form-item class="futuristic-form-item">
-          <el-button
-              type="info"
-              @click="handleRegister"
-              class="futuristic-button"
-          >
-            注册账号
-            <div class="button-hover-effect"></div>
-          </el-button>
+          <div class="login-link">
+            已有账号？<el-link type="primary" @click="goToLogin">立即登录</el-link>
+          </div>
         </el-form-item>
-
-
       </el-form>
 
       <!-- 科技感装饰元素 -->
@@ -137,51 +155,44 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { Refresh, User, Lock, Key, Avatar, UserFilled, Setting, View, Connection } from '@element-plus/icons-vue';
+import { Refresh, User, Lock, Message, Avatar, UserFilled, Setting, View, Connection } from '@element-plus/icons-vue';
 import axios from 'axios';
 
-// 角色图标映射
+// 角色图标映射（包含所有角色）
 const roleIcons = {
   admin: Setting,
   researcher: UserFilled,
   analyst: View,
   auditor: Avatar,
-  user: User,          // 普通用户图标
-  guest: Connection    // 游客图标
+  user: User,
+  guest: Connection
 };
 
 // 响应式数据
 const form = ref({
   username: '',
   password: '',
+  confirmPassword: '',
+  email: '',
   role: '',
   code: '',
-  cert: ''  // 数字证书
+  agreed: false
 });
 
+// 角色选项（包含所有角色）
 const roleOptions = ref([
   { label: '管理员', value: 'admin' },
   { label: '研究员', value: 'researcher' },
   { label: '分析师', value: 'analyst' },
   { label: '审核员', value: 'auditor' },
-  { label: '普通用户', value: 'user' },  // 新增普通用户
-  { label: '游客', value: 'guest' }     // 新增游客
+  { label: '普通用户', value: 'user' },
+  { label: '游客', value: 'guest' }
 ]);
 
 const loading = ref(false);
 const router = useRouter();
 const captchaImage = ref('');
 const captchaToken = ref('');
-
-
-const handleRegister = () => {
-  router.push({
-    name: 'Register',
-    state: {
-      transitionType: 'tech' // 标识使用科技风过渡
-    }
-  })
-};
 
 // 生成验证码
 const generateCaptcha = async () => {
@@ -243,13 +254,42 @@ const refreshCaptcha = () => {
   generateCaptcha();
 };
 
-// 登录处理逻辑
-const handleLogin = async () => {
+// 显示注册协议
+const showAgreement = () => {
+  ElMessage.info('用户注册协议内容将在弹窗中显示');
+};
+
+// 跳转到登录页面（带动画）
+const goToLogin = () => {
+  router.push({
+    name: 'Login',
+    state: {
+      transitionType: 'tech' // 标识使用科技风过渡
+    }
+  })
+};
+
+// 注册处理逻辑
+const handleRegister = async () => {
   try {
     loading.value = true;
 
-    if (!form.value.username || !form.value.password || !form.value.role) {
+    // 表单验证
+    if (!form.value.username || !form.value.password || !form.value.confirmPassword ||
+        !form.value.email || !form.value.role || !form.value.code) {
       ElMessage.error('所有字段都必须填写');
+      loading.value = false;
+      return;
+    }
+
+    if (form.value.password !== form.value.confirmPassword) {
+      ElMessage.error('两次输入的密码不一致');
+      loading.value = false;
+      return;
+    }
+
+    if (!form.value.agreed) {
+      ElMessage.error('请先同意用户注册协议');
       loading.value = false;
       return;
     }
@@ -261,19 +301,19 @@ const handleLogin = async () => {
       return;
     }
 
-    if (form.value.cert && form.value.cert !== 'valid-cert') {
-      ElMessage.error('数字证书无效');
-      loading.value = false;
-      return;
-    }
-
-    const response = await axios.post('localhost:8080/api/login', form.value);
+    // 发送注册请求
+    const response = await axios.post('localhost:8080/api/register', {
+      username: form.value.username,
+      password: form.value.password,
+      email: form.value.email,
+      role: form.value.role
+    });
 
     if (response.data.success) {
-      ElMessage.success('登录成功');
-      await router.push({name: 'Home'});
+      ElMessage.success('注册成功，请登录');
+      await router.push({ name: 'Login' });
     } else {
-      ElMessage.error('登录失败，用户名或密码错误');
+      ElMessage.error(response.data.message || '注册失败');
     }
   } catch (error) {
     ElMessage.error('网络错误，请重试');
@@ -289,6 +329,7 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+/* 科技风样式变量 */
 $tech-bg: #0a1220;
 $tech-card-bg: rgba(22, 32, 72, 0.9);
 $tech-primary: #00f0ff;
@@ -298,7 +339,7 @@ $tech-light: #ffffff;
 $tech-border: rgba(0, 240, 255, 0.4);
 $tech-highlight: rgba(0, 240, 255, 0.2);
 
-.login-container {
+.register-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -374,7 +415,7 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
   }
 }
 
-.login-header {
+.register-header {
   text-align: center;
   margin-bottom: 30px;
 }
@@ -395,7 +436,7 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
   animation: fadeInOut 3s ease-in-out infinite;
 }
 
-.login-form {
+.register-form {
   margin-top: 20px;
 }
 
@@ -453,7 +494,7 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
 /* 角色选择器 */
 .role-selector {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 从2列改为3列 */
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   width: 100%;
 }
@@ -462,27 +503,21 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
   background: rgba(16, 26, 60, 0.7);
   border: 2px solid $tech-border;
   border-radius: 10px;
-  padding: 15px 10px; /* 调整左右内边距 */
+  padding: 15px 10px;
   display: flex;
   align-items: center;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  min-width: 120px; /* 增加最小宽度 */
-  height: 60px; /* 固定高度 */
-
+  min-width: 120px;
+  height: 60px;
 
   &:hover {
     background: $tech-highlight;
     border-color: $tech-primary;
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(0, 240, 255, 0.3);
-
-    .role-icon {
-      margin-right: 5px; /* 移除右边距 */
-      margin-bottom: 8px; /* 添加底部边距 */
-    }
   }
 
   &.active {
@@ -502,34 +537,35 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
     }
   }
 }
+
 .role-icon {
-  width: 32px; /* 稍微缩小图标 */
+  width: 32px;
   height: 32px;
   border-radius: 50%;
   background: rgba(0, 240, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px; /* 调整右边距 */
+  margin-right: 12px;
   color: $tech-text;
   transition: all 0.3s ease;
-  flex-shrink: 0; /* 防止图标被压缩 */
+  flex-shrink: 0;
 
   .el-icon {
-    font-size: 16px; /* 缩小图标大小 */
+    font-size: 16px;
   }
 }
+
 .role-label {
   color: $tech-text;
-  font-size: 14px; /* 稍微减小字体大小 */
+  font-size: 14px;
   font-weight: 500;
-  white-space: nowrap; /* 防止文字换行 */
+  white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* 文字过长显示省略号 */
+  text-overflow: ellipsis;
   flex: 1;
-  min-width: 0; /* 允许文本截断 */
+  min-width: 0;
 }
-
 
 .active-indicator {
   position: absolute;
@@ -723,32 +759,28 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
   opacity: 0.1;
   animation: dotsMove 30s linear infinite;
 }
-.register-button {
-  background: linear-gradient(90deg, rgba(125, 95, 255, 0.8) 0%, rgba(0, 240, 255, 0.6) 100%) !important;
-  color: $tech-text !important;
-  box-shadow: 0 0 25px rgba(125, 95, 255, 0.5) !important;
 
-  &:hover {
-    box-shadow: 0 0 35px rgba(125, 95, 255, 0.7) !important;
-    transform: translateY(-4px);
-  }
+/* 注册页面特有样式 */
+.login-link {
+  color: $tech-text;
+  font-size: 14px;
+  text-align: center;
+  width: 100%;
 
-  .button-hover-effect {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    opacity: 0;
-    transition: all 0.3s;
-  }
-
-  &:hover .button-hover-effect {
-    opacity: 1;
-    animation: loadingShine 1.5s infinite;
+  .el-link {
+    margin-left: 5px;
+    font-size: 14px;
   }
 }
+
+.agreement-checkbox {
+  color: $tech-text;
+
+  .el-link {
+    margin-left: 5px;
+  }
+}
+
 /* 动画效果 */
 @keyframes slideLine {
   0% { transform: translateX(0); }
@@ -793,5 +825,39 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
 @keyframes loadingShine {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
+}
+
+/* 科技风页面过渡动画 */
+.tech-slide-right-enter-active,
+.tech-slide-right-leave-active,
+.tech-slide-left-enter-active,
+.tech-slide-left-leave-active {
+  transition: all 0.5s ease;
+  position: absolute;
+  width: 100%;
+}
+
+.tech-slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(50px);
+  filter: blur(5px);
+}
+
+.tech-slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-50px);
+  filter: blur(5px);
+}
+
+.tech-slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-50px);
+  filter: blur(5px);
+}
+
+.tech-slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(50px);
+  filter: blur(5px);
 }
 </style>

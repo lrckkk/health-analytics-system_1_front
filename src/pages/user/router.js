@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Show from '../home/show.vue'
 import LoginPage from '/src/components/Login.vue';
 import Province from "@/pages/user/Province.vue";
+import RegisterPage from "@/components/Register.vue";
 import Card from "@/pages/card/CardContainer.vue";
 import Scroll from "./scroll.vue"
 
@@ -26,7 +27,18 @@ const routes = [
     {
         name: 'Login',
         path: '/login',
-        component: LoginPage
+        component: LoginPage,
+        meta: {
+            transition: 'tech-hologram-beam' // 组合动画
+        }
+    },
+    {
+        name: 'Register',
+        path: '/register',
+        component: RegisterPage,
+        meta: {
+            transition: 'tech-hologram-beam' // 组合动画
+        }
     },
     {
         name: 'Card',
