@@ -351,8 +351,8 @@ $tech-darkblue: #023E8A;
 $tech-text: #CAF0F8;
 
 .scatter-chart-container {
-  width: 100%;
-  position: relative;
+  width: 55vh
+
 }
 
 .futuristic-card {
