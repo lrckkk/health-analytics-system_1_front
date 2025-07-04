@@ -29,13 +29,14 @@
 
     <div class="chart-row">
       <multi-line-chart
-          :chart-data="salesData"
-          title="年度销售趋势"
-          x-field="year"
+          :chart-data="populationData"
+          title="人口统计趋势"
           height="350px"
           :show-data-zoom="true"
           :show-legend="true"
           :smooth="true"
+          :loading="populationLoading"
+          @provinceChange="handleProvinceChange"
       />
     </div>
 
@@ -58,6 +59,25 @@
           color="#00B4D8"
       />
     </div>
+
+    <div class="chart-row">
+      <bar-chart
+          :chart-data="medicalPersonnelData"
+          title="医疗卫生人员统计"
+          height="350px"
+          x-field="year"
+          y-field="count"
+          color="#7DF9FF"
+
+      />
+    </div>
+    <div class="chart-row">
+      <MultipleChart
+          :chart-data="medicalServiceData"
+          title="医疗服务统计"
+          height="350px"
+      />
+    </div>
   </div>
 
 </template>
@@ -69,10 +89,14 @@ import Simpleline from '/src/components/simpleline.vue'
 import MultiLineChart from '/src/components/MutipleLineCharts.vue'
 import PieChart from '/src/components/PieChart.vue'
 import ScatterChart from '/src/components/ScatterChart.vue'
-import { provinceIdMap } from '@/utils/mapid'
-import { IdToNameMapper } from '@/utils/IdToNameMapper'
-import request from '@/utils/request'  // 使用我们封装好的request
+import BarChart from '@/components/BarChart.vue'
+import MultipleChart from '@/components/MutipleChart.vue'
+import { provinceIdMap } from '@/utils/mapid'  // 导入省份ID映射表
+import { IdToNameMapper } from '@/utils/IdToNameMapper'  // 导入转换类
+import request from '@/utils/request'
+ // 使用我们封装好的request
 //
+const provinceMapper = new IdToNameMapper(provinceIdMap)
 // 初始化ID到名称的映射器
 // const provinceMapper = new IdToNameMapper(provinceIdMap)
 
@@ -126,12 +150,28 @@ const marketShareData = ref([
 //   { year: '2020', count: 1022922 },
 //   { year: '2021', count: 1140340 }
 // ])
-
+// const medicalPersonnelData = ref([
+//   { year: '2018', count: 12345 },
+//   { year: '2019', count: 13567 },
+//   { year: '2020', count: 14289 },
+//   { year: '2021', count: 15678 }
+// ])
 //
+// const medicalServiceData = ref([
+//   { year: 2004, outpatientVisits: 3700, inpatientAdmissions: 230 },
+//   { year: 2005, outpatientVisits: 4000, inpatientAdmissions: 250 },
+//   // ...其他数据
+// ])
+
 // // 创建响应式数据
 const medicalData = ref([])
 const medicalData2 = ref([])
 const costData = ref([])
+const medicalPersonnelData = ref([])
+const medicalServiceData = ref([
+
+])
+const populationData = ref([])
 // const salesData = ref([])
 // const marketShareData = ref([])
 //
@@ -142,7 +182,7 @@ const medicalLoading = ref(true)
 
 // 当前选择的省份（默认为湖南）
 const currentProvinceId = ref(23) // 湖南的ID
-
+const populationLoading = ref(true)
 // 获取医疗机构数据
 const fetchMedicalData = async () => {
   try {
@@ -186,7 +226,7 @@ const fetchBedData = async () => {
       year: String(item.year), // 强制转为字符串
       count: Number(item.total) // 明确使用total字段
     }));
-
+    // medicalServiceData.value = response.data
 
     console.log('处理后的图表数据:', medicalData.value); // 验证处理结果
     console.log('最终medicalData:', JSON.parse(JSON.stringify(medicalData.value)))
@@ -228,14 +268,124 @@ const fetchCostData = async () => {
 }
 
 
+const fetchPersonnelData = async () => {
+  try {
+    medicalLoading.value = true;
+    const response = await request.get(`/api/provinces/${currentProvinceId.value}/personnel/years`);
+
+    // 调试：打印原始响应结构
+    console.log('API响应结构:', Object.keys(response), Array.isArray(response));
+
+
+
+
+    medicalPersonnelData.value = (response.data || response).map(item => ({
+      year: String(item.year), // 强制转为字符串
+      count: Number(item.total) // 明确使用total字段
+    }));
+
+
+    console.log('处理后的图表数据:', medicalData.value); // 验证处理结果
+    console.log('最终medicalData:', JSON.parse(JSON.stringify(medicalData.value)))
+
+  } catch (error) {
+    console.error('获取医疗机构数据失败:', error);
+    medicalData.value = [];
+  } finally {
+    medicalLoading.value = false;
+  }
+}
+
+// 获取医疗服务数据
+const fetchServiceData = async () => {
+  try {
+    medicalLoading.value = true;
+    const response = await request.get(`/api/provinces/${currentProvinceId.value}/service/years`);
+
+    // 调试：打印原始响应结构
+    console.log('API响应结构:', Object.keys(response), Array.isArray(response));
+
+    // 处理响应数据
+    medicalServiceData.value = (response.data || response).map(item => ({
+      year: String(item.year), // 强制转为字符串
+      outpatientVisits: Number(item.outpatientVisits), // 门诊量
+      inpatientAdmissions: Number(item.inpatientAdmissions) // 住院量
+    }));
+
+    console.log('处理后的图表数据:', medicalServiceData.value); // 验证处理结果
+    console.log('最终medicalServiceData:', JSON.parse(JSON.stringify(medicalServiceData.value)))
+
+  } catch (error) {
+    console.error('获取医疗服务数据失败:', error);
+    medicalServiceData.value = [];
+  } finally {
+    medicalLoading.value = false;
+  }
+}
+// 获取人口数据
+const fetchPopulationData = async (provinceIds) => {
+  try {
+    populationLoading.value = true
+    const requests = provinceIds.map(provinceId =>
+        request.get(`/api/provinces/${provinceId}/population/years`)
+    )
+    const responses = await Promise.all(requests)
+
+    // 转换数据格式
+    const allData = {}
+    responses.forEach((response, index) => {
+      const provinceId = provinceIds[index]
+      const provinceName = provinceMapper.getName(provinceId) || `省份${provinceId}`
+      allData[provinceName] = response.map(item => ({
+        year: String(item.year),
+        population: Number(item.total)
+      }))
+    })
+
+    // 合并数据
+    populationData.value = mergeProvinceData(allData)
+  } catch (error) {
+    console.error('获取人口数据失败:', error)
+  } finally {
+    populationLoading.value = false
+  }
+}
+
+// 合并省份数据
+const mergeProvinceData = (dataByProvince) => {
+  const result = []
+  const allYears = [...new Set(
+      Object.values(dataByProvince).flatMap(data => data.map(item => item.year))
+  )].sort()
+
+  allYears.forEach(year => {
+    const yearData = { year }
+    Object.entries(dataByProvince).forEach(([provinceName, data]) => {
+      const item = data.find(d => d.year === year)
+      yearData[provinceName] = item ? item.population : null
+    })
+    result.push(yearData)
+  })
+
+  return result
+}
+// 处理省份选择变化
+const handleProvinceChange = async (provinceIds) => {
+  if (provinceIds.length === 0) {
+    // 如果全部省份被移除，可以保留默认的湖南或者清空数据
+    provinceIds = [23] // 保留湖南作为默认
+    // 或者 populationData.value = [] 清空数据
+  }
+  await fetchPopulationData(provinceIds)
+}
 
 const fetchAllData = async () => {
   await Promise.all([
     fetchMedicalData(),
     fetchBedData(),
    fetchCostData(),
-    // fetchMarketShareData(),
-    // fetchYearData()
+    fetchPersonnelData(),
+    fetchServiceData(),
   ])
 }
 
@@ -243,6 +393,7 @@ const fetchAllData = async () => {
 // 组件挂载时获取数据
 onMounted(() => {
   fetchAllData()
+  fetchPopulationData([currentProvinceId.value])
 })
 </script>
 

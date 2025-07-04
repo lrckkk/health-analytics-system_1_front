@@ -260,7 +260,7 @@
         <div class="card-header">
           <h3 class="futuristic-title">{{ title }}</h3>
           <div class="chart-controls">
-            <div class="control-group">
+            <div class="control-group futuristic-control">
               <span class="control-label">X轴</span>
               <el-select
                   v-model="selectedXField"
@@ -280,8 +280,8 @@
                 />
               </el-select>
             </div>
-            <div class="control-group">
-              <span class="control-label">Y轴</span>
+            <div class="control-group futuristic-control">
+              <span class="control-label glow-text">Y轴</span>
               <el-select
                   v-model="selectedYField"
                   placeholder="选择Y轴"
@@ -832,5 +832,7 @@ onUnmounted(() => {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+
 </style>
 
