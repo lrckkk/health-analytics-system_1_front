@@ -428,17 +428,38 @@ const initParticles = () => {
 }
 
 // 初始化图表
+// const initChart = () => {
+//   if (!chartRef.value) return
+//
+//   if (chartInstance) {
+//     chartInstance.dispose()
+//   }
+//
+//   chartInstance = echarts.init(chartRef.value, 'dark')
+//   updateChart()
+// }
 const initChart = () => {
-  if (!chartRef.value) return
+  nextTick(() => { // 确保在 DOM 更新后执行
+    if (!chartRef.value) {
+      console.error("图表容器不存在")
+      return
+    }
 
-  if (chartInstance) {
-    chartInstance.dispose()
-  }
+    console.log("图表容器尺寸:", chartRef.value.offsetWidth, "x", chartRef.value.offsetHeight)
 
-  chartInstance = echarts.init(chartRef.value, 'dark')
-  updateChart()
+    if (chartInstance) {
+      chartInstance.dispose()
+    }
+
+    try {
+      chartInstance = echarts.init(chartRef.value, 'dark')
+      console.log("ECharts 实例创建成功")
+      updateChart()
+    } catch (e) {
+      console.error("ECharts 初始化失败:", e)
+    }
+  })
 }
-
 // 更新图表数据
 const updateChart = () => {
   if (!chartInstance) return
@@ -638,9 +659,22 @@ const handleResize = () => {
 }
 
 onMounted(() => {
-  extractAvailableFields()
-  initChart()
-  initParticles()
+
+  nextTick(() => {
+    extractAvailableFields();
+    if (props.chartData.length > 0) {
+      initChart();
+      initParticles()
+    }
+  });
+
+// 添加对数据的主动监听
+  watch(() => props.chartData, (newData) => {
+    if (newData.length > 0) {
+      nextTick(initChart); // 数据变化时重新初始化
+      nextTick(initParticles); // 数据变化时重新初始化
+    }
+  }, { immediate: true, deep: true });
   window.addEventListener('resize', resizeChart);
   window.addEventListener('resize', handleResize)
 })
@@ -656,153 +690,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-//.line-chart-container {
-//  width: 100%;
-//  min-width: 300px;
-//
-//  display: flex;
-//  flex-direction: column;
-//}
-//
-//.chart-card {
-//  margin: 0;
-//  border: none;
-//  background: linear-gradient(135deg, #03045E 0%, #023E8A 100%);
-//  box-shadow: 0 2px 12px rgba(0, 119, 182, 0.3);
-//  display: flex;
-//  flex-direction: column;
-//  flex-grow: 1;
-//
-//  :deep(.el-card__header) {
-//    padding: 12px 16px;
-//    border-bottom: 1px solid rgba(72, 202, 228, 0.2);
-//  }
-//}
-//
-//.card-header {
-//  display: flex;
-//  flex-direction: column;
-//  gap: 8px;
-//
-//}
-//
-//.chart-controls {
-//  display: flex;
-//  gap: 12px;
-//  flex-wrap: wrap;
-//}
-//
-//.control-group {
-//  display: flex;
-//  align-items: center;
-//  gap: 8px;
-//  flex: 1;
-//  min-width: 200px;
-//}
-//
-//.control-label {
-//  color: #90E0EF;
-//  font-size: 13px;
-//  white-space: nowrap;
-//}
-//
-//.futuristic-title {
-//  color: #7DF9FF;
-//  font-size: 15px;
-//  margin: 0;
-//  font-weight: 500;
-//}
-//
-//.chart-wrapper {
-//  position: relative;
-//  width: auto;
-//  height: v-bind(height);
-//  min-height: 200px;
-//  flex-grow: 1;
-//}
-//
-//.chart {
-//  width: 197%;
-//  height: 100%;
-//  position: relative;
-//  z-index: 2;
-//}
-//
-//.particle-canvas {
-//  position: absolute;
-//  top: 0;
-//  left: 0;
-//  width: 100%;
-//  height: 100%;
-//  z-index: 1;
-//}
-//
-//.loading-overlay {
-//  position: absolute;
-//  top: 0;
-//  left: 0;
-//  width: 100%;
-//  height: 100%;
-//  background: rgba(2, 62, 138, 0.7);
-//  display: flex;
-//  align-items: center;
-//  justify-content: center;
-//  z-index: 3;
-//
-//  .loading-spinner {
-//    width: 30px;
-//    height: 30px;
-//    border: 3px solid rgba(125, 249, 255, 0.2);
-//    border-radius: 50%;
-//    border-top-color: #7DF9FF;
-//    animation: spin 1s linear infinite;
-//  }
-//}
-//
-//.empty-placeholder {
-//  position: absolute;
-//  top: 0;
-//  left: 0;
-//  width: 100%;
-//  height: 100%;
-//  display: flex;
-//  flex-direction: column;
-//  align-items: center;
-//  justify-content: center;
-//  z-index: 3;
-//  color: rgba(144, 224, 239, 0.7);
-//  font-size: 13px;
-//
-//  .el-icon-data-line {
-//    font-size: 32px;
-//    margin-bottom: 8px;
-//    color: rgba(125, 249, 255, 0.4);
-//  }
-//}
-//
-//.futuristic-select {
-//  flex: 1;
-//
-//  :deep(.el-input__inner) {
-//    background: rgba(0, 119, 182, 0.2);
-//    border: 1px solid rgba(72, 202, 228, 0.4);
-//    color: #CAF0F8;
-//    height: 28px;
-//    font-size: 12px;
-//
-//    &::placeholder {
-//      color: rgba(202, 240, 248, 0.6);
-//    }
-//  }
-//
-//  :deep(.el-select__caret) {
-//    color: #7DF9FF;
-//  }
-//}
-//
-//@keyframes spin {
-//  to { transform: rotate(360deg); }
-//}
 
 .line-chart-container {
   width: 100%;
