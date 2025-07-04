@@ -1,8 +1,11 @@
 <template>
   <div class="page-container">
-    <AppHeader />
-
+    <div class="page-header">
+      <AppHeader/>
+    </div>
     <router-view></router-view>
+
+    <!-- ChinaMap 容器 -->
     <div class="bottom-align" v-if="!mapDataStore.isLoading && !mapDataStore.error">
       <ChinaMap
           @region-clicked="handleRegionClick"
@@ -10,6 +13,11 @@
           :scatterData="mapDataStore.scatterData"
           :pieSeriesData="mapDataStore.pieSeriesData"
       />
+    </div>
+
+    <!-- 新增的 card 组件包裹 div，限定大小并定位在左上方 -->
+    <div class="card-display-area">
+      <card></card>
     </div>
 
     <div v-if="mapDataStore.isLoading" class="loading-overlay tech-loading">
@@ -25,40 +33,41 @@
 
 <script>
 import ChinaMap from '../../components/Map.vue';
-import AppHeader from '../../components/Header.vue'; // <-- 导入新的 AppHeader 组件
+import AppHeader from '../../components/Header.vue'; // 导入 AppHeader 组件
 import { ref, onMounted } from 'vue';
-// router 不再需要在这里直接导入，因为它在 AppHeader 内部使用
 import { useMapDataStore } from '@/stores/TotalData.js';
+import {useRegionStore} from '@/stores/RegionData.js';
 import {ElMessage} from "element-plus";
-
-// Element Plus 组件和图标也不再需要在这里直接导入，它们已在 AppHeader 和 ChinaMap 内部管理
-// import { ElButton, ElMessage, ElIcon } from 'element-plus';
-// import { Monitor, Grid, DataAnalysis, MapLocation, TrendCharts, Setting, Opportunity } from '@element-plus/icons-vue';
-
+import card from '../card/CardContainer.vue'; // 导入 CardContainer.vue 组件
 
 export default {
   components: {
     ChinaMap,
-    AppHeader, // <-- 注册 AppHeader 组件
-    // ElButton, ElIcon 等不再需要在这里注册
-    // 图标也不需要在这里注册了
+    AppHeader,
+    card, // 注册 card 组件
   },
   setup() {
-    const selectedRegion = ref(null);
     const mapDataStore = useMapDataStore();
+    const regionStore = useRegionStore();
 
     const handleRegionClick = (regionName) => {
-      selectedRegion.value = regionName;
-      ElMessage({
-        message: `你点击了：${regionName}`,
-        type: 'info',
-        duration: 2000,
-        customClass: 'tech-message'
-      });
+      regionStore.setSelectedRegion(regionName)
+      if (regionStore.selectedRegionId !== 0) {
+        ElMessage({
+          message: `你点击了：${regionStore.getDisplayRegion} (ID: ${regionStore.getRegionId})`,
+          type: 'info',
+          duration: 2000,
+          customClass: 'tech-message'
+        });
+      } else {
+        ElMessage({
+          message: `取消选择：${regionName} (当前全国视图, ID: ${regionStore.getRegionId})`,
+          type: 'info',
+          duration: 2000,
+          customClass: 'tech-message'
+        });
+      }
     };
-
-    // goTocard 和 goToTargetPage 以及 handleNewButtonClick 已移至 AppHeader 组件内部
-    // 所以这里不再需要这些方法的定义
 
     onMounted(() => {
       if (mapDataStore.provinceData.length === 0 && !mapDataStore.isLoading) {
@@ -68,8 +77,6 @@ export default {
 
     return {
       handleRegionClick,
-      selectedRegion,
-      // goToTargetPage, goTocard, handleNewButtonClick 不再从这里返回
       mapDataStore,
     };
   },
@@ -90,7 +97,7 @@ body {
 
 /* 页面容器基础样式 - 保持不变 */
 .page-container {
-  min-height: 90vh;
+  height: 90vh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -113,6 +120,18 @@ body {
   background-clip: padding-box, border-box;
   overflow: hidden;
 }
+
+/* card 组件的包裹 div 样式，定位在左上方 */
+.card-display-area {
+  position: fixed;
+  top: 10%; /* 与地图顶部对齐 */
+  left: 0%; /* 距离左侧边缘 */
+  width: 30%; /* 限定宽度 */
+  height: 40%; /* 限定高度，与地图高度相同，保持视觉平衡 */
+
+
+}
+
 
 /* 加载和错误状态显示 - 保持原有定位和尺寸，仅优化视觉效果 */
 .loading-overlay, .error-message {
@@ -146,6 +165,9 @@ body {
   text-shadow: 0 0 5px rgba(0, 180, 255, 0.5);
   align-self: center;
   z-index: 5;
+}
+.page-header{
+  height: 7%;
 }
 
 /* 加载和错误覆盖层 - 科技风视觉优化 */
@@ -220,4 +242,5 @@ body {
 .el-message.tech-message.el-message--success {
   background-color: rgba(26, 42, 58, 0.9);
 }
+
 </style>

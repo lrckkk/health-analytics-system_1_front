@@ -1,6 +1,5 @@
 <template>
-  <div id="app-container">
-    <h1>炫酷跟手堆叠卡片 (GSAP 循环精简版)</h1>
+  <div>
     <CardSwitcher
         :components="cardComponents"
         :swipeThreshold="80"

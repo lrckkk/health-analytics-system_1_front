@@ -100,7 +100,7 @@ export default defineComponent({
 /* 科技风页眉样式 - 从原有文件中剪切并粘贴到这里 */
 .app-header.tech-header {
   width: 100%;
-  height: 70px; /* 固定页眉高度 */
+  height: 100%; /* 固定页眉高度 */
   padding: 0 30px;
   background: linear-gradient(to right, #0a1b2e, #000b1a);
   color: #e0f2f7;
