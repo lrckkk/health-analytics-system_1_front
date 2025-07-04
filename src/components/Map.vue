@@ -1,9 +1,16 @@
 <template>
   <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
     <div class="controls" style="padding: 10px; text-align: center; flex-shrink: 0;">
-      <button @click="setView('scatter')">显示散点</button>
-      <button @click="setView('pie')">显示饼图</button>
-      <button @click="setView('map_only')">仅显示地图</button>
+      <el-button @click="setView('scatter')" class="tech-button" link>
+        <el-icon><TrendCharts /></el-icon> <span>显示散点</span>
+      </el-button>
+      <el-button @click="setView('pie')" class="tech-button" link>
+        <el-icon><PieChart /></el-icon>
+        <span>显示饼图</span>
+      </el-button>
+      <el-button @click="setView('map_only')" class="tech-button" link>
+        <el-icon><Location /></el-icon> <span>仅显示地图</span>
+      </el-button>
     </div>
 
     <div id="china-map-interactive" style="width: 100%; flex-grow: 1; background: transparent; border-radius: 8px;"></div>
@@ -13,6 +20,13 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue';
 import * as echarts from 'echarts';
+const emit = defineEmits(['region-clicked']);
+
+// 导入 Element Plus 组件
+import { ElButton, ElIcon } from 'element-plus';
+// 导入 Element Plus 图标 (确保你已安装 @element-plus/icons-vue)
+// 注意：'Map' 图标已更正为 'Location'，'ScatterChart' 图标已更正为 'TrendCharts'
+import { TrendCharts, PieChart, Location } from '@element-plus/icons-vue';
 
 // 定义 props，接收父组件传入的数据
 const props = defineProps({
@@ -66,6 +80,14 @@ const initChart = (mode) => {
 
   const myChart = echarts.init(chartDom, null, { renderer: 'canvas' });
   chartInstance.value = myChart; // 保存新实例的引用
+  myChart.on('click', function(params) {
+    if (params.componentType === 'series' && params.seriesType === 'map') {
+      const regionName = params.name;
+      // 这是最关键的部分：派发事件！
+      // 通过 emit 函数将 'region-clicked' 事件和地块名称 regionName 传递给父组件
+      emit('region-clicked', regionName);
+    }
+  })
 
   // 注册地图，确保只注册一次，即使切换模式也无需重复注册
   if (!echarts.getMap('china') && chinaGeoJson.value) {
@@ -288,33 +310,179 @@ watch(() => props.provinceData, (newVal) => {
 </script>
 
 <style scoped>
-/* 按钮样式保持不变 */
-.controls button {
-  margin: 0 10px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: bold;
+/* 定义动画 */
+@keyframes tech-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px #00aaff, 0 0 10px #00aaff, inset 0 0 3px #00aaff;
+    filter: drop-shadow(0 0 3px #00aaff);
+  }
+  50% {
+    box-shadow: 0 0 10px #00d5ff, 0 0 20px #00d5ff, inset 0 0 5px #00d5ff;
+    filter: drop-shadow(0 0 5px #00d5ff);
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* 按钮容器 */
+.controls {
+  display: flex; /* 使用 Flexbox 布局按钮 */
+  justify-content: center; /* 按钮水平居中 */
+  gap: 30px; /* 按钮之间的间距 */
+  margin-bottom: 15px; /* 按钮与地图之间的间距 */
+  padding: 10px 0;
+}
+
+/* * 科技感按钮核心样式
+ * 我们将完全重写 Element Plus 的 link 按钮样式
+ */
+.controls .el-button.tech-button {
+  /* 基础设定 */
+  background: transparent;
+  border: 1px solid #083c72;
+  color: #79c9fb;
+  padding: 0; /* 清除内边距，由内部元素控制 */
+  min-width: 140px; /* 增加最小宽度 */
+  height: 50px; /* 固定按钮高度 */
+  font-size: 16px;
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase; /* 文字大写 */
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden; /* 隐藏超出范围的伪元素和动画 */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  /* 完全覆盖 Element Plus 的默认样式 */
+  border-radius: 0; /* 使用锐利边角 */
+  text-decoration: none;
+}
+
+/* 按钮内容（图标和文字）的容器 */
+.controls .el-button.tech-button :deep(span) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 2; /* 确保内容在最上层 */
+}
+
+/* 内部图标样式 */
+.controls .el-button.tech-button .el-icon {
+  font-size: 1.6em; /* 图标大小 */
+  margin-bottom: 4px; /* 图标与文字间距 */
   transition: all 0.3s ease;
-  background: linear-gradient(145deg, #2a72bb, #1d5a99);
-  color: #e0f2f7;
-  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3),
-  -5px -5px 10px rgba(255, 255, 255, 0.1);
 }
 
-.controls button:hover {
-  background: linear-gradient(145deg, #1d5a99, #2a72bb);
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3),
-  -2px -2px 5px rgba(255, 255, 255, 0.1);
+/* 按钮主要背景和伪元素装饰 */
+.controls .el-button.tech-button::before,
+.controls .el-button.tech-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* 允许点击穿透 */
+  transition: all 0.4s ease-out;
+}
+
+/* ::before 用于背景渐变和边框 */
+.controls .el-button.tech-button::before {
+  background: linear-gradient(135deg, rgba(13, 58, 110, 0.3), rgba(8, 28, 54, 0.6));
+  border: 1px solid #1c5a9b;
+  box-sizing: border-box;
+}
+
+/* ::after 用于制作角落的装饰 */
+.controls .el-button.tech-button::after {
+  --corner-size: 8px; /* 定义角落装饰的大小 */
+  border-left: 2px solid #79c9fb;
+  border-top: 2px solid #79c9fb;
+  width: var(--corner-size);
+  height: var(--corner-size);
+  top: -2px; /* 补偿边框宽度 */
+  left: -2px;
+}
+
+/* 流光动画效果 */
+.controls .el-button.tech-button .scanner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(121, 201, 251, 0.3),
+      transparent
+  );
+  z-index: 1;
+  animation: scan-line 3s infinite linear;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+/* --- 悬停 (Hover) 效果 --- */
+.controls .el-button.tech-button:hover {
+  color: #fff;
+  border-color: #79c9fb;
   transform: translateY(-2px);
+  filter: drop-shadow(0 0 8px rgba(121, 201, 251, 0.7));
 }
 
-.controls button:active {
-  background: linear-gradient(145deg, #1d5a99, #2a72bb);
-  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.4),
-  inset -2px -2px 5px rgba(255, 255, 255, 0.05);
-  transform: translateY(1px);
+.controls .el-button.tech-button:hover::before {
+  background: linear-gradient(135deg, rgba(8, 28, 54, 0.6), rgba(13, 58, 110, 0.8));
+  box-shadow: inset 0 0 15px rgba(121, 201, 251, 0.2);
+}
+
+.controls .el-button.tech-button:hover::after {
+  width: calc(100% + 4px); /* 装饰线延伸 */
+  height: calc(100% + 4px);
+  border-color: #00e0ff;
+}
+
+.controls .el-button.tech-button:hover .scanner {
+  opacity: 1; /* 悬停时显示流光 */
+  animation: scan-line 2.5s infinite linear; /* 加快动画 */
+}
+
+.controls .el-button.tech-button:hover .el-icon {
+  transform: scale(1.1); /* 图标放大 */
+}
+
+/* --- 点击 (Active) 效果 --- */
+.controls .el-button.tech-button:active {
+  transform: translateY(0); /* 按下时恢复原位 */
+  filter: drop-shadow(0 0 5px rgba(121, 201, 251, 0.5));
+  background: rgba(0, 150, 255, 0.1);
+  transition-duration: 0.1s;
+}
+
+/* * 修复 Element Plus 按钮 `link` 属性带来的样式问题。
+ * 我们需要一个 `<span>` 来包裹图标和文字，但`el-button`默认会创建自己的span。
+ * 使用 :deep() 选择器强制修改其内部结构，使其适应我们的Flex布局。
+ */
+.controls .el-button.tech-button :deep(.el-icon + span) {
+  margin-left: 0; /* 移除 Element Plus 默认的图标和文字间距 */
+}
+
+/* ECharts 容器样式 */
+#china-map-interactive {
+  width: 100%;
+  flex-grow: 1;
+  background: transparent;
+  border-radius: 8px;
 }
 </style>

@@ -1,22 +1,8 @@
 <template>
   <div class="page-container">
-    <header class="app-header tech-header">
-      <div class="header-title">大数据医疗</div>
-      <nav class="header-nav fill-width">
-        <button @click="goToTargetPage" class="nav-button tech-button">跳转页面</button>
-        <button @click="goTocard" class="nav-button tech-button">跳转卡片</button>
-        <button @click="handleNewButtonClick('数据概览')" class="nav-button tech-button">数据概览</button>
-        <button @click="handleNewButtonClick('区域分析')" class="nav-button tech-button">区域分析</button>
-        <button @click="handleNewButtonClick('趋势预测')" class="nav-button tech-button">趋势预测</button>
-        <button @click="handleNewButtonClick('设置')" class="nav-button tech-button">设置</button>
-      </nav>
-    </header>
+    <AppHeader />
+
     <router-view></router-view>
-    <div>{{selectedRegion}}</div>
-
-    <div v-if="mapDataStore.isLoading" class="loading-overlay">加载数据中，请稍候...喵~</div>
-    <div v-if="mapDataStore.error" class="error-message">加载数据失败：{{ mapDataStore.error }}，喵~</div>
-
     <div class="bottom-align" v-if="!mapDataStore.isLoading && !mapDataStore.error">
       <ChinaMap
           @region-clicked="handleRegionClick"
@@ -25,37 +11,54 @@
           :pieSeriesData="mapDataStore.pieSeriesData"
       />
     </div>
+
+    <div v-if="mapDataStore.isLoading" class="loading-overlay tech-loading">
+      <div class="loading-spinner"></div>
+      <p>数据加载中，请稍候...</p>
+    </div>
+    <div v-if="mapDataStore.error" class="error-message tech-error">
+      <p>加载数据失败：{{ mapDataStore.error }}</p>
+      <el-button type="primary" size="small" @click="mapDataStore.fetchMapData()">重试</el-button>
+    </div>
   </div>
 </template>
 
 <script>
 import ChinaMap from '../../components/Map.vue';
+import AppHeader from '../../components/Header.vue'; // <-- 导入新的 AppHeader 组件
 import { ref, onMounted } from 'vue';
-import router from "@/pages/user/router.js";
+// router 不再需要在这里直接导入，因为它在 AppHeader 内部使用
 import { useMapDataStore } from '@/stores/TotalData.js';
+import {ElMessage} from "element-plus";
+
+// Element Plus 组件和图标也不再需要在这里直接导入，它们已在 AppHeader 和 ChinaMap 内部管理
+// import { ElButton, ElMessage, ElIcon } from 'element-plus';
+// import { Monitor, Grid, DataAnalysis, MapLocation, TrendCharts, Setting, Opportunity } from '@element-plus/icons-vue';
+
 
 export default {
-  components: { ChinaMap /* , heatmap */ },
+  components: {
+    ChinaMap,
+    AppHeader, // <-- 注册 AppHeader 组件
+    // ElButton, ElIcon 等不再需要在这里注册
+    // 图标也不需要在这里注册了
+  },
   setup() {
     const selectedRegion = ref(null);
     const mapDataStore = useMapDataStore();
 
     const handleRegionClick = (regionName) => {
       selectedRegion.value = regionName;
+      ElMessage({
+        message: `你点击了：${regionName}`,
+        type: 'info',
+        duration: 2000,
+        customClass: 'tech-message'
+      });
     };
 
-    const goToTargetPage = () => {
-      router.push({ name: 'Home' });
-    };
-
-    const goTocard = () => {
-      router.push({ name: 'Card' });
-    };
-
-    const handleNewButtonClick = (buttonName) => {
-      alert(`你点击了：${buttonName}！`);
-      // 在这里添加未来按钮的具体逻辑
-    };
+    // goTocard 和 goToTargetPage 以及 handleNewButtonClick 已移至 AppHeader 组件内部
+    // 所以这里不再需要这些方法的定义
 
     onMounted(() => {
       if (mapDataStore.provinceData.length === 0 && !mapDataStore.isLoading) {
@@ -66,9 +69,7 @@ export default {
     return {
       handleRegionClick,
       selectedRegion,
-      goToTargetPage,
-      goTocard,
-      handleNewButtonClick,
+      // goToTargetPage, goTocard, handleNewButtonClick 不再从这里返回
       mapDataStore,
     };
   },
@@ -76,29 +77,44 @@ export default {
 </script>
 
 <style>
-/* 现有样式（保持不变） */
+/* 全局科技风主题 - 保持不变，它影响 body */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif, 'Microsoft YaHei', 'PingFang SC';
+  background: linear-gradient(135deg, #0a192f 0%, #000a1a 100%);
+  color: #e0f2f7;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 页面容器基础样式 - 保持不变 */
 .page-container {
   min-height: 90vh;
   display: flex;
   flex-direction: column;
   position: relative;
 }
+
+/* ChinaMap 容器 - 严格保持原有位置和大小 */
 .bottom-align {
   position: fixed;
-  top: 10%; /* 调整以适应页眉高度 */
+  top: 10%;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  width: 40%;
+  width: 44%;
   height: 40%;
   padding: 1px;
   border-radius: 1px;
   border: 2px solid transparent;
   background-origin: border-box;
   background-clip: padding-box, border-box;
+  overflow: hidden;
 }
 
+/* 加载和错误状态显示 - 保持原有定位和尺寸，仅优化视觉效果 */
 .loading-overlay, .error-message {
   position: absolute;
   top: 50%;
@@ -117,63 +133,91 @@ export default {
   background-color: rgba(255, 0, 0, 0.7);
 }
 
-/* --- 科技风页眉新增及修改样式 --- */
-.app-header.tech-header {
-  width: 100%;
-  padding: 15px 30px;
-  /* 科技感背景：深蓝灰，带一点点发光效果 */
-  background: linear-gradient(to right, #1a2a3a, #101c2a);
-  color: #e0f2f7; /* 浅蓝色文字 */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  /* 科技感阴影：更锐利，带一点蓝色光晕 */
-  box-shadow: 0 4px 15px rgba(0, 150, 255, 0.3), 0 0 20px rgba(0, 150, 255, 0.1);
-  z-index: 10;
-  position: sticky;
-  top: 0;
-  left: 0;
-  border-bottom: 1px solid rgba(0, 150, 255, 0.5); /* 底部细边框 */
-}
-
-.tech-header .header-title {
-  font-family: 'Segoe UI', 'Roboto', sans-serif; /* 更现代的字体 */
-  font-size: 2em; /* 标题更大更醒目 */
-  font-weight: 600;
-  letter-spacing: 2px; /* 字符间距增加 */
-  text-shadow: 0 0 8px rgba(0, 150, 255, 0.6); /* 文字发光效果 */
-  flex-shrink: 0; /* 确保标题不被挤压 */
-  margin-right: 30px; /* 标题与导航间距 */
-}
-
-.header-nav.fill-width {
-  flex-grow: 1; /* 导航区域占据所有可用空间 */
-  display: flex;
-  justify-content: space-around; /* 按钮平均分布 */
-  align-items: center;
-  gap: 10px; /* 按钮之间的间隙 */
-}
-
-.nav-button.tech-button {
-  flex: 1; /* 每个按钮占据等宽空间 */
-  min-width: 80px; /* 确保按钮不会太窄 */
-  background: linear-gradient(to bottom, #007bff, #0056b3); /* 蓝色渐变按钮 */
-  color: white;
-  padding: 12px 0; /* 上下内边距，左右由flex自动分配 */
-  border: 1px solid rgba(0, 150, 255, 0.7); /* 蓝色边框 */
-  border-radius: 3px; /* 略微锐利的圆角 */
-  cursor: pointer;
-  font-size: 1.05em;
+/* selected-region-display 样式 */
+.selected-region-display {
+  margin-top: 550px;
+  padding: 10px 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 150, 255, 0.5);
+  border-radius: 5px;
+  color: #00e0ff;
+  font-size: 1.1em;
   font-weight: 500;
-  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-  /* 科技感阴影和悬停效果 */
-  box-shadow: 0 2px 8px rgba(0, 150, 255, 0.3);
-  text-transform: uppercase; /* 按钮文字大写，增加科技感 */
+  text-shadow: 0 0 5px rgba(0, 180, 255, 0.5);
+  align-self: center;
+  z-index: 5;
 }
 
-.nav-button.tech-button:hover {
-  background: linear-gradient(to bottom, #0056b3, #003d80); /* 悬停时颜色变深 */
-  transform: translateY(-2px); /* 略微上浮效果 */
-  box-shadow: 0 4px 12px rgba(0, 150, 255, 0.5); /* 悬停时阴影更明显 */
+/* 加载和错误覆盖层 - 科技风视觉优化 */
+.loading-overlay.tech-loading, .error-message.tech-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #00e0ff;
+  font-size: 1.5em;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.loading-spinner {
+  border: 6px solid rgba(0, 150, 255, 0.3);
+  border-top: 6px solid #00e0ff;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message.tech-error {
+  background-color: rgba(139, 0, 0, 0.85);
+  border: 1px solid rgba(255, 0, 0, 0.7);
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+  color: #ffcccc;
+}
+
+.error-message.tech-error .el-button {
+  margin-top: 15px;
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.error-message.tech-error .el-button:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+/* Element Plus Message Box 科技风样式 - 如果 main.vue 中也会用到 ElMessage，则这些样式也需要 */
+/* 这里我把它们保留在 main.vue 的 style 中，因为 handleRegionClick 还在使用 ElMessage */
+.el-message.tech-message {
+  background-color: rgba(26, 42, 58, 0.9);
+  border: 1px solid rgba(0, 150, 255, 0.5);
+  box-shadow: 0 0 10px rgba(0, 150, 255, 0.3);
+  color: #e0f2f7;
+}
+.el-message.tech-message .el-message__content {
+  color: inherit;
+}
+.el-message.tech-message.el-message--info {
+  background-color: rgba(26, 42, 58, 0.9);
+}
+.el-message.tech-message.el-message--success {
+  background-color: rgba(26, 42, 58, 0.9);
 }
 </style>

@@ -3,6 +3,7 @@ import Show from '../home/show.vue'
 import LoginPage from '/src/components/Login.vue';
 import Province from "@/pages/user/Province.vue";
 import Card from "@/pages/card/CardContainer.vue";
+import Scroll from "./scroll.vue"
 
 
 // 您的路由定义
@@ -31,7 +32,13 @@ const routes = [
         name: 'Card',
         path: '/card',
         component: Card
+    },
+    {
+        name:'Scroll',
+        path: '/scroll',
+        component: Scroll
     }
+
 
 ]
 
