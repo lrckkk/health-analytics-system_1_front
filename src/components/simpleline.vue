@@ -260,49 +260,51 @@
         <div class="card-header">
           <h3 class="futuristic-title">{{ title }}</h3>
           <div class="chart-controls">
-            <div class="control-group futuristic-control">
-              <span class="control-label">X轴</span>
-              <el-select
-                  v-model="selectedXField"
-                  placeholder="选择X轴"
-                  @change="handleFieldChange"
-                  class="futuristic-select"
+<!--            <div class="control-group futuristic-control">-->
+<!--              <span class="control-label">X轴</span>-->
+<!--              <el-select-->
+<!--                  v-model="selectedXField"-->
 
-                  :clearable="false"
-                  size="small"
-              >
-                <el-option
-                    v-for="field in availableFields"
-                    :key="field"
-                    :label="field"
-                    :value="field"
-                    class="futuristic-option"
-                />
-              </el-select>
-            </div>
-            <div class="control-group futuristic-control">
-              <span class="control-label glow-text">Y轴</span>
-              <el-select
-                  v-model="selectedYField"
-                  placeholder="选择Y轴"
-                  @change="handleFieldChange"
-                  class="futuristic-select"
+<!--                  placeholder="选择X轴"-->
+<!--                  @change="handleFieldChange"-->
+<!--                  class="futuristic-select"-->
 
-                  :clearable="false"
-                  size="small"
-              >
-                <el-option
-                    v-for="field in availableFields"
-                    :key="field"
-                    :label="field"
-                    :value="field"
-                    class="futuristic-option"
-                />
-              </el-select>
-            </div>
+<!--                  :clearable="false"-->
+<!--                  size="small"-->
+<!--              >-->
+<!--                <el-option-->
+<!--                    v-for="field in availableFields"-->
+<!--                    :key="field"-->
+<!--                    :label="field"-->
+<!--                    :value="field"-->
+<!--                    class="futuristic-option"-->
+<!--                />-->
+<!--              </el-select>-->
+<!--            </div>-->
+<!--            <div class="control-group futuristic-control">-->
+<!--              <span class="control-label glow-text">Y轴</span>-->
+<!--              <el-select-->
+<!--                  v-model="selectedYField"-->
+<!--                  placeholder="选择Y轴"-->
+<!--                  @change="handleFieldChange"-->
+<!--                  class="futuristic-select"-->
+
+<!--                  :clearable="false"-->
+<!--                  size="small"-->
+<!--              >-->
+<!--                <el-option-->
+<!--                    v-for="field in availableFields"-->
+<!--                    :key="field"-->
+<!--                    :label="field"-->
+<!--                    :value="field"-->
+<!--                    class="futuristic-option"-->
+<!--                />-->
+<!--              </el-select>-->
+<!--            </div>-->
           </div>
         </div>
       </template>
+
 
       <div class="chart-wrapper">
         <div
@@ -312,9 +314,9 @@
 
         ></div>
         <canvas ref="particleCanvas" class="particle-canvas"></canvas>
-        <div v-if="isLoading" class="loading-overlay">
-          <div class="loading-spinner"></div>
-        </div>
+<!--        <div v-if="isLoading" class="loading-overlay">-->
+<!--          <div class="loading-spinner"></div>-->
+<!--        </div>-->
         <div v-if="!hasData" class="empty-placeholder">
           <i class="el-icon-data-line"></i>
           <span>暂无数据</span>
@@ -489,15 +491,15 @@ const updateChart = () => {
 
   const option = {
     backgroundColor: 'transparent',
-    // title: {
-    //   text: props.title,
-    //   left: 'center',
-    //   textStyle: {
-    //     color: '#7DF9FF',
-    //     fontSize: 16,
-    //     fontWeight: 'bold'
-    //   }
-    // },
+    title: {
+      // text: props.title,
+      left: 'center',
+      textStyle: {
+        color: '#7DF9FF',
+        fontSize: 16,
+        fontWeight: 'bold'
+      }
+    },
     tooltip: {
       trigger: 'axis',
       backgroundColor: 'rgba(0, 20, 40, 0.9)',
@@ -557,6 +559,11 @@ const updateChart = () => {
     },
     yAxis: {
       type: 'value',
+      name: '总数',
+      nameTextStyle: {
+        color: '#90E0EF',
+        fontSize: 12
+      },
       axisLine: {
         lineStyle: {
           color: '#48CAE4'
@@ -696,26 +703,16 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
 })
 </script>
-
 <style scoped lang="scss">
-//
-//.line-chart-container {
-//  width: 100%;
-//  min-width: 300px;
-//  display: flex;
-//  flex-direction: column;
-//}
-
+/* 容器样式 */
 .line-chart-container {
-  /* 移除固定宽度设置，改为由props控制 */
   min-width: 300px;
   display: flex;
   flex-direction: column;
-
-  /* 确保容器可以收缩 */
   flex-shrink: 0;
 }
 
+/* 卡片样式 */
 .chart-card {
   margin: 0;
   border: none;
@@ -731,18 +728,29 @@ onUnmounted(() => {
   }
 }
 
+/* 卡片头部样式 */
 .card-header {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.futuristic-title {
+  color: #7DF9FF;
+  font-size: 15px;
+  margin: 0;
+  font-weight: 500;
+  text-shadow: 0 0 8px rgba(125, 249, 255, 0.3);
+}
+
+/* 图表控制区域 */
 .chart-controls {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
 
+/* 控制组样式 */
 .control-group {
   display: flex;
   align-items: center;
@@ -754,32 +762,119 @@ onUnmounted(() => {
     color: #90E0EF;
     font-size: 13px;
     white-space: nowrap;
+    text-shadow: 0 0 5px rgba(125, 249, 255, 0.3);
   }
 
-  :deep(.el-input__inner) {
-    background: rgba(0, 119, 182, 0.2);
-    border: 1px solid rgba(72, 202, 228, 0.4);
-    color: #CAF0F8;
-    height: 28px;
-    font-size: 12px;
+  /* 选择器样式 */
+  :deep(.el-select) {
+    flex-grow: 1;
+    width: 100%;
 
-    &::placeholder {
-      color: rgba(202, 240, 248, 0.6);
+    .el-input {
+      .el-input__inner {
+        background: rgba(0, 119, 182, 0.3) !important;
+        border: 1px solid rgba(72, 202, 228, 0.6) !important;
+        color: #CAF0F8 !important;
+        height: 32px;
+        font-size: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 8px rgba(0, 180, 216, 0.2);
+        border-radius: 4px;
+
+        &::placeholder {
+          color: rgba(202, 240, 248, 0.6) !important;
+        }
+
+        &:hover {
+          border-color: #7DF9FF !important;
+          box-shadow: 0 0 12px rgba(125, 249, 255, 0.4) !important;
+        }
+
+        &:focus {
+          border-color: #7DF9FF !important;
+          box-shadow: 0 0 15px rgba(125, 249, 255, 0.6) !important;
+        }
+      }
+
+      .el-select__caret {
+        color: #7DF9FF !important;
+        transition: transform 0.3s;
+      }
+    }
+
+    &.is-focus {
+      .el-input__inner {
+        border-color: #7DF9FF !important;
+      }
+      .el-select__caret {
+        transform: rotate(180deg);
+      }
+    }
+  }
+}
+
+/* 下拉菜单样式 */
+:deep(.el-select-dropdown) {
+  background: linear-gradient(135deg, #03045E 0%, #023E8A 100%) !important;
+  border: 1px solid rgba(72, 202, 228, 0.6) !important;
+  box-shadow: 0 5px 20px rgba(0, 119, 182, 0.4) !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+
+  .el-select-dropdown__item {
+    color: #CAF0F8 !important;
+    font-size: 12px !important;
+    padding: 8px 16px !important;
+    transition: all 0.2s ease !important;
+    position: relative !important;
+
+    &:before {
+      content: '' !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 3px !important;
+      height: 100% !important;
+      background: transparent !important;
+      transition: all 0.2s ease !important;
+    }
+
+    &:hover {
+      background: rgba(0, 180, 216, 0.2) !important;
+      color: #7DF9FF !important;
+
+      &:before {
+        background: #7DF9FF !important;
+      }
+    }
+
+    &.selected {
+      background: rgba(0, 150, 199, 0.3) !important;
+      color: #7DF9FF !important;
+      font-weight: bold !important;
+
+      &:before {
+        background: #7DF9FF !important;
+      }
     }
   }
 
-  :deep(.el-select__caret) {
-    color: #7DF9FF;
+  .el-select-dropdown__empty {
+    color: rgba(202, 240, 248, 0.6) !important;
+    padding: 10px !important;
+    font-size: 12px !important;
+  }
+
+  .popper__arrow {
+    border-bottom-color: rgba(72, 202, 228, 0.6) !important;
+
+    &:after {
+      border-bottom-color: #03045E !important;
+    }
   }
 }
 
-.futuristic-title {
-  color: #7DF9FF;
-  font-size: 15px;
-  margin: 0;
-  font-weight: 500;
-}
-
+/* 图表容器样式 */
 .chart-wrapper {
   position: relative;
   width: 100%;
@@ -795,6 +890,7 @@ onUnmounted(() => {
   z-index: 2;
 }
 
+/* 粒子画布样式 */
 .particle-canvas {
   position: absolute;
   top: 0;
@@ -802,8 +898,10 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   z-index: 1;
+  pointer-events: none;
 }
 
+/* 加载状态样式 */
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -826,6 +924,7 @@ onUnmounted(() => {
   }
 }
 
+/* 空状态提示样式 */
 .empty-placeholder {
   position: absolute;
   top: 0;
@@ -847,10 +946,20 @@ onUnmounted(() => {
   }
 }
 
+/* 动画定义 */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .chart-controls {
+    flex-direction: column;
+  }
 
+  .control-group {
+    min-width: 100%;
+  }
+}
 </style>
 

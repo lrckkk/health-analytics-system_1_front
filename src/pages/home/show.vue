@@ -21,6 +21,9 @@
         :width="chartWidth2"
         x-field="year"
         y-field="count"
+        :loading="medicalLoading"
+
+
     />
   </div>
   </div>
