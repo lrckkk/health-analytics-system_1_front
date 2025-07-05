@@ -254,7 +254,7 @@
 
 
 <template>
-  <div class="line-chart-container">
+  <div class="line-chart-container" :style="{ width: computedWidth }">
     <el-card class="chart-card futuristic-card">
       <template #header>
         <div class="card-header">
@@ -309,6 +309,7 @@
             ref="chartRef"
             class="chart futuristic-chart"
             :style="{ height: '100%' ,width: '100%' }"
+
         ></div>
         <canvas ref="particleCanvas" class="particle-canvas"></canvas>
         <div v-if="isLoading" class="loading-overlay">
@@ -341,6 +342,10 @@ const props = defineProps({
     type: String,
     default: '350px'
   },
+  width: {
+    type: [String, Number],
+    default: '100%'
+  },
   xField: {
     type: String,
     default: '100%'
@@ -366,7 +371,10 @@ const availableFields = ref([])
 const selectedXField = ref(props.xField)
 const selectedYField = ref(props.yField)
 const isLoading = ref(props.loading)
-
+// 计算宽度（处理数字类型的px单位）
+const computedWidth = computed(() => {
+  return typeof props.width === 'number' ? `${props.width}px` : props.width
+})
 // 计算属性
 const hasData = computed(() => {
   return props.chartData && props.chartData.length > 0 && selectedXField.value && selectedYField.value
@@ -690,12 +698,22 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
+//
+//.line-chart-container {
+//  width: 100%;
+//  min-width: 300px;
+//  display: flex;
+//  flex-direction: column;
+//}
 
 .line-chart-container {
-  width: 100%;
+  /* 移除固定宽度设置，改为由props控制 */
   min-width: 300px;
   display: flex;
   flex-direction: column;
+
+  /* 确保容器可以收缩 */
+  flex-shrink: 0;
 }
 
 .chart-card {
@@ -764,7 +782,7 @@ onUnmounted(() => {
 
 .chart-wrapper {
   position: relative;
-  width: auto;
+  width: 100%;
   height: v-bind(height);
   min-height: 200px;
   flex-grow: 1;

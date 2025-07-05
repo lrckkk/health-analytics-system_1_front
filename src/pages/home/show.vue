@@ -6,7 +6,7 @@
         :chart-data="medicalData"
         title="医疗机构数量变化趋势"
         height="200px"
-        width=100%
+        :width="chartWidth1"
         x-field="year"
         y-field="count"
         :loading="medicalLoading"
@@ -18,7 +18,7 @@
         :chart-data="medicalData2"
         title="病床机构数量变化趋势"
         height="200px"
-        width=100%
+        :width="chartWidth2"
         x-field="year"
         y-field="count"
     />
@@ -99,7 +99,9 @@ import request from '@/utils/request'
 const provinceMapper = new IdToNameMapper(provinceIdMap)
 // 初始化ID到名称的映射器
 // const provinceMapper = new IdToNameMapper(provinceIdMap)
-
+// 新增宽度控制变量
+const chartWidth1 = ref('100%') // 可以是百分比或具体像素值
+const chartWidth2 = ref('100%')
 
 // const medicalData = ref([
 //   { year: '2015', count: 983528 },
