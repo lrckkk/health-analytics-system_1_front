@@ -16,71 +16,107 @@
 </template>
 
 <script setup>
-import {ref, onMounted, nextTick} from 'vue'
-// import axios from 'axios'
+import {ref, onMounted, nextTick, watch} from 'vue'
 import Simpleline from '/src/components/simpleline.vue'
-import MultiLineChart from '/src/components/MutipleLineCharts.vue'
-import PieChart from '/src/components/PieChart.vue'
-import ScatterChart from '/src/components/ScatterChart.vue'
-import { provinceIdMap } from '@/utils/mapid'
-import { IdToNameMapper } from '@/utils/IdToNameMapper'
 import request from '@/utils/request'  // 使用我们封装好的request
+import {useRegionStore} from '@/stores/RegionData.js';
+import axios from "axios";
+const regionStore = useRegionStore();
 
 const medicalData = ref([])
 const medicalData2 = ref([])
 const costData = ref([])
-// const salesData = ref([])
-// const marketShareData = ref([])
-//
-// 加载状态
 const medicalLoading = ref(true)
 // const medicalLoading2 = ref(true)
 // API基础URL
+//
+// const fetchBedData = async (region) => {
+//   if (region === undefined || region === 0) {
+//     try {
+//
+//       medicalLoading.value = true;
+//       const response = await request.get(`/api/provinces/1/bed/years`);
+//
+//       // 调试：打印原始响应结构
+//       console.log('API响应结构:', Object.keys(response), Array.isArray(response));
+//       medicalData2.value = (response.data || response).map(item => ({
+//         year: String(item.year), // 强制转为字符串
+//         count: Number(item.total) // 明确使用total字段
+//       }));
+//       console.log('处理后的图表数据:', medicalData.value); // 验证处理结果
+//       console.log('最终medicalData:', JSON.parse(JSON.stringify(medicalData.value)))
+//
+//     } catch (error) {
+//       console.error('获取医疗机构数据失败:', error);
+//       medicalData.value = [];
+//     } finally {
+//       medicalLoading.value = false;
+//     }
+//   }
+//   else{
+//     try {
+//
+//       medicalLoading.value = true;
+//       const response = await request.get(`/api/provinces/${region}/bed/years`);
+//
+//       // 调试：打印原始响应结构
+//       console.log('API响应结构:', Object.keys(response), Array.isArray(response));
+//       medicalData2.value = (response.data || response).map(item => ({
+//         year: String(item.year), // 强制转为字符串
+//         count: Number(item.total) // 明确使用total字段
+//       }));
+//       console.log('处理后的图表数据:', medicalData.value); // 验证处理结果
+//       console.log('最终medicalData:', JSON.parse(JSON.stringify(medicalData.value)))
+//
+//     } catch (error) {
+//       console.error('获取医疗机构数据失败:', error);
+//       medicalData.value = [];
+//     } finally {
+//       medicalLoading.value = false;
+//     }
+//   }
+// }
+//
+// const fetchAllData = async () => {
+//   await Promise.all([
+//     fetchBedData(),
+//
+//   ])
+// }
+// watch(
+//     () => regionStore.getRegionId, // 侦听 Pinia store 中的 selectedRegion
+//     (newRegion) => {
+//       console.log(`检测到区域变化: ${newRegion}，正在重新请求数据...`);
+//       fetchBedData(newRegion); // 使用新的区域值作为参数发起请求
+//     },
+//     { immediate: true } // 立即执行一次，以便在组件挂载时就获取数据
+// );
+watch(
+    () => regionStore.getRegionId, // 侦听 Pinia store 中的 ID
+    async (newRegionId) => {
+      console.log(`检测到区域变化: ${newRegionId}，准备从 Store 获取数据...`);
+      medicalLoading.value = true;
+      try {
+        // 直接调用 store 的 action，它会处理缓存逻辑
+        const data = await regionStore.fetchMedicalData2IfNeeded(newRegionId);
+        medicalData2.value = data;
+      } catch (error) {
+        console.error("在组件中处理数据获取失败:", error);
+        medicalData2.value = [];
+      } finally {
+        medicalLoading.value = false;
+      }
+    },
+    {
+      immediate: true // 立即执行一次，确保组件挂载时就能加载初始数据
+    }
+);
 
-// 当前选择的省份（默认为湖南）
-const currentProvinceId = ref(23) // 湖南的ID
 
-const fetchBedData = async () => {
-  try {
-    medicalLoading.value = true;
-    const response = await request.get(`/api/provinces/${currentProvinceId.value}/bed/years`);
-
-    // 调试：打印原始响应结构
-    console.log('API响应结构:', Object.keys(response), Array.isArray(response));
-
-
-
-
-    medicalData2.value = (response.data || response).map(item => ({
-      year: String(item.year), // 强制转为字符串
-      count: Number(item.total) // 明确使用total字段
-    }));
-
-
-    console.log('处理后的图表数据:', medicalData.value); // 验证处理结果
-    console.log('最终medicalData:', JSON.parse(JSON.stringify(medicalData.value)))
-
-  } catch (error) {
-    console.error('获取医疗机构数据失败:', error);
-    medicalData.value = [];
-  } finally {
-    medicalLoading.value = false;
-  }
-}
-
-
-const fetchAllData = async () => {
-  await Promise.all([
-    fetchBedData(),
-
-  ])
-}
-
-
-// 组件挂载时获取数据
-onMounted(() => {
-  fetchAllData()
-})
+// // 组件挂载时获取数据
+// onMounted(() => {
+//   fetchAllData()
+// })
 </script>
 
 
