@@ -3,7 +3,7 @@
     <div class="page-header">
       <AppHeader/>
     </div>
-    <router-view></router-view>
+
 
     <!-- ChinaMap 容器 -->
     <div class="bottom-align" v-if="!mapDataStore.isLoading && !mapDataStore.error">
@@ -18,6 +18,9 @@
     <!-- 新增的 card 组件包裹 div，限定大小并定位在左上方 -->
     <div class="card-display-area">
       <card></card>
+    </div>
+    <div class="scroll-display-area">
+      <scroll></scroll>
     </div>
 
     <div v-if="mapDataStore.isLoading" class="loading-overlay tech-loading">
@@ -39,12 +42,14 @@ import { useMapDataStore } from '@/stores/TotalData.js';
 import {useRegionStore} from '@/stores/RegionData.js';
 import {ElMessage} from "element-plus";
 import card from '../card/CardContainer.vue'; // 导入 CardContainer.vue 组件
+import scroll from './scroll.vue';
 
 export default {
   components: {
     ChinaMap,
     AppHeader,
-    card, // 注册 card 组件
+    card,
+    scroll
   },
   setup() {
     const mapDataStore = useMapDataStore();
@@ -111,8 +116,8 @@ body {
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  width: 44%;
-  height: 40%;
+  width: 38%;
+  height: 52%;
   padding: 1px;
   border-radius: 1px;
   border: 2px solid transparent;
@@ -125,18 +130,15 @@ body {
 .card-display-area {
   position: fixed;
   top: 7%; /* 与地图顶部对齐 */
-  left: 0%; /* 距离左侧边缘 */
+  left: 1%; /* 距离左侧边缘 */
   width: 28%; /* 限定宽度 */
   height: 30%; /* 限定高度，与地图高度相同，保持视觉平衡 */
   box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
   overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
-
-  /* --- 修改的边框和背景样式 --- */
-  /* 背景：深蓝色到黑色的渐变，透明度稍低，更符合科技感深色背景 */
   background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
 
   /* 边框效果：通过多层box-shadow模拟发光边框 */
-  border: 1px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
+  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
   box-shadow:
       0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
       0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
@@ -144,10 +146,12 @@ body {
 
   /* 圆角：如果图片中有圆角，可以添加 */
   border-radius: 8px; /* 适当的圆角 */
-
-  /* 可选：如果内容有 padding，可以保持，但在这里它不再用于模拟边框宽度 */
-
-  /* --- 结束修改的边框和背景样式 --- */
+}
+.scroll-display-area {
+  position: absolute;
+  left: 28%;
+  top: 70%;
+  width: 50%;
 }
 
 

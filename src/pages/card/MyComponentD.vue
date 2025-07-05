@@ -1,13 +1,14 @@
 <template>
   <div class="card-content-inner-a">
-    <simpleline
-        :chart-data="medicalData"
-        :title="`医疗机构数量变化趋势 - ${regionStore.getDisplayRegion}`"
+    <bar-chart
+        :width="barChartWidth"
+        :chart-data="medicalPersonnelData"
+        title="医疗卫生人员统计"
         height=22vh
-        width=100%
         x-field="year"
         y-field="count"
-        :loading="medicalLoading"
+        color="#7DF9FF"
+
     />
 
   </div>
@@ -21,12 +22,14 @@
 import {ref, onMounted, watch} from 'vue'
 // 假设这些是您的公共组件路径
 import Simpleline from '/src/components/simpleline.vue' // 请确保路径正确，可能需要调整
+import BarChart from '@/components/BarChart.vue'
+const barChartWidth = ref('100%')//单柱
 import request from '@/utils/request'  // 确保 request 路径正确
 
 import {useRegionStore} from '@/stores/RegionData.js';
 import axios from "axios";
 const regionStore = useRegionStore();
-const medicalData = ref([])
+const medicalPersonnelData = ref([])
 const medicalLoading = ref(true)
 //
 // const currentProvinceId = ref()//默认北京
@@ -80,11 +83,11 @@ watch(
       medicalLoading.value = true;
       try {
         // 直接调用 store 的 action，它会处理缓存逻辑
-        const data = await regionStore.fetchMedicalDataIfNeeded(newRegionId);
-        medicalData.value = data;
+        const data = await regionStore.fetchbarChartWidthIfNeeded(newRegionId);
+        medicalPersonnelData.value = data;
       } catch (error) {
         console.error("在组件中处理数据获取失败:", error);
-        medicalData.value = [];
+        medicalPersonnelData.value = [];
       } finally {
         medicalLoading.value = false;
       }

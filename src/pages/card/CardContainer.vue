@@ -17,6 +17,7 @@ import CardSwitcher from './CardSwitcher.vue'; // 确保路径正确
 import MyComponentA from './MyComponentA.vue';
 import MyComponentB from './MyComponentB.vue';
 import MyComponentC from './MyComponentC.vue';
+import MyComponentD from './MyComponentD.vue';
 
 
 // 定义要传入 CardSwitcher 的组件数组
@@ -24,8 +25,7 @@ const cardComponents = [
   MyComponentA,
   MyComponentB,
   MyComponentC,
-
-  // 你可以继续添加更多组件
+  MyComponentD,
 ];
 </script>
 

@@ -167,7 +167,7 @@ onUnmounted(() => {
 
 <style scoped>
 .message-scroller-container {
-  width: 50%;
+  width: 90%;
   height: 150px; /* 每条消息高 50px，共显示 3 条 */
   overflow: hidden; /* 隐藏超出容器的消息 */
   position: relative;

@@ -1,7 +1,6 @@
 <template>
   <div class="my-page">
     <div class="message-section">
-      <h2>实时消息</h2>
       <MessageScroller :messages="myMessages" :scrollInterval="4.5" :scrollDuration="0.8" />
     </div>
   </div>

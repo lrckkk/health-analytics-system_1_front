@@ -1,5 +1,8 @@
 <template>
   <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+
+
+    <div id="china-map-interactive" style="width: 100%; flex-grow: 1; background: transparent; border-radius: 8px;"></div>
     <div class="controls" style="padding: 10px; text-align: center; flex-shrink: 0;">
       <el-button @click="setView('scatter')" class="tech-button" link>
         <el-icon><TrendCharts /></el-icon> <span>显示散点</span>
@@ -13,7 +16,7 @@
       </el-button>
     </div>
 
-    <div id="china-map-interactive" style="width: 100%; flex-grow: 1; background: transparent; border-radius: 8px;"></div>
+
   </div>
 </template>
 
