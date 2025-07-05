@@ -29,6 +29,7 @@
 
     <div class="chart-row">
       <multi-line-chart
+          :width="lineChartWidth"
           :chart-data="populationData"
           title="人口统计趋势"
           height="350px"
@@ -42,6 +43,7 @@
 
     <div class="chart-row">
       <pie-chart
+          :width="pieChartWidth"
           :chart-data="marketShareData"
           title="市场份额分布"
           name-field="company"
@@ -53,6 +55,7 @@
 
     <div class="chart-row">
       <scatter-chart
+          :width="scatterChartWidth"
           :chart-data="costData"
           title="医疗费用年度分布"
           height="350px"
@@ -62,6 +65,7 @@
 
     <div class="chart-row">
       <bar-chart
+          :width="barChartWidth"
           :chart-data="medicalPersonnelData"
           title="医疗卫生人员统计"
           height="350px"
@@ -73,6 +77,7 @@
     </div>
     <div class="chart-row">
       <MultipleChart
+          :width="multiChartWidth"
           :chart-data="medicalServiceData"
           title="医疗服务统计"
           height="350px"
@@ -102,7 +107,11 @@ const provinceMapper = new IdToNameMapper(provinceIdMap)
 // 新增宽度控制变量
 const chartWidth1 = ref('100%') // 可以是百分比或具体像素值
 const chartWidth2 = ref('100%')
-
+const lineChartWidth = ref('100%')//多折线
+const barChartWidth = ref('100%')//单柱
+const multiChartWidth = ref('100%')//多柱
+const pieChartWidth = ref('100%')//派
+const scatterChartWidth = ref('100%')//散点
 // const medicalData = ref([
 //   { year: '2015', count: 983528 },
 //   { year: '2016', count: 983394 },

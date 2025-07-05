@@ -1684,7 +1684,7 @@
 <!--}-->
 <!--</style>-->
 <template>
-  <div class="multi-line-chart-container">
+  <div class="multi-line-chart-container" :style="{ width: computedWidth }">
     <el-card class="chart-card futuristic-card">
       <template #header>
         <div class="card-header">
@@ -1786,6 +1786,10 @@ const props = defineProps({
     type: String,
     default: '350px'
   },
+  width: {
+    type: [String, Number],
+    default: '100%'
+  },
   showDataZoom: {
     type: Boolean,
     default: true
@@ -1817,7 +1821,10 @@ const colorPalette = ref([
   '#7DF9FF', '#FF00FF', '#00B4D8', '#48CAE4', '#90E0EF',
   '#0096FF', '#5D8AA8', '#0077B6', '#03045E'
 ])
-
+// 添加计算属性处理宽度
+const computedWidth = computed(() => {
+  return typeof props.width === 'number' ? `${props.width}px` : props.width
+})
 // 计算属性
 const hasData = computed(() => {
   return Object.keys(populationData.value).length > 0 && selectedXField.value
@@ -2208,10 +2215,17 @@ $tech-cyan: #7DF9FF;
 $tech-lightblue: #90E0EF;
 $tech-darkblue: #023E8A;
 $tech-text: #CAF0F8;
-
+//
+//.multi-line-chart-container {
+//  width: 100%;
+//  position: relative;
+//}
 .multi-line-chart-container {
-  width: 100%;
-  position: relative;
+  /* 移除固定宽度设置 */
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
 }
 
 .futuristic-card {
