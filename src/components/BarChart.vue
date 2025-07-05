@@ -217,6 +217,7 @@ const updateChart = () => {
     }
   })
 
+
   const option = {
     backgroundColor: 'transparent',
     title: {

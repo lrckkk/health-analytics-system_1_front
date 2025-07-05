@@ -305,6 +305,7 @@
         </div>
       </template>
 
+
       <div class="chart-wrapper">
         <div
             ref="chartRef"

@@ -146,6 +146,7 @@ const hasData = computed(() => {
   return Object.keys(populationData.value).length > 0 && selectedXField.value
 })
 
+
 // 获取所有省份列表
 const fetchProvinces = async () => {
   try {

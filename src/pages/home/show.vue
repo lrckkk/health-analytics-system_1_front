@@ -23,6 +23,7 @@
         y-field="count"
         :loading="medicalLoading"
 
+
     />
   </div>
   </div>

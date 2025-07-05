@@ -167,6 +167,7 @@ const updateChart = () => {
         fontWeight: 'bold'
       }
     },
+
     tooltip: {
       trigger: 'item',
       backgroundColor: 'rgba(0, 20, 40, 0.9)',
