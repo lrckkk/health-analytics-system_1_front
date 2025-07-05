@@ -6,43 +6,49 @@
           <h3 class="futuristic-title">{{ title }}</h3>
           <div class="chart-controls">
             <div class="control-group">
-              <span class="control-label">X轴</span>
-              <el-select
-                  v-model="selectedXField"
-                  placeholder="选择X轴"
-                  @change="handleFieldChange"
-                  class="futuristic-select"
-                  :clearable="false"
-                  size="small"
-              >
-                <el-option
-                    v-for="field in availableFields"
-                    :key="field"
-                    :label="field"
-                    :value="field"
-                    class="futuristic-option"
-                />
-              </el-select>
+<!--              <span class="control-label">X轴</span>-->
+<!--              <el-select-->
+<!--                  v-model="selectedXField"-->
+<!--                  placeholder="选择X轴"-->
+<!--                  @change="handleFieldChange"-->
+<!--                  class="futuristic-select"-->
+<!--                  :clearable="false"-->
+<!--                  size="small"-->
+<!--                  popper-class="custom-select-dropdown"-->
+<!--                  popper-append-to-body="false"-->
+<!--                  teleported="false"-->
+<!--              >-->
+<!--                <el-option-->
+<!--                    v-for="field in availableFields"-->
+<!--                    :key="field"-->
+<!--                    :label="field"-->
+<!--                    :value="field"-->
+
+<!--                />-->
+<!--              </el-select>-->
             </div>
-            <div class="control-group">
-              <span class="control-label">Y轴</span>
-              <el-select
-                  v-model="selectedYField"
-                  placeholder="选择Y轴"
-                  @change="handleFieldChange"
-                  class="futuristic-select"
-                  :clearable="false"
-                  size="small"
-              >
-                <el-option
-                    v-for="field in availableFields"
-                    :key="field"
-                    :label="field"
-                    :value="field"
-                    class="futuristic-option"
-                />
-              </el-select>
-            </div>
+<!--            <div class="control-group">-->
+<!--              <span class="control-label">Y轴</span>-->
+<!--              <el-select-->
+<!--                  v-model="selectedYField"-->
+<!--                  placeholder="选择Y轴"-->
+<!--                  @change="handleFieldChange"-->
+<!--                  class="futuristic-select"-->
+<!--                  :clearable="false"-->
+<!--                  size="small"-->
+<!--                  popper-class="custom-select-dropdown"-->
+<!--                  popper-append-to-body="false"-->
+<!--                  teleported="false"-->
+<!--              >-->
+<!--                <el-option-->
+<!--                    v-for="field in availableFields"-->
+<!--                    :key="field"-->
+<!--                    :label="field"-->
+<!--                    :value="field"-->
+
+<!--                />-->
+<!--              </el-select>-->
+<!--            </div>-->
           </div>
         </div>
       </template>
@@ -214,7 +220,7 @@ const updateChart = () => {
   const option = {
     backgroundColor: 'transparent',
     title: {
-      text: props.title,
+      // text: props.title,
       left: 'center',
       textStyle: {
         color: '#7DF9FF',
@@ -277,7 +283,7 @@ const updateChart = () => {
     },
     yAxis: {
       type: 'value',
-      name: selectedYField.value,
+      name: '总数',
       nameTextStyle: {
         color: '#90E0EF',
         fontSize: 12
@@ -424,6 +430,8 @@ $tech-cyan: #7DF9FF;
 $tech-lightblue: #90E0EF;
 $tech-darkblue: #023E8A;
 $tech-text: #CAF0F8;
+$tech-highlight: #FF00FF;
+
 //
 //.bar-chart-container {
 //  width: 100%;
@@ -458,47 +466,42 @@ $tech-text: #CAF0F8;
   text-shadow: 0 0 8px rgba($tech-cyan, 0.5);
 }
 
+//.control-group {
+//  display: flex;
+//  align-items: center;
+//  gap: 10px;
+//  min-width: 220px;
+//
+//  .control-label {
+//    color: $tech-cyan;
+//    font-size: 14px;
+//    white-space: nowrap;
+//    text-shadow: 0 0 4px rgba($tech-cyan, 0.3);
+//    min-width: 40px; // 保证标签对齐
+//  }
+//}
+//.chart-controls {
+//  display: flex;
+//  gap: 20px;
+//  flex-wrap: wrap;
+//}
 .chart-controls {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   flex-wrap: wrap;
+  margin-top: 10px;
 }
-
 .control-group {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 220px;
+  gap: 8px;
+  min-width: 200px;
 
   .control-label {
     color: $tech-cyan;
-    font-size: 14px;
-    white-space: nowrap;
-    text-shadow: 0 0 4px rgba($tech-cyan, 0.3);
-  }
-}
-
-.futuristic-select {
-  width: 180px;
-
-  :deep(.el-input__wrapper) {
-    background: rgba(0, 119, 182, 0.3) !important;
-    border: 1px solid rgba(72, 202, 228, 0.5) !important;
-    box-shadow: 0 0 8px rgba(125, 249, 255, 0.2) !important;
-    height: 32px;
-
-    .el-input__inner {
-      color: $tech-text !important;
-      font-size: 13px;
-
-      &::placeholder {
-        color: rgba($tech-lightblue, 0.7) !important;
-      }
-    }
-  }
-
-  :deep(.el-select__caret) {
-    color: $tech-cyan !important;
+    font-size: 13px;
+    min-width: 30px;
+    text-shadow: 0 0 5px rgba($tech-cyan, 0.3);
   }
 }
 
@@ -575,22 +578,4 @@ $tech-text: #CAF0F8;
   to { transform: rotate(360deg); }
 }
 
-:deep(.el-select-dropdown) {
-  background: $tech-darkblue !important;
-  border: 1px solid $tech-cyan !important;
-  box-shadow: 0 0 15px rgba($tech-cyan, 0.3) !important;
-
-  .el-select-dropdown__item {
-    color: $tech-text;
-
-    &:hover {
-      background: rgba($tech-cyan, 0.1) !important;
-    }
-
-    &.selected {
-      color: $tech-cyan;
-      font-weight: normal;
-    }
-  }
-}
 </style>

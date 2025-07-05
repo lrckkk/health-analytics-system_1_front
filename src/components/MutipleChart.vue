@@ -5,44 +5,44 @@
         <div class="card-header">
           <h3 class="futuristic-title">{{ title }}</h3>
           <div class="chart-controls">
-            <div class="control-group">
-              <span class="control-label">X轴</span>
-              <el-select
-                  v-model="selectedXField"
-                  placeholder="选择X轴"
-                  @change="updateChart"
-                  class="futuristic-select"
-                  :clearable="false"
-                  size="small"
-              >
-                <el-option
-                    v-for="field in availableFields"
-                    :key="field"
-                    :label="field"
-                    :value="field"
-                    class="futuristic-option"
-                />
-              </el-select>
-            </div>
-            <div class="control-group">
-              <span class="control-label">Y轴</span>
-              <el-select
-                  v-model="selectedYFields"
-                  multiple
-                  placeholder="选择Y轴"
-                  @change="updateChart"
-                  class="futuristic-select"
-                  size="small"
-              >
-                <el-option
-                    v-for="field in valueFields"
-                    :key="field"
-                    :label="field"
-                    :value="field"
-                    class="futuristic-option"
-                />
-              </el-select>
-            </div>
+<!--            <div class="control-group">-->
+<!--              <span class="control-label">X轴</span>-->
+<!--              <el-select-->
+<!--                  v-model="selectedXField"-->
+<!--                  placeholder="选择X轴"-->
+<!--                  @change="updateChart"-->
+<!--                  class="futuristic-select"-->
+<!--                  :clearable="false"-->
+<!--                  size="small"-->
+<!--              >-->
+<!--                <el-option-->
+<!--                    v-for="field in availableFields"-->
+<!--                    :key="field"-->
+<!--                    :label="field"-->
+<!--                    :value="field"-->
+<!--                    class="futuristic-option"-->
+<!--                />-->
+<!--              </el-select>-->
+<!--            </div>-->
+<!--            <div class="control-group">-->
+<!--              <span class="control-label">Y轴</span>-->
+<!--              <el-select-->
+<!--                  v-model="selectedYFields"-->
+<!--                  multiple-->
+<!--                  placeholder="选择Y轴"-->
+<!--                  @change="updateChart"-->
+<!--                  class="futuristic-select"-->
+<!--                  size="small"-->
+<!--              >-->
+<!--                <el-option-->
+<!--                    v-for="field in valueFields"-->
+<!--                    :key="field"-->
+<!--                    :label="field"-->
+<!--                    :value="field"-->
+<!--                    class="futuristic-option"-->
+<!--                />-->
+<!--              </el-select>-->
+<!--            </div>-->
           </div>
         </div>
       </template>
@@ -256,7 +256,7 @@ const updateChart = () => {
   const option = {
     backgroundColor: 'transparent',
     title: {
-      text: props.title,
+      // text: props.title,
       left: 'center',
       textStyle: {
         color: '#7DF9FF',

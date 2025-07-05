@@ -159,7 +159,7 @@ const updateChart = () => {
   const option = {
     backgroundColor: 'transparent',
     title: {
-      text: props.title,
+      // text: props.title,
       left: 'center',
       textStyle: {
         color: '#7DF9FF',
