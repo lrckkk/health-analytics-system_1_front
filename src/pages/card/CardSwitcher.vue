@@ -338,9 +338,7 @@ watch(currentIndex, (newVal, oldVal) => {
   position: absolute; /* 所有卡片绝对定位堆叠 */
   width: 100%; /* 卡片自身宽度，比容器小一些形成堆叠感 */
   height: 100%; /* 卡片自身高度，会基于 card-stack-container 的 height 计算 */
-  //max-height: 380px; /* **关键调整**：限制卡片的最大高度，确保图表不会溢出 */
 
-  //box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
   background-color: #f9f9f9; /* 默认背景色 */
   transform-origin: center center;
   will-change: transform, opacity; /* 告知浏览器这些属性会变化，优化性能 */

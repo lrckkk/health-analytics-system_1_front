@@ -489,15 +489,15 @@ const updateChart = () => {
 
   const option = {
     backgroundColor: 'transparent',
-    title: {
-      text: props.title,
-      left: 'center',
-      textStyle: {
-        color: '#7DF9FF',
-        fontSize: 16,
-        fontWeight: 'bold'
-      }
-    },
+    // title: {
+    //   text: props.title,
+    //   left: 'center',
+    //   textStyle: {
+    //     color: '#7DF9FF',
+    //     fontSize: 16,
+    //     fontWeight: 'bold'
+    //   }
+    // },
     tooltip: {
       trigger: 'axis',
       backgroundColor: 'rgba(0, 20, 40, 0.9)',
