@@ -146,21 +146,21 @@ const initParticles = () => {
 
   particleCtx = canvas.getContext('2d')
 
-  // 创建粒子
+  // 创建粒子 - 数量减少到40个以降低负载
   const particles = Array.from({ length: 40 }, () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    size: Math.random() * 1.5 + 0.5,
-    speed: Math.random() * 0.2 + 0.1,
-    opacity: Math.random() * 0.4 + 0.2,
+    size: Math.random() * 1 + 0.5, // 减小粒子大小
+    speed: Math.random() * 0.15 + 0.05, // 降低速度
+    opacity: Math.random() * 0.3 + 0.1, // 降低不透明度
     direction: Math.random() * Math.PI * 2
   }))
 
   const animate = () => {
     if (!particleCtx || !canvas) return
 
-    // 半透明背景用于拖尾效果
-    particleCtx.fillStyle = 'rgba(3, 4, 94, 0.08)'
+    // 使用更透明的背景让拖尾更快消失
+    particleCtx.fillStyle = 'rgba(3, 4, 94, 0.05)' // 更透明
     particleCtx.fillRect(0, 0, canvas.width, canvas.height)
 
     // 绘制粒子
@@ -176,8 +176,9 @@ const initParticles = () => {
           p.x, p.y, 0,
           p.x, p.y, p.size
       )
-      gradient.addColorStop(0, 'rgba(125, 249, 255, 0.8)')
-      gradient.addColorStop(1, 'rgba(125, 249, 255, 0)')
+      // 使用更浅的颜色
+      gradient.addColorStop(0, 'rgba(180, 250, 255, 0.6)') // 更浅的蓝色
+      gradient.addColorStop(1, 'rgba(180, 250, 255, 0)')
 
       particleCtx.beginPath()
       particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
@@ -185,7 +186,12 @@ const initParticles = () => {
       particleCtx.fill()
     })
 
-    animationFrameId = requestAnimationFrame(animate)
+    // 添加帧率控制 - 每两帧渲染一次
+    animationFrameId = requestAnimationFrame(() => {
+      setTimeout(() => {
+        requestAnimationFrame(animate)
+      }, 0)
+    })
   }
 
   animate()
@@ -467,25 +473,6 @@ $tech-highlight: #FF00FF;
   text-shadow: 0 0 8px rgba($tech-cyan, 0.5);
 }
 
-//.control-group {
-//  display: flex;
-//  align-items: center;
-//  gap: 10px;
-//  min-width: 220px;
-//
-//  .control-label {
-//    color: $tech-cyan;
-//    font-size: 14px;
-//    white-space: nowrap;
-//    text-shadow: 0 0 4px rgba($tech-cyan, 0.3);
-//    min-width: 40px; // 保证标签对齐
-//  }
-//}
-//.chart-controls {
-//  display: flex;
-//  gap: 20px;
-//  flex-wrap: wrap;
-//}
 .chart-controls {
   display: flex;
   gap: 15px;
@@ -578,5 +565,7 @@ $tech-highlight: #FF00FF;
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
-
+:deep(.el-card .el-card__body) {
+  padding: 0 !important;
+}
 </style>

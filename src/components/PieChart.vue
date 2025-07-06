@@ -753,4 +753,7 @@ $tech-text: #CAF0F8;
     }
   }
 }
+:deep(.el-card .el-card__body) {
+  padding: 0 !important;
+}
 </style>
