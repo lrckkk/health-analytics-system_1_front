@@ -1,257 +1,3 @@
-<!--<template>-->
-<!--  <div class="line-chart-container">-->
-<!--    &lt;!&ndash; Element Plus 选择器 &ndash;&gt;-->
-<!--    <el-card class="chart-card">-->
-<!--      <template #header>-->
-<!--&lt;!&ndash;        <div>选择X轴字段</div>&ndash;&gt;-->
-<!--&lt;!&ndash;        <div>选择Y轴字段</div>&ndash;&gt;-->
-<!--        <div class="card-header">-->
-<!--&lt;!&ndash;          <span>{{ title }}</span>&ndash;&gt;-->
-<!--          <div class="chart-controls">-->
-<!--&lt;!&ndash;            <div>选择X轴字段</div>&ndash;&gt;-->
-<!--            <el-select-->
-<!--                v-model="selectedXField"-->
-<!--                placeholder="选择X轴字段"-->
-<!--                @change="updateChart"-->
-<!--            >-->
-<!--              <el-option-->
-<!--                  v-for="field in availableFields"-->
-<!--                  :key="field"-->
-<!--                  :label="field"-->
-<!--                  :value="field"-->
-<!--              />-->
-<!--            </el-select>-->
-<!--&lt;!&ndash;            <div>选择Y轴字段</div>&ndash;&gt;-->
-<!--            <el-select-->
-<!--                v-model="selectedYField"-->
-<!--                placeholder="选择Y轴字段"-->
-<!--                @change="updateChart"-->
-<!--            >-->
-<!--              <el-option-->
-<!--                  v-for="field in availableFields"-->
-<!--                  :key="field"-->
-<!--                  :label="field"-->
-<!--                  :value="field"-->
-<!--              />-->
-<!--            </el-select>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </template>-->
-
-<!--      &lt;!&ndash; ECharts 图表容器 &ndash;&gt;-->
-<!--      <div ref="chartRef" class="chart" :style="{ height: height ,width:width}"></div>-->
-<!--    </el-card>-->
-<!--  </div>-->
-<!--</template>-->
-
-<!--<script setup>-->
-<!--import { ref, onMounted, watch, nextTick } from 'vue'-->
-<!--import * as echarts from 'echarts'-->
-<!--import { ElCard, ElSelect, ElOption } from 'element-plus'-->
-
-<!--const props = defineProps({-->
-<!--  // 图表数据-->
-<!--  chartData: {-->
-<!--    type: Array,-->
-<!--    default: () => []-->
-<!--  },-->
-<!--  // 图表标题-->
-<!--  title: {-->
-<!--    type: String,-->
-<!--    default: '数据趋势图'-->
-<!--  },-->
-<!--  // 图表高度-->
-<!--  height: {-->
-<!--    type: String,-->
-<!--    default: '400px'-->
-<!--  },-->
-<!--  width: {-->
-<!--    type: String,-->
-<!--    default: '100%',-->
-<!--  },-->
-<!--  // X轴字段名-->
-<!--  xField: {-->
-<!--    type: String,-->
-<!--    default: ''-->
-<!--  },-->
-<!--  // Y轴字段名-->
-<!--  yField: {-->
-<!--    type: String,-->
-<!--    default: ''-->
-<!--  }-->
-<!--})-->
-
-<!--const chartRef = ref(null)-->
-<!--let chartInstance = null-->
-<!--const availableFields = ref([])-->
-<!--const selectedXField = ref(props.xField)-->
-<!--const selectedYField = ref(props.yField)-->
-
-<!--// 初始化图表-->
-<!--const initChart = () => {-->
-<!--  if (!chartRef.value) return-->
-
-<!--  // 销毁旧实例-->
-<!--  if (chartInstance) {-->
-<!--    chartInstance.dispose()-->
-<!--  }-->
-
-<!--  // 创建新实例-->
-<!--  chartInstance = echarts.init(chartRef.value)-->
-<!--  updateChart()-->
-<!--}-->
-
-<!--// 更新图表数据-->
-<!--const updateChart = () => {-->
-<!--  if (!chartInstance || !props.chartData.length) return-->
-
-<!--  const xData = []-->
-<!--  const yData = []-->
-
-<!--  props.chartData.forEach(item => {-->
-<!--    if (selectedXField.value && item[selectedXField.value] !== undefined) {-->
-<!--      xData.push(item[selectedXField.value])-->
-<!--    }-->
-<!--    if (selectedYField.value && item[selectedYField.value] !== undefined) {-->
-<!--      yData.push(item[selectedYField.value])-->
-<!--    }-->
-<!--  })-->
-
-<!--  const option = {-->
-<!--    title: {-->
-<!--      text: props.title,-->
-<!--      left: 'center'-->
-<!--    },-->
-<!--    tooltip: {-->
-<!--      trigger: 'axis',-->
-<!--      formatter: params => {-->
-<!--        const xValue = params[0].axisValue-->
-<!--        const yValue = params[0].data-->
-<!--        return `${selectedXField.value}: ${xValue}<br/>${selectedYField.value}: ${yValue}`-->
-<!--      }-->
-<!--    },-->
-<!--    legend: {-->
-<!--      data: [selectedYField.value],-->
-<!--      bottom: 10-->
-<!--    },-->
-<!--    grid: {-->
-<!--      left: '3%',-->
-<!--      right: '4%',-->
-<!--      bottom: '15%',-->
-<!--      containLabel: true-->
-<!--    },-->
-<!--    xAxis: {-->
-<!--      type: 'category',-->
-<!--      data: xData,-->
-<!--      name: selectedXField.value,-->
-<!--      axisLabel: {-->
-<!--        rotate: xData.length > 10 ? 45 : 0-->
-<!--      }-->
-<!--    },-->
-<!--    yAxis: {-->
-<!--      type: 'value',-->
-<!--      name: selectedYField.value-->
-<!--    },-->
-<!--    series: [-->
-<!--      {-->
-<!--        name: selectedYField.value,-->
-<!--        type: 'line',-->
-<!--        data: yData,-->
-<!--        smooth: true,-->
-<!--        symbol: 'circle',-->
-<!--        symbolSize: 8,-->
-<!--        itemStyle: {-->
-<!--          color: '#409EFF'-->
-<!--        },-->
-<!--        lineStyle: {-->
-<!--          width: 3-->
-<!--        },-->
-<!--        areaStyle: {-->
-<!--          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [-->
-<!--            { offset: 0, color: 'rgba(64, 158, 255, 0.5)' },-->
-<!--            { offset: 1, color: 'rgba(64, 158, 255, 0.1)' }-->
-<!--          ])-->
-<!--        }-->
-<!--      }-->
-<!--    ]-->
-<!--  }-->
-
-<!--  chartInstance.setOption(option)-->
-<!--}-->
-
-<!--// 提取可用字段-->
-<!--const extractAvailableFields = () => {-->
-<!--  if (!props.chartData.length) {-->
-<!--    availableFields.value = []-->
-<!--    return-->
-<!--  }-->
-
-<!--  const fields = new Set()-->
-<!--  props.chartData.forEach(item => {-->
-<!--    Object.keys(item).forEach(key => {-->
-<!--      fields.add(key)-->
-<!--    })-->
-<!--  })-->
-
-<!--  availableFields.value = Array.from(fields)-->
-
-<!--  // 如果没有指定字段，自动选择前两个字段-->
-<!--  if (!selectedXField.value && availableFields.value.length > 0) {-->
-<!--    selectedXField.value = availableFields.value[0]-->
-<!--  }-->
-<!--  if (!selectedYField.value && availableFields.value.length > 1) {-->
-<!--    selectedYField.value = availableFields.value[1]-->
-<!--  }-->
-<!--}-->
-
-<!--// 监听数据变化-->
-<!--watch(() => props.chartData, (newVal) => {-->
-<!--  extractAvailableFields()-->
-<!--  nextTick(() => {-->
-<!--    updateChart()-->
-<!--  })-->
-<!--}, { deep: true })-->
-
-<!--// 组件挂载时初始化-->
-<!--onMounted(() => {-->
-<!--  extractAvailableFields()-->
-<!--  initChart()-->
-
-<!--  // 窗口大小变化时重新调整图表大小-->
-<!--  window.addEventListener('resize', () => {-->
-<!--    if (chartInstance) {-->
-<!--      chartInstance.resize()-->
-<!--    }-->
-<!--  })-->
-<!--})-->
-<!--</script>-->
-
-<!--<style scoped>-->
-
-<!--.line-chart-container {-->
-<!--  width: 100%;-->
-<!--}-->
-
-<!--.chart-card {-->
-<!--  margin: 20px 0;-->
-<!--}-->
-
-<!--.card-header {-->
-<!--  display: flex;-->
-<!--  justify-content: space-between;-->
-<!--  align-items: center;-->
-<!--}-->
-
-<!--.chart-controls {-->
-<!--  display: flex;-->
-<!--  gap: 10px;-->
-<!--}-->
-
-<!--.chart {-->
-<!--  width: 100%;-->
-<!--}-->
-<!--</style>-->
-
 
 <template>
   <div class="line-chart-container" :style="{ width: computedWidth }">
@@ -260,47 +6,6 @@
         <div class="card-header">
           <h3 class="futuristic-title">{{ title }}</h3>
           <div class="chart-controls">
-<!--            <div class="control-group futuristic-control">-->
-<!--              <span class="control-label">X轴</span>-->
-<!--              <el-select-->
-<!--                  v-model="selectedXField"-->
-
-<!--                  placeholder="选择X轴"-->
-<!--                  @change="handleFieldChange"-->
-<!--                  class="futuristic-select"-->
-
-<!--                  :clearable="false"-->
-<!--                  size="small"-->
-<!--              >-->
-<!--                <el-option-->
-<!--                    v-for="field in availableFields"-->
-<!--                    :key="field"-->
-<!--                    :label="field"-->
-<!--                    :value="field"-->
-<!--                    class="futuristic-option"-->
-<!--                />-->
-<!--              </el-select>-->
-<!--            </div>-->
-<!--            <div class="control-group futuristic-control">-->
-<!--              <span class="control-label glow-text">Y轴</span>-->
-<!--              <el-select-->
-<!--                  v-model="selectedYField"-->
-<!--                  placeholder="选择Y轴"-->
-<!--                  @change="handleFieldChange"-->
-<!--                  class="futuristic-select"-->
-
-<!--                  :clearable="false"-->
-<!--                  size="small"-->
-<!--              >-->
-<!--                <el-option-->
-<!--                    v-for="field in availableFields"-->
-<!--                    :key="field"-->
-<!--                    :label="field"-->
-<!--                    :value="field"-->
-<!--                    class="futuristic-option"-->
-<!--                />-->
-<!--              </el-select>-->
-<!--            </div>-->
           </div>
         </div>
       </template>
@@ -392,21 +97,21 @@ const initParticles = () => {
 
   particleCtx = canvas.getContext('2d')
 
-  // 创建粒子
-  const particles = Array.from({ length: 60 }, () => ({
+  // 创建粒子 - 数量减少到40个以降低负载
+  const particles = Array.from({ length: 40 }, () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    size: Math.random() * 1.5 + 0.5,
-    speed: Math.random() * 0.2 + 0.1,
-    opacity: Math.random() * 0.4 + 0.2,
+    size: Math.random() * 1 + 0.5, // 减小粒子大小
+    speed: Math.random() * 0.15 + 0.05, // 降低速度
+    opacity: Math.random() * 0.3 + 0.1, // 降低不透明度
     direction: Math.random() * Math.PI * 2
   }))
 
   const animate = () => {
     if (!particleCtx || !canvas) return
 
-    // 半透明背景用于拖尾效果
-    particleCtx.fillStyle = 'rgba(3, 4, 94, 0.08)'
+    // 使用更透明的背景让拖尾更快消失
+    particleCtx.fillStyle = 'rgba(3, 4, 94, 0.05)' // 更透明
     particleCtx.fillRect(0, 0, canvas.width, canvas.height)
 
     // 绘制粒子
@@ -422,8 +127,9 @@ const initParticles = () => {
           p.x, p.y, 0,
           p.x, p.y, p.size
       )
-      gradient.addColorStop(0, 'rgba(125, 249, 255, 0.8)')
-      gradient.addColorStop(1, 'rgba(125, 249, 255, 0)')
+      // 使用更浅的颜色
+      gradient.addColorStop(0, 'rgba(180, 250, 255, 0.6)') // 更浅的蓝色
+      gradient.addColorStop(1, 'rgba(180, 250, 255, 0)')
 
       particleCtx.beginPath()
       particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
@@ -431,23 +137,19 @@ const initParticles = () => {
       particleCtx.fill()
     })
 
-    animationFrameId = requestAnimationFrame(animate)
+    // 添加帧率控制 - 每两帧渲染一次
+    animationFrameId = requestAnimationFrame(() => {
+      setTimeout(() => {
+        requestAnimationFrame(animate)
+      }, 0)
+    })
   }
 
   animate()
 }
 
 // 初始化图表
-// const initChart = () => {
-//   if (!chartRef.value) return
-//
-//   if (chartInstance) {
-//     chartInstance.dispose()
-//   }
-//
-//   chartInstance = echarts.init(chartRef.value, 'dark')
-//   updateChart()
-// }
+
 const initChart = () => {
   nextTick(() => { // 确保在 DOM 更新后执行
     if (!chartRef.value) {
@@ -488,7 +190,17 @@ const updateChart = () => {
       yData.push(item[selectedYField.value])
     }
   })
-
+  // 格式化数字显示
+  const formatNumber = (value) => {
+    if (value >= 100000000) {
+      return (value / 100000000).toFixed(1) + '亿'
+    } else if (value >= 10000) {
+      return (value / 10000).toFixed(1) + '万'
+    } else if (value >= 1000) {
+      return (value / 1000).toFixed(1) + '千'
+    }
+    return Math.round(value) // 小于1000的直接取整
+  }
   const option = {
     backgroundColor: 'transparent',
     title: {
@@ -519,7 +231,7 @@ const updateChart = () => {
           </div>
           <div>
             <span style="color:#90E0EF;">${selectedYField.value}: </span>
-            <span style="color:#7DF9FF;font-weight:bold;">${yValue}</span>
+            <span style="color:#7DF9FF;font-weight:bold;">${formatNumber(yValue)}</span>
           </div>
         `
       }
@@ -533,9 +245,9 @@ const updateChart = () => {
       }
     },
     grid: {
-      left: '10%',
+      left: '5%',
       right: '5%',
-      bottom: '15%',
+      bottom: '10%',
       top: '20%',
       containLabel: true
     },
@@ -571,7 +283,10 @@ const updateChart = () => {
       },
       axisLabel: {
         color: '#90E0EF',
-        fontSize: 11
+        fontSize: 11,
+        formatter: function(value) {
+          return formatNumber(value)
+        }
       },
       splitLine: {
         lineStyle: {
@@ -607,7 +322,16 @@ const updateChart = () => {
         itemStyle: {
           color: '#FF00FF'
         }
+      },
+      label: {
+        show: yData.length <= 100, // 数据点较少时才显示标签
+        position: 'top',
+        color: '#CAF0F8',
+        fontSize: 9,
+        offset: [0, 5],
+        formatter: (params) => formatNumber(params.value)
       }
+
     }],
     animationDuration: 800
   }
@@ -881,6 +605,7 @@ onUnmounted(() => {
   height: v-bind(height);
   min-height: 200px;
   flex-grow: 1;
+
 }
 
 .chart {
@@ -961,5 +686,10 @@ onUnmounted(() => {
     min-width: 100%;
   }
 }
+:deep(.el-card .el-card__body) {
+  padding: 0 !important;
+}
+
 </style>
+
 

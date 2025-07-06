@@ -52,11 +52,11 @@ const props = defineProps({
   },
   maxBubbleSize: {
     type: Number,
-    default: 40
+    default: 23
   },
   minBubbleSize: {
     type: Number,
-    default: 20
+    default: 10
   }
 })
 
@@ -84,21 +84,21 @@ const initParticles = () => {
 
   particleCtx = canvas.getContext('2d')
 
-  // 创建粒子
-  const particles = Array.from({ length: 60 }, () => ({
+  // 创建粒子 - 数量减少到40个以降低负载
+  const particles = Array.from({ length: 40 }, () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    size: Math.random() * 1.5 + 0.5,
-    speed: Math.random() * 0.2 + 0.1,
-    opacity: Math.random() * 0.4 + 0.2,
+    size: Math.random() * 1 + 0.5, // 减小粒子大小
+    speed: Math.random() * 0.15 + 0.05, // 降低速度
+    opacity: Math.random() * 0.3 + 0.1, // 降低不透明度
     direction: Math.random() * Math.PI * 2
   }))
 
   const animate = () => {
     if (!particleCtx || !canvas) return
 
-    // 半透明背景用于拖尾效果
-    particleCtx.fillStyle = 'rgba(3, 4, 94, 0.08)'
+    // 使用更透明的背景让拖尾更快消失
+    particleCtx.fillStyle = 'rgba(3, 4, 94, 0.05)' // 更透明
     particleCtx.fillRect(0, 0, canvas.width, canvas.height)
 
     // 绘制粒子
@@ -114,8 +114,9 @@ const initParticles = () => {
           p.x, p.y, 0,
           p.x, p.y, p.size
       )
-      gradient.addColorStop(0, 'rgba(125, 249, 255, 0.8)')
-      gradient.addColorStop(1, 'rgba(125, 249, 255, 0)')
+      // 使用更浅的颜色
+      gradient.addColorStop(0, 'rgba(180, 250, 255, 0.6)') // 更浅的蓝色
+      gradient.addColorStop(1, 'rgba(180, 250, 255, 0)')
 
       particleCtx.beginPath()
       particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
@@ -123,7 +124,12 @@ const initParticles = () => {
       particleCtx.fill()
     })
 
-    animationFrameId = requestAnimationFrame(animate)
+    // 添加帧率控制 - 每两帧渲染一次
+    animationFrameId = requestAnimationFrame(() => {
+      setTimeout(() => {
+        requestAnimationFrame(animate)
+      }, 0)
+    })
   }
 
   animate()
@@ -145,17 +151,28 @@ const initChart = () => {
 // 更新图表数据
 const updateChart = () => {
   if (!chartInstance || !hasData.value) return
-
+  // 格式化数字显示
+  const formatNumber = (value) => {
+    if (value >= 100000000) {
+      return (value / 100000000).toFixed(1) + '亿'
+    } else if (value >= 10000) {
+      return (value / 10000).toFixed(1) + '万'
+    } else if (value >= 1000) {
+      return (value / 1000).toFixed(1) + '千'
+    }
+    return Math.round(value) // 小于1000的直接取整
+  }
   // 准备数据 - 假设数据格式为 [{ year: '2020', count: 100 }, ...]
   const seriesData = props.chartData.map(item => ({
-    name: item.year,
-    value: [item.year, item.count],
-    symbolSize: calculateBubbleSize(item.count)
+    name: String(item.year), // 确保年份是字符串
+    value: [String(item.year), Number(item.count)], // 确保类型正确
+    symbolSize: calculateBubbleSize(item.count),
+    formattedValue: formatNumber(item.count)
   }))
 
-  // 计算最大值用于坐标轴刻度
-  const maxCount = Math.max(...props.chartData.map(item => item.count)) * 1.1
-
+  // 计算最大值并向上取整到最近的合适刻度
+  const maxCount = Math.max(...props.chartData.map(item => item.count))
+  const roundedMax = roundToNiceNumber(maxCount * 1.1)
   const option = {
     backgroundColor: 'transparent',
     title: {
@@ -186,16 +203,17 @@ const updateChart = () => {
           </div>
           <div>
             <span style="color:#90E0EF;">费用: </span>
-            <span style="color:#7DF9FF;font-weight:bold;">${data.value[1]}</span>
+            <span style="color:#7DF9FF;font-weight:bold;">${data.formattedValue}</span>
           </div>
         `
       }
     },
     grid: {
-      left: '10%',
-      right: '5%',
+      left: '5%',
+      right: '10%',
       bottom: '15%',
       top: '20%',
+      // position: 'center',
       containLabel: true
     },
     xAxis: {
@@ -228,7 +246,8 @@ const updateChart = () => {
         color: '#90E0EF',
         fontSize: 12
       },
-      max: maxCount,
+      max: roundedMax,
+      min: 0, // 确保从0开始
       axisLine: {
         lineStyle: {
           color: '#48CAE4',
@@ -237,7 +256,10 @@ const updateChart = () => {
       },
       axisLabel: {
         color: '#90E0EF',
-        fontSize: 11
+        fontSize: 11,
+        formatter: function(value) {
+          return formatNumber(value)
+        }
       },
       splitLine: {
         lineStyle: {
@@ -269,6 +291,14 @@ const updateChart = () => {
           shadowColor: 'rgba(255, 0, 255, 0.5)'
         }
       },
+      label: {
+        show: props.chartData.length <= 100, // 数据点较少时才显示标签
+        position: 'top',
+        color: '#CAF0F8',
+        fontSize: 9,
+        offset: [0, 5],
+        formatter: (params) => formatNumber(params.data.value[1])
+      },
       // 添加缩放动画效果
       animationType: 'scale',
       animationEasing: 'elasticOut',
@@ -282,21 +312,41 @@ const updateChart = () => {
 
   chartInstance.setOption(option, true)
 }
+// 辅助函数：将数字舍入到合适的刻度
+const roundToNiceNumber = (value) => {
+  const exponent = Math.floor(Math.log10(value))
+  const fraction = value / Math.pow(10, exponent)
 
-// 计算气泡大小（根据数量值）
+  let niceFraction
+  if (fraction <= 1.5) niceFraction = 1.5
+  else if (fraction <= 3) niceFraction = 3
+  else if (fraction <= 7) niceFraction = 5
+  else niceFraction = 10
+
+  return niceFraction * Math.pow(10, exponent)
+}
+// 更新calculateBubbleSize函数，添加规范化处理
 const calculateBubbleSize = (value) => {
   const values = props.chartData.map(item => item.count)
   const minVal = Math.min(...values)
   const maxVal = Math.max(...values)
 
+  // 处理所有值相同的情况
   if (maxVal === minVal) {
     return (props.minBubbleSize + props.maxBubbleSize) / 2
   }
 
+  // 对数值进行对数处理，减小极端值的影响
+  const logMin = Math.log10(minVal + 1) // +1防止0值
+  const logMax = Math.log10(maxVal + 1)
+  const logValue = Math.log10(value + 1)
+
+  // 计算规范化后的尺寸
   return props.minBubbleSize +
-      ((value - minVal) / (maxVal - minVal)) *
+      ((logValue - logMin) / (logMax - logMin)) *
       (props.maxBubbleSize - props.minBubbleSize)
 }
+
 
 // 响应式调整
 const handleResize = () => {
@@ -307,19 +357,6 @@ const handleResize = () => {
   }
 }
 
-// // 初始化
-// onMounted(() => {
-//   nextTick(() => {
-//     initChart()
-//     initParticles()
-//     window.addEventListener('resize', handleResize)
-//   })
-// })
-//
-// // 监听数据变化
-// watch(() => props.chartData, () => {
-//   updateChart()
-// }, { deep: true })
 
 
 onMounted(() => {
@@ -415,7 +452,9 @@ $tech-text: #CAF0F8;
   pointer-events: none;
   opacity: 0.6;
 }
-
+:deep(.el-card .el-card__body) {
+  padding: 0 !important;
+}
 .empty-placeholder {
   position: absolute;
   top: 50%;
