@@ -4,7 +4,7 @@
         :width="barChartWidth"
         :chart-data="medicalPersonnelData"
         title="医疗卫生人员统计"
-        height=26vh
+        height=16vh
         x-field="year"
         y-field="count"
         color="#7DF9FF"

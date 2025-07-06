@@ -49,8 +49,7 @@ const routes = [
         name:'Scroll',
         path: '/scroll',
         component: Scroll
-    }
-
+    },
 
 ]
 

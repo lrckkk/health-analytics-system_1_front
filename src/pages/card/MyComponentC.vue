@@ -7,7 +7,7 @@
           :chart-data="costData"
           :width="scatterChartWidth"
           title="医疗费用年度分布"
-          height=26vh
+          height=16vh
           color="#00B4D8"
       />
     </div>

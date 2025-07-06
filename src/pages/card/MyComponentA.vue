@@ -3,7 +3,7 @@
     <simpleline
         :chart-data="medicalData"
         :title="`医疗机构数量变化趋势 - ${regionStore.getDisplayRegion}`"
-        height=26vh
+        height=16vh
         width=100%
         x-field="year"
         y-field="count"

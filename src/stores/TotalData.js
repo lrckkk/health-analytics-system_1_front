@@ -8,7 +8,102 @@ import { ref } from 'vue';
 import { provinceIdMap } from '../utils/mapid.js'; // 假设 provinceIdMap 在 src/utils/mapid.js
 
 // 导入你的通用转换类 (确保路径正确)
-import { IdToNameMapper } from '../utils/IdToNameMapper.js'; // 假设 IdToNameMapper 在 src/utils/IdToNameMapper.js
+// import { IdToNameMapper } from '../utils/IdToNameMapper.js'; // 假设 IdToNameMapper 在 src/utils/IdToNameMapper.js
+import request from "@/utils/request.js";
+
+// === IdToNameMapper 类定义开始 ===
+// 为了确保该文件独立运行，将 IdToNameMapper 的定义直接包含在此处。
+// 如果您在 src/utils/IdToNameMapper.js 中有更复杂的实现，请确保它与此兼容。
+export class IdToNameMapper {
+    /**
+     * 构造函数
+     * @param {Object} idMap 一个键值对为 { id: name } 的映射对象。
+     * 例如: { 1: '北京', 2: '上海', ... }
+     */
+    constructor(idMap) {
+        if (typeof idMap !== 'object' || idMap === null) {
+            throw new Error('IdToNameMapper: 构造函数需要一个有效的 idMap 对象。');
+        }
+        this.idMap = idMap;
+    }
+
+    /**
+     * 将一个 ID 转换为对应的名称。
+     * @param {number | string} id 要转换的 ID。
+     * @returns {string | undefined} 对应的名称，如果未找到则返回 undefined。
+     */
+    getName(id) {
+        return this.idMap[id];
+    }
+
+    /**
+     * 递归地处理数据，将对象中特定字段的 ID 转换为名称。
+     * 默认情况下，它会查找名为 'id' 的字段，并将其替换为 'name'。
+     * 你可以通过 options 配置要查找的 ID 字段名和替换后的名称字段名。
+     *
+     * @param {any} data 要处理的原始数据 (可以是对象、数组或基本类型)。
+     * @param {Object} [options] 配置选项。
+     * @param {string} [options.idKey='id'] 原始数据中表示 ID 的字段名。
+     * @param {string} [options.nameKey='name'] 转换后表示名称的字段名。
+     * @param {boolean} [options.deleteOriginalId=true] 是否删除原始的 ID 字段。
+     * @param {string | null} [options.unknownName='未知'] 如果找不到对应的名称，使用的默认名称。设置为 null 则保持 id 不变。
+     * @returns {any} 转换后的数据副本。
+     */
+    mapData(data, options = {}) {
+        const defaultOptions = {
+            idKey: 'id',
+            nameKey: 'name',
+            deleteOriginalId: true,
+            unknownName: '未知'
+        };
+        const opts = { ...defaultOptions, ...options };
+
+        // 处理基本类型数据
+        if (data === null || typeof data !== 'object') {
+            return data;
+        }
+
+        // 处理数组
+        if (Array.isArray(data)) {
+            return data.map(item => this.mapData(item, opts));
+        }
+
+        // 处理对象
+        const newData = { ...data }; // 创建一个浅拷贝以避免直接修改原数据
+
+        if (newData.hasOwnProperty(opts.idKey)) {
+            const idValue = newData[opts.idKey];
+            const nameValue = this.getName(idValue);
+
+            if (nameValue !== undefined) {
+                newData[opts.nameKey] = nameValue;
+            } else if (opts.unknownName !== null) {
+                newData[opts.nameKey] = opts.unknownName;
+                console.warn(`IdToNameMapper: 未找到 ID 为 "${idValue}" 的名称，使用默认值 "${opts.unknownName}"。`);
+            } else {
+                // 如果 unknownName 为 null，则保持原始 ID 字段不变
+                console.warn(`IdToNameMapper: 未找到 ID 为 "${idValue}" 的名称，ID 字段保留。`);
+            }
+
+            if (opts.deleteOriginalId && newData.hasOwnProperty(opts.idKey) && opts.idKey !== opts.nameKey) {
+                // 只有在 idKey 和 nameKey 不同时才删除，避免删除刚添加的 name
+                delete newData[opts.idKey];
+            }
+        }
+
+        // 递归处理对象中的其他属性
+        for (const key in newData) {
+            if (Object.prototype.hasOwnProperty.call(newData, key) && typeof newData[key] === 'object') {
+                newData[key] = this.mapData(newData[key], opts);
+            }
+        }
+
+        return newData;
+    }
+}
+// === IdToNameMapper 类定义结束 ===
+
+
 const sectorColors = {
     '工业': '#FF6B6B',
     '农业': '#4ECDC4',
@@ -25,106 +120,111 @@ export const useMapDataStore = defineStore('mapData', () => {
     const pieSeriesData = ref([]);
     const isLoading = ref(false);
     const error = ref(null);
+    const populationData = ref([]);
+    const institutionData = ref([]);
+    const personnelData = ref([]);
+    const bedData = ref([]);
+    const outpatientVisitsData = ref([]);
+    const totalCostData = ref([]);
+    // 确保 fetchedScatterData 是一个常量，并且包含所有可能的省份坐标
+    const fetchedScatterData = [
+        { name: '北京', value: [116.4074, 39.9042, 90] },
+        { name: '上海', value: [121.4737, 31.2304, 85] },
+        { name: '广东', value: [113.2644, 23.1291, 80] }, // 广州所在省
+        { name: '四川', value: [104.0665, 30.5728, 75] }, // 成都所在省
+        { name: '湖北', value: [114.3055, 30.5931, 70] }, // 武汉所在省
+        { name: '陕西', value: [108.9398, 34.3416, 70] }, // 西安所在省
+        { name: '浙江', value: [120.1551, 30.2741, 75] }, // 杭州所在省
+        { name: '江苏', value: [118.7969, 32.0603, 70] }, // 南京所在省
+        { name: '重庆', value: [106.5045, 29.5332, 68] }, // 直辖市
+        { name: '天津', value: [117.1902, 39.1255, 60] }, // 直辖市
+        { name: '湖南', value: [112.9823, 28.1941, 65] }, // 长沙所在省
+        { name: '河南', value: [113.6654, 34.7579, 62] }, // 郑州所在省
+        { name: '山东', value: [120.3551, 36.0883, 67] }, // 青岛所在省
+        { name: '福建', value: [118.1000, 24.4600, 58] }, // 厦门所在省
+        { name: '安徽', value: [117.2830, 31.8612, 59] }, // 合肥所在省
+        { name: '辽宁', value: [123.4290, 41.7922, 53] }, // 沈阳所在省
+        { name: '黑龙江', value: [126.6424, 45.7569, 50] }, // 哈尔滨所在省
+        { name: '吉林', value: [125.3245, 43.8868, 52] }, // 长春所在省
+        { name: '河北', value: [114.5025, 38.0455, 57] }, // 石家庄所在省
+        { name: '山西', value: [112.5492, 37.8703, 54] }, // 太原所在省
+        { name: '江西', value: [115.8921, 28.6765, 56] }, // 南昌所在省
+        { name: '广西', value: [108.3200, 22.8168, 48] }, // 南宁所在省
+        { name: '云南', value: [102.7122, 25.0406, 47] }, // 昆明所在省
+        { name: '贵州', value: [106.7134, 26.5783, 46] }, // 贵阳所在省
+        { name: '西藏', value: [91.1322, 29.6603, 30] }, // 拉萨所在省
+        { name: '新疆', value: [87.6177, 43.7928, 28] }, // 乌鲁木齐所在省
+        { name: '甘肃', value: [103.7342, 36.0827, 35] }, // 兰州所在省
+        { name: '宁夏', value: [106.2781, 38.4664, 32] }, // 银川所在省
+        { name: '青海', value: [101.7789, 36.6232, 29] }, // 西宁所在省
+        { name: '海南', value: [110.3312, 20.0319, 45] }, // 海口所在省
+        { name: '内蒙古', value: [111.7383, 40.8183, 38] }, // 呼和浩特所在省
+    ];
+
 
     // --- 新增：创建 IdToNameMapper 实例 ---
     const provinceMapper = new IdToNameMapper(provinceIdMap);
 
+    const fetchcountryData =async () => {
+        const rawdata = await request.get(`/api/provinces/latest`);
+
+        populationData.value = [];
+        institutionData.value = [];
+        personnelData.value = [];
+        bedData.value = [];
+        outpatientVisitsData.value = [];
+        totalCostData.value = [];
+        rawdata.forEach(item => {
+            const provinceId = item.provinceId;
+
+            // 1. 人口总数
+            if (item.population && item.population.total !== undefined) {
+                populationData.value.push({ id: provinceId, value: item.population.total });
+            }
+
+            // 2. 医疗机构总数
+            if (item.institution && item.institution.total !== undefined) {
+                institutionData.value.push({ id: provinceId, value: item.institution.total });
+            }
+
+            // 3. 医疗人员总数
+            if (item.personnel && item.personnel.total !== undefined) {
+                personnelData.value.push({ id: provinceId, value: item.personnel.total });
+            }
+
+            // 4. 床位总数
+            if (item.bed && item.bed.total !== undefined) {
+                bedData.value.push({ id: provinceId, value: item.bed.total });
+            }
+
+            // 5. 门诊就诊人次
+            if (item.service && item.service.outpatientVisits !== undefined) {
+                outpatientVisitsData.value.push({ id: provinceId, value: item.service.outpatientVisits });
+            }
+
+            // 6. 医疗总费用
+            if (item.cost && item.cost.total !== undefined) {
+                totalCostData.value.push({ id: provinceId, value: item.cost.total });
+            }
+        });
+
+    };
     // actions: Used to modify state or perform asynchronous operations
     const fetchMapData = async () => {
         isLoading.value = true;
         error.value = null; // Reset any previous errors
 
         try {
-            // **这部分是模拟从后端获取的原始数据，其中包含 ID。**
-            // 在实际应用中，你会用 axios.get 或 fetch 来从 API 获取数据，例如：
-            // const backendResponse = await axios.get('/api/province-data-with-ids');
-            // const rawFetchedProvinceDataFromBackend = backendResponse.data;
-
-            // 模拟后端返回的原始省份数据（包含 ID）
-            const rawFetchedProvinceDataFromBackend = [
-                { id: 24, value: 126 }, // 广东
-                { id: 21, value: 94 },  // 河南
-                { id: 20, value: 101 }, // 山东
-                { id: 15, value: 85 },  // 江苏
-                { id: 26, value: 83 },  // 四川
-                { id: 10, value: 75 },  // 河北
-                { id: 23, value: 66 },  // 湖南
-                { id: 17, value: 63 },  // 安徽
-                { id: 16, value: 65 },  // 浙江
-                { id: 22, value: 59 },  // 湖北
-                { id: 6, value: 49 },   // 广西
-                { id: 19, value: 45 },  // 江西
-                { id: 28, value: 48 },  // 云南
-                { id: 29, value: 39 },  // 陕西
-                { id: 12, value: 43 },  // 辽宁
-                { id: 13, value: 27 },  // 吉林
-                { id: 11, value: 37 },  // 山西
-                { id: 9, value: 25.8 }, // 新疆
-                { id: 30, value: 26 },  // 甘肃
-                { id: 25, value: 10 },  // 海南
-                { id: 8, value: 6 },    // 宁夏
-                { id: 31, value: 6 },   // 青海
-                { id: 7, value: 3.5 },  // 西藏
-                { id: 1, value: 21.9 }, // 北京
-                { id: 3, value: 24.9 }, // 上海
-                { id: 2, value: 13 },   // 天津
-                { id: 32, value: 7.5 }, // 香港
-                { id: 33, value: 0.7 }, // 澳门
-                { id: 34, value: 0 },   // 台湾
-                { id: 14, value: 18 },  // 黑龙江
-                { id: 5, value: 23.96 }, // 内蒙古
-                { id: 4, value: 16 },    // 重庆
-                { id: 999, value: 100 }  // 模拟一个不存在的ID，用于测试 '未知' 处理
-            ];
-
-            // --- 使用 IdToNameMapper 转换 provinceData ---
-            // provinceMapper.mapData 会遍历 rawFetchedProvinceDataFromBackend
-            // 找到每个对象的 'id' 字段，并根据 provinceIdMap 将其转换为 'name' 字段。
-            // 转换后的数据将赋值给 provinceData.value。
-            provinceData.value = provinceMapper.mapData(rawFetchedProvinceDataFromBackend);
+            await fetchcountryData()
+            console.log("cnm"+populationData.value);
+            provinceData.value = provinceMapper.mapData(populationData.value);
 
             // 打印转换后的 provinceData，以便你查看结果
             console.log("转换后的 provinceData:", provinceData.value);
 
             // 以下是其他数据的模拟，保持不变
             // 注意：这些数据目前已经是带 `name` 字段的，所以不需要额外转换
-            const fetchedScatterData = [
-                { name: '北京', value: [116.4074, 39.9042, 90] },
-                { name: '上海', value: [121.4737, 31.2304, 85] },
-                { name: '广东', value: [113.2644, 23.1291, 80] }, // 广州所在省
-                { name: '四川', value: [104.0665, 30.5728, 75] }, // 成都所在省
-                { name: '湖北', value: [114.3055, 30.5931, 70] }, // 武汉所在省
-                { name: '陕西', value: [108.9398, 34.3416, 70] }, // 西安所在省
-                { name: '浙江', value: [120.1551, 30.2741, 75] }, // 杭州所在省
-                { name: '江苏', value: [118.7969, 32.0603, 70] }, // 南京所在省
-                { name: '重庆', value: [106.5045, 29.5332, 68] }, // 直辖市
-                { name: '广东', value: [114.0579, 22.5431, 82] }, // 深圳所在省
-                { name: '天津', value: [117.1902, 39.1255, 60] }, // 直辖市
-                { name: '江苏', value: [120.6196, 31.3179, 72] }, // 苏州所在省
-                { name: '湖南', value: [112.9823, 28.1941, 65] }, // 长沙所在省
-                { name: '河南', value: [113.6654, 34.7579, 62] }, // 郑州所在省
-                { name: '山东', value: [120.3551, 36.0883, 67] }, // 青岛所在省
-                { name: '福建', value: [118.1000, 24.4600, 58] }, // 厦门所在省
-                { name: '福建', value: [119.3062, 26.0753, 55] }, // 福州所在省
-                { name: '安徽', value: [117.2830, 31.8612, 59] }, // 合肥所在省
-                { name: '山东', value: [117.0009, 36.6758, 61] }, // 济南所在省
-                { name: '辽宁', value: [123.4290, 41.7922, 53] }, // 沈阳所在省
-                { name: '黑龙江', value: [126.6424, 45.7569, 50] }, // 哈尔滨所在省
-                { name: '吉林', value: [125.3245, 43.8868, 52] }, // 长春所在省
-                { name: '河北', value: [114.5025, 38.0455, 57] }, // 石家庄所在省
-                { name: '山西', value: [112.5492, 37.8703, 54] }, // 太原所在省
-                { name: '江西', value: [115.8921, 28.6765, 56] }, // 南昌所在省
-                { name: '广西', value: [108.3200, 22.8168, 48] }, // 南宁所在省
-                { name: '云南', value: [102.7122, 25.0406, 47] }, // 昆明所在省
-                { name: '贵州', value: [106.7134, 26.5783, 46] }, // 贵阳所在省
-                { name: '西藏', value: [91.1322, 29.6603, 30] }, // 拉萨所在省
-                { name: '新疆', value: [87.6177, 43.7928, 28] }, // 乌鲁木齐所在省
-                { name: '甘肃', value: [103.7342, 36.0827, 35] }, // 兰州所在省
-                { name: '宁夏', value: [106.2781, 38.4664, 32] }, // 银川所在省
-                { name: '青海', value: [101.7789, 36.6232, 29] }, // 西宁所在省
-                { name: '海南', value: [110.3312, 20.0319, 45] }, // 海口所在省
-                { name: '内蒙古', value: [111.7383, 40.8183, 38] }, // 呼和浩特所在省
-            ];
+
             // 为了不直接修改原始常量，我们先创建一个拷贝
             const updatedScatterData = JSON.parse(JSON.stringify(fetchedScatterData));
 
@@ -163,43 +263,6 @@ export const useMapDataStore = defineStore('mapData', () => {
                 '天津': [117.1902, 39.1255], '重庆': [106.5045, 29.5332], '香港': [114.1694, 22.3193],
                 '澳门': [113.5439, 22.1987], '台湾': [120.9605, 23.6938] // Assuming a dummy position if no real data
             };
-
-            const provincePieData = {
-                '广东': [{ name: '工业', value: 60, color: '#FF6B6B' }, { name: '农业', value: 30, color: '#4ECDC4' }, { name: '服务业', value: 36, color: '#FFD166' }],
-                '北京': [{ name: '工业', value: 20, color: '#FF6B6B' }, { name: '农业', value: 5, color: '#4ECDC4' }, { name: '服务业', value: 75, color: '#FFD166' }],
-                '上海': [{ name: '工业', value: 45, color: '#FF6B6B' }, { name: '农业', value: 5, color: '#4ECDC4' }, { name: '服务业', value: 50, color: '#FFD166' }],
-                '江苏': [{ name: '工业', value: 55, color: '#FF6B6B' }, { name: '农业', value: 20, color: '#4ECDC4' }, { name: '服务业', value: 35, color: '#FFD166' }],
-                '浙江': [{ name: '工业', value: 48, color: '#FF6B6B' }, { name: '农业', value: 15, color: '#4ECDC4' }, { name: '服务业', value: 37, color: '#FFD166' }],
-                '四川': [{ name: '工业', value: 40, color: '#FF6B6B' }, { name: '农业', value: 30, color: '#4ECDC4' }, { name: '服务业', value: 30, color: '#FFD166' }],
-                '山东': [{ name: '工业', value: 50, color: '#FF6B6B' }, { name: '农业', value: 25, color: '#4ECDC4' }, { name: '服务业', value: 25, color: '#FFD166' }],
-                '河南': [{ name: '工业', value: 40, color: '#FF6B6B' }, { name: '农业', value: 40, color: '#4ECDC4' }, { name: '服务业', value: 20, color: '#FFD166' }],
-                '河北': [{ name: '工业', value: 45, color: '#FF6B6B' }, { name: '农业', value: 35, color: '#4ECDC4' }, { name: '服务业', value: 20, color: '#FFD166' }],
-                '湖南': [{ name: '工业', value: 35, color: '#FF6B6B' }, { name: '农业', value: 30, color: '#4ECDC4' }, { name: '服务业', value: 35, color: '#FFD166' }],
-                '湖北': [{ name: '工业', value: 42, color: '#FF6B6B' }, { name: '农业', value: 28, color: '#4ECDC4' }, { name: '服务业', value: 30, color: '#FFD166' }],
-                '安徽': [{ name: '工业', value: 38, color: '#FF6B6B' }, { name: '农业', value: 32, color: '#4ECDC4' }, { name: '服务业', value: 30, color: '#FFD166' }],
-                '辽宁': [{ name: '工业', value: 40, color: '#FF6B6B' }, { name: '农业', value: 25, color: '#4ECDC4' }, { name: '服务业', value: 35, color: '#FFD166' }],
-                '陕西': [{ name: '工业', value: 30, color: '#FF6B6B' }, { name: '农业', value: 20, color: '#4ECDC4' }, { name: '服务业', value: 50, color: '#FFD166' }],
-                '广西': [{ name: '工业', value: 25, color: '#FF6B6B' }, { name: '农业', value: 40, color: '#4ECDC4' }, { name: '服务业', value: 35, color: '#FFD166' }],
-                '江西': [{ name: '工业', value: 30, color: '#FF6B6B' }, { name: '农业', value: 35, color: '#4ECDC4' }, { name: '服务业', value: 35, color: '#FFD166' }],
-                '云南': [{ name: '工业', value: 20, color: '#FF6B6B' }, { name: '农业', value: 50, color: '#4ECDC4' }, { name: '服务业', value: 30, color: '#FFD166' }],
-                '黑龙江': [{ name: '工业', value: 30, color: '#FF6B6B' }, { name: '农业', value: 50, color: '#4ECDC4' }, { name: '服务业', value: 20, color: '#FFD166' }],
-                '吉林': [{ name: '工业', value: 35, color: '#FF6B6B' }, { name: '农业', value: 45, color: '#4ECDC4' }, { name: '服务业', value: 20, color: '#FFD166' }],
-                '山西': [{ name: '工业', value: 50, color: '#FF6B6B' }, { name: '农业', value: 20, color: '#4ECDC4' }, { name: '服务业', value: 30, color: '#FFD166' }],
-                '甘肃': [{ name: '工业', value: 25, color: '#FF6B6B' }, { name: '农业', value: 40, color: '#4ECDC4' }, { name: '服务业', value: 35, color: '#FFD166' }],
-                '内蒙古': [{ name: '工业', value: 30, color: '#FF6B6B' }, { name: '农业', value: 40, color: '#4ECDC4' }, { name: '服务业', value: 30, color: '#FFD166' }],
-                '新疆': [{ name: '工业', value: 20, color: '#FF6B6B' }, { name: '农业', value: 40, color: '#4ECDC4' }, { name: '服务业', value: 40, color: '#FFD166' }],
-                '宁夏': [{ name: '工业', value: 30, color: '#FF6B6B' }, { name: '农业', value: 30, color: '#4ECDC4' }, { name: '服务业', value: 40, color: '#FFD166' }],
-                '青海': [{ name: '工业', value: 20, color: '#FF6B6B' }, { name: '农业', value: 50, color: '#4ECDC4' }, { name: '服务业', value: 30, color: '#FFD166' }],
-                '西藏': [{ name: '工业', value: 10, color: '#FF6B6B' }, { name: '农业', value: 60, color: '#4ECDC4' }, { name: '服务业', value: 30, color: '#FFD166' }],
-                '海南': [{ name: '工业', value: 20, color: '#FF6B6B' }, { name: '农业', value: 30, color: '#4ECDC4' }, { name: '服务业', value: 50, color: '#FFD166' }],
-                '天津': [{ name: '工业', value: 50, color: '#FF6B6B' }, { name: '农业', value: 10, color: '#4ECDC4' }, { name: '服务业', value: 40, color: '#FFD166' }],
-                '重庆': [{ name: '工业', value: 45, color: '#FF6B6B' }, { name: '农业', value: 20, color: '#4ECDC4' }, { name: '服务业', value: 35, color: '#FFD166' }],
-                '香港': [{ name: '工业', value: 5, color: '#FF6B6B' }, { name: '农业', value: 0, color: '#4ECDC4' }, { name: '服务业', value: 95, color: '#FFD166' }],
-                '澳门': [{ name: '工业', value: 0, color: '#FF6B6B' }, { name: '农业', value: 0, color: '#4ECDC4' }, { name: '服务业', value: 100, color: '#FFD166' }],
-                '台湾': [{ name: '工业', value: 40, color: '#FF6B6B' }, { name: '农业', value: 20, color: '#4ECDC4' }, { name: '服务业', value: 40, color: '#FFD166' }] // Dummy data if not provided by backend
-            };
-
-
 
             const rawFetchedPieDataFromBackend = [
                 {
@@ -288,6 +351,57 @@ export const useMapDataStore = defineStore('mapData', () => {
             isLoading.value = false;
         }
     };
+    const fetchsatterdata = (param1) => {
+        console.log(`fetchsatterdata called with: ${param1}`);
+
+        let rawDataToMap = []; // 用于存储即将被映射的原始数据
+        if (param1 === 'populationData') {
+            rawDataToMap = populationData.value;
+        } else if (param1 === 'institutionData') {
+            rawDataToMap = institutionData.value;
+        } else if (param1 === 'personnelData') {
+            rawDataToMap = personnelData.value;
+        } else if (param1 === 'bedData') {
+            rawDataToMap = bedData.value;
+        } else if (param1 === 'outpatientVisitsData') {
+            rawDataToMap = outpatientVisitsData.value;
+        } else if (param1 === 'totalCostData') {
+            rawDataToMap = totalCostData.value;
+        }
+        console.log("fetchsatterdata: 原始数据 (rawDataToMap):", rawDataToMap);
+
+        // 关键修复：将原始数据通过 provinceMapper.mapData 进行转换，确保 provinceData.value 包含 name 属性
+        provinceData.value = provinceMapper.mapData(rawDataToMap);
+        console.log("fetchsatterdata: provinceData.value (映射后):", provinceData.value);
+
+        const updatedScatterData = JSON.parse(JSON.stringify(fetchedScatterData));
+
+        // 创建一个 Map，用于快速查找后端数据中省份名称对应的值
+        const backendValueMapForScatter = new Map();
+        provinceData.value.forEach(item => {
+            // 此时 item.name 应该已经存在且正确
+            if (item.name && item.name !== '未知') {
+                backendValueMapForScatter.set(item.name, item.value);
+            }
+        });
+        console.log("fetchsatterdata: backendValueMapForScatter:", backendValueMapForScatter);
+
+
+        // 遍历 updatedScatterData，并根据 backendValueMapForScatter 更新其 value 数组的最后一个值
+        updatedScatterData.forEach(scatterItem => {
+            if (backendValueMapForScatter.has(scatterItem.name)) {
+                // 如果在后端数据中找到了对应的省份名称
+                // 则更新 scatterData 中该项的 value 数组的最后一个元素 (索引为 2)
+                scatterItem.value[2] = backendValueMapForScatter.get(scatterItem.name);
+            } else {
+                // 如果 scatterData 中的某个省份在当前 selectedData 中没有对应的值，可以考虑设置为0或保持不变
+                // console.warn(`fetchsatterdata: Scatter item "${scatterItem.name}" not found in current selected data.`);
+            }
+        });
+        scatterData.value = updatedScatterData;
+        console.log("fetchsatterdata: 更新后的 scatterData:", scatterData.value);
+
+    };
 
     return {
         provinceData,
@@ -295,6 +409,15 @@ export const useMapDataStore = defineStore('mapData', () => {
         pieSeriesData,
         isLoading,
         error,
-        fetchMapData // Expose the action
+        fetchMapData, // Expose the action
+        fetchcountryData,
+        fetchsatterdata,
+        populationData,
+        institutionData,
+        personnelData,
+        bedData,
+        outpatientVisitsData,
+        totalCostData,
+
     };
 });

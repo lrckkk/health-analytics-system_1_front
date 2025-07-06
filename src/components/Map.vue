@@ -28,7 +28,6 @@ const emit = defineEmits(['region-clicked']);
 // 导入 Element Plus 组件
 import { ElButton, ElIcon } from 'element-plus';
 // 导入 Element Plus 图标 (确保你已安装 @element-plus/icons-vue)
-// 注意：'Map' 图标已更正为 'Location'，'ScatterChart' 图标已更正为 'TrendCharts'
 import { TrendCharts, PieChart, Location } from '@element-plus/icons-vue';
 
 // 定义 props，接收父组件传入的数据
@@ -52,9 +51,8 @@ const chartInstance = ref(null);
 // 用于存储中国 GeoJSON 数据，避免重复加载
 const chinaGeoJson = ref(null);
 
-// 存储从 props 获取的最新数据副本，用于图表渲染
-const currentScatterData = ref([]);
-const currentPieSeriesData = ref([]);
+// 存储当前显示的模式，用于 watch 逻辑判断
+const currentViewMode = ref('scatter'); // 默认模式
 
 /**
  * 销毁当前的 ECharts 实例。
@@ -83,6 +81,8 @@ const initChart = (mode) => {
 
   const myChart = echarts.init(chartDom, null, { renderer: 'canvas' });
   chartInstance.value = myChart; // 保存新实例的引用
+  currentViewMode.value = mode; // 更新当前模式
+
   myChart.on('click', function(params) {
     if (params.componentType === 'series' && params.seriesType === 'map') {
       const regionName = params.name;
@@ -110,8 +110,8 @@ const initChart = (mode) => {
         }
         if (params.seriesId === 'pie') {
           let tooltipHtml = `${params.name}<br/>`;
-          // 根据名称找到对应的饼图数据
-          const pieDataForTooltip = currentPieSeriesData.value.find(d => d.name === params.name)?.pieData || [];
+          // 从 props 中获取饼图数据
+          const pieDataForTooltip = props.pieSeriesData.find(d => d.name === params.name)?.pieData || [];
           pieDataForTooltip.forEach(item => {
             tooltipHtml += `<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${item.color};"></span>${item.name}: ${item.value}<br/>`;
           });
@@ -147,16 +147,16 @@ const initChart = (mode) => {
   if (mode === 'scatter') {
     // 散点图模式：显示 visualMap，作用于地图和散点图
     option.visualMap = {
-      show: true, min: 0, max: 200,
+      show: true, min: 0, max: 200, // visualMap 的 min/max 仍可用于颜色映射
       inRange: { color: ['#0080F5', '#143E9F'] },
       text: ['高', '低'], calculable: true, orient: 'vertical',
       right: 10, top: '50%',
-      seriesIndex: [0], // visualMap 作用于地图（索引0）和散点图（索引1）
+      seriesIndex: [0], // visualMap 作用于地图（索引0）
     };
     option.series = [
       { // 0. 地图系列 (作为背景)
         id: 'map', type: 'map', map: 'china', geoIndex: 0,
-        data: props.provinceData,
+        data: props.provinceData, // 从 props 获取数据
         itemStyle: { areaColor: '#143E9F' },
         emphasis: { itemStyle: { areaColor: '#000080' } }
       },
@@ -164,24 +164,32 @@ const initChart = (mode) => {
         id: 'scatter', name: '热点', type: 'scatter', coordinateSystem: 'geo',
         symbol: 'circle',
         // val[2] 是散点数据的第三个值 (通常是指标值)，用于决定大小
-        symbolSize: val => val && val[2] !== undefined ? val[2] / 3 : 10, // 确保安全访问并提供默认值
+        symbolSize: val => {
+          const dataVal = val && val[2] !== undefined ? val[2] : 0;
+          // 尝试从 props.scatterData[5].value[2] 获取除数，如果不存在或无效则默认为 1
+          const divisor = props.scatterData[23].value[2]
+
+          // 执行除法，并确保结果不会过小，给一个最小尺寸
+          // 增加乘数因子 1.5，并提高最小尺寸到 8 像素
+          return Math.max((dataVal / divisor) * 8+6, 8);
+        },
         itemStyle: { color: 'yellow', borderColor: 'yellow', borderWidth: 1 }, // **散点颜色设置为黄色**
-        data: currentScatterData.value
+        data: props.scatterData // 从 props 获取数据
       }
     ];
   } else if (mode === 'pie') {
-    // 饼图模式：不显示 visualMap
+    // 饼图模式：显示 visualMap (根据之前的要求，这里也显示 visualMap)
     option.visualMap = { show: true,
       min: 0, max: 200,
       inRange: { color: ['#0080F5', '#143E9F'] },
       text: ['高', '低'], calculable: true, orient: 'vertical',
       right: 10, top: '50%',
-      seriesIndex: [0], // visualMap 作用于地图（索引0）和散点图（索引1）
+      seriesIndex: [0], // visualMap 作用于地图
     };
     option.series = [
       { // 0. 地图系列 (作为背景，保持其固有颜色)
         id: 'map', type: 'map', map: 'china', geoIndex: 0,
-        data: props.provinceData,
+        data: props.provinceData, // 从 props 获取数据
         itemStyle: {
           areaColor: '#143E9F', // **显式设置地图区域颜色，解决变红问题**
           borderColor: '#79C9FB', borderWidth: 1
@@ -191,14 +199,14 @@ const initChart = (mode) => {
       { // 1. 自定义饼图系列
         id: 'pie', name: '产业分布', type: 'custom', coordinateSystem: 'geo',
         zlevel: 10, // 确保饼图在地图上方
-        data: currentPieSeriesData.value, // 直接使用饼图数据
+        data: props.pieSeriesData, // 从 props 获取数据
         renderItem: (params, api) => {
           // 获取地理坐标并转换为像素坐标
           const point = api.coord([api.value(0), api.value(1)]);
           if (!point) return null; // 如果无法获取像素坐标，不渲染
 
-          // 从 currentPieSeriesData 中找到当前数据项对应的饼图详细数据
-          const pieData = currentPieSeriesData.value[params.dataIndex]?.pieData;
+          // 从 props 的 pieSeriesData 中找到当前数据项对应的饼图详细数据
+          const pieData = props.pieSeriesData[params.dataIndex]?.pieData;
           if (!pieData || pieData.length === 0) return null; // 没有饼图数据则不渲染
 
           const total = pieData.reduce((sum, item) => sum + item.value, 0);
@@ -232,7 +240,7 @@ const initChart = (mode) => {
     option.series = [
       { // 0. 地图系列
         id: 'map', type: 'map', map: 'china', geoIndex: 0,
-        data: props.provinceData,
+        data: props.provinceData, // 从 props 获取数据
         itemStyle: { areaColor: '#143E9F' },
         emphasis: { itemStyle: { areaColor: '#000080' } }
       }
@@ -264,50 +272,46 @@ onMounted(async () => {
     console.error('加载中国GeoJSON数据失败:', error);
   }
 
-  // 初始化本地数据副本，确保有数据可用
-  currentScatterData.value = props.scatterData;
-  currentPieSeriesData.value = props.pieSeriesData;
-
   // 默认显示散点图模式
   initChart('scatter');
 });
 
 // --- 监听 props 变化并更新图表 ---
-// 当 scatterData 变化时，如果当前是散点图模式，则重新初始化图表
+// 当 scatterData 变化时，如果当前是散点图模式，则更新散点图数据
 watch(() => props.scatterData, (newVal) => {
-  currentScatterData.value = newVal;
-  // 通过检查当前图表的 series 结构来判断是否处于“散点图”模式
-  const currentSeries = chartInstance.value?.getOption()?.series;
-  if (currentSeries && currentSeries[1]?.id === 'scatter') {
-    initChart('scatter');
+  if (chartInstance.value && currentViewMode.value === 'scatter') {
+    chartInstance.value.setOption({
+      series: [{
+        id: 'scatter', // 确保ID匹配
+        data: newVal
+        // symbolSize 函数会因为 props.scatterData 的变化而自动更新
+      }]
+    });
   }
 }, { deep: true }); // deep: true 确保能侦听到数组内部对象的变化
 
-// 当 pieSeriesData 变化时，如果当前是饼图模式，则重新初始化图表
+// 当 pieSeriesData 变化时，如果当前是饼图模式，则更新饼图数据
 watch(() => props.pieSeriesData, (newVal) => {
-  currentPieSeriesData.value = newVal;
-  // 通过检查当前图表的 series 结构来判断是否处于“饼图”模式
-  const currentSeries = chartInstance.value?.getOption()?.series;
-  if (currentSeries && currentSeries[1]?.id === 'pie') {
-    initChart('pie');
+  if (chartInstance.value && currentViewMode.value === 'pie') {
+    chartInstance.value.setOption({
+      series: [{
+        id: 'pie', // 确保ID匹配
+        data: newVal
+      }]
+    });
   }
 }, { deep: true }); // deep: true 确保能侦听到数组内部对象的变化
 
-// 当 provinceData 变化时，重新初始化当前图表模式，以更新地图底图
+// 当 provinceData 变化时，更新地图底图的数据
 watch(() => props.provinceData, (newVal) => {
-  // 不需要更新 currentProvinceData，直接使用 props.provinceData
   if (chartInstance.value) {
-    // 尝试获取当前图表的模式，然后用新数据重新初始化
-    const option = chartInstance.value.getOption();
-    let currentMode = 'map_only'; // 默认值
-
-    // 粗略判断当前模式
-    if (option.series[1]?.id === 'scatter' && option.visualMap?.show === true) {
-      currentMode = 'scatter';
-    } else if (option.series[1]?.id === 'pie' && option.visualMap?.show === false) {
-      currentMode = 'pie';
-    }
-    initChart(currentMode);
+    // 仅更新地图系列的数据，而不是重新初始化整个图表
+    chartInstance.value.setOption({
+      series: [{
+        id: 'map', // 确保ID匹配地图系列
+        data: newVal
+      }]
+    });
   }
 }, { deep: true }); // deep: true 确保能侦听到数组内部对象的变化
 </script>
