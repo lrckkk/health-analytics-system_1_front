@@ -190,7 +190,17 @@ const updateChart = () => {
       yData.push(item[selectedYField.value])
     }
   })
-
+  // 格式化数字显示
+  const formatNumber = (value) => {
+    if (value >= 100000000) {
+      return (value / 100000000).toFixed(1) + '亿'
+    } else if (value >= 10000) {
+      return (value / 10000).toFixed(1) + '万'
+    } else if (value >= 1000) {
+      return (value / 1000).toFixed(1) + '千'
+    }
+    return Math.round(value) // 小于1000的直接取整
+  }
   const option = {
     backgroundColor: 'transparent',
     title: {
@@ -221,7 +231,7 @@ const updateChart = () => {
           </div>
           <div>
             <span style="color:#90E0EF;">${selectedYField.value}: </span>
-            <span style="color:#7DF9FF;font-weight:bold;">${yValue}</span>
+            <span style="color:#7DF9FF;font-weight:bold;">${formatNumber(yValue)}</span>
           </div>
         `
       }
@@ -273,7 +283,10 @@ const updateChart = () => {
       },
       axisLabel: {
         color: '#90E0EF',
-        fontSize: 11
+        fontSize: 11,
+        formatter: function(value) {
+          return formatNumber(value)
+        }
       },
       splitLine: {
         lineStyle: {
@@ -309,7 +322,16 @@ const updateChart = () => {
         itemStyle: {
           color: '#FF00FF'
         }
+      },
+      label: {
+        show: yData.length <= 100, // 数据点较少时才显示标签
+        position: 'top',
+        color: '#CAF0F8',
+        fontSize: 9,
+        offset: [0, 5],
+        formatter: (params) => formatNumber(params.value)
       }
+
     }],
     animationDuration: 800
   }

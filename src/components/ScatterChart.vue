@@ -151,12 +151,23 @@ const initChart = () => {
 // 更新图表数据
 const updateChart = () => {
   if (!chartInstance || !hasData.value) return
-
+  // 格式化数字显示
+  const formatNumber = (value) => {
+    if (value >= 100000000) {
+      return (value / 100000000).toFixed(1) + '亿'
+    } else if (value >= 10000) {
+      return (value / 10000).toFixed(1) + '万'
+    } else if (value >= 1000) {
+      return (value / 1000).toFixed(1) + '千'
+    }
+    return Math.round(value) // 小于1000的直接取整
+  }
   // 准备数据 - 假设数据格式为 [{ year: '2020', count: 100 }, ...]
   const seriesData = props.chartData.map(item => ({
-    name: item.year,
-    value: [item.year, item.count],
-    symbolSize: calculateBubbleSize(item.count)
+    name: String(item.year), // 确保年份是字符串
+    value: [String(item.year), Number(item.count)], // 确保类型正确
+    symbolSize: calculateBubbleSize(item.count),
+    formattedValue: formatNumber(item.count)
   }))
 
   // 计算最大值并向上取整到最近的合适刻度
@@ -192,7 +203,7 @@ const updateChart = () => {
           </div>
           <div>
             <span style="color:#90E0EF;">费用: </span>
-            <span style="color:#7DF9FF;font-weight:bold;">${data.value[1]}</span>
+            <span style="color:#7DF9FF;font-weight:bold;">${data.formattedValue}</span>
           </div>
         `
       }
@@ -246,15 +257,8 @@ const updateChart = () => {
       axisLabel: {
         color: '#90E0EF',
         fontSize: 11,
-        formatter: (value) => {
-          // 格式化数字显示，避免过多小数位
-          if (value >= 10000) {
-            return (value / 10000).toFixed(1) + '万'
-          }
-          if (value >= 1000) {
-            return (value / 1000).toFixed(1) + 'k'
-          }
-          return Number.isInteger(value) ? value : value.toFixed(1)
+        formatter: function(value) {
+          return formatNumber(value)
         }
       },
       splitLine: {
@@ -286,6 +290,14 @@ const updateChart = () => {
           shadowBlur: 20,  // 强调状态阴影增大
           shadowColor: 'rgba(255, 0, 255, 0.5)'
         }
+      },
+      label: {
+        show: props.chartData.length <= 100, // 数据点较少时才显示标签
+        position: 'top',
+        color: '#CAF0F8',
+        fontSize: 9,
+        offset: [0, 5],
+        formatter: (params) => formatNumber(params.data.value[1])
       },
       // 添加缩放动画效果
       animationType: 'scale',

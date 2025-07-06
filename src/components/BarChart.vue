@@ -222,7 +222,19 @@ const updateChart = () => {
       yData.push(item[selectedYField.value])
     }
   })
-
+  // 格式化数字显示
+  const formatNumber = (value) => {
+    if (value >= 100000000) {
+      return (value / 100000000).toFixed(1) + '亿'
+    } else if (value >= 10000) {
+      return (value / 10000).toFixed(1) + '万'
+    } else if (value >= 1000) {
+      return (value / 1000).toFixed(1) + '千'
+    }
+    return Math.round(value) // 小于1000的直接取整
+  }
+  // 获取Y轴最大值用于确定合适的单位
+  const maxValue = Math.max(...yData)
 
   const option = {
     backgroundColor: 'transparent',
@@ -254,7 +266,7 @@ const updateChart = () => {
           </div>
           <div>
             <span style="color:#90E0EF;">${selectedYField.value}: </span>
-            <span style="color:#7DF9FF;font-weight:bold;">${yValue}</span>
+            <span style="color:#7DF9FF;font-weight:bold;">${formatNumber(yValue)}</span>
           </div>
         `
       }
@@ -293,7 +305,7 @@ const updateChart = () => {
       name: '总数',
       nameTextStyle: {
         color: '#90E0EF',
-        fontSize: 12
+        fontSize: 10
       },
       axisLine: {
         lineStyle: {
@@ -303,7 +315,10 @@ const updateChart = () => {
       },
       axisLabel: {
         color: '#90E0EF',
-        fontSize: 11
+        fontSize: 11,
+        formatter: function(value) {
+          return formatNumber(value)
+        }
       },
       splitLine: {
         lineStyle: {
@@ -341,8 +356,13 @@ const updateChart = () => {
         show: props.showLabel,
         position: 'top',
         color: '#CAF0F8',
-        fontSize: 11,
-        formatter: '{c}'
+        fontSize: 9,
+        offset: [0, 3],  // 垂直偏移2像素，避免紧贴柱顶
+        formatter: (params) => formatNumber(params.value), // 使用格式化函数
+        textStyle: {
+          fontSize: 6.8,  // 再次确认字体大小
+          fontWeight: 'normal'  // 使用普通字体粗细
+        }
       },
       animationType: 'scale',
       animationEasing: 'elasticOut',
