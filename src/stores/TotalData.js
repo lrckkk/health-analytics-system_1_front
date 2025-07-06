@@ -276,7 +276,6 @@ export const useMapDataStore = defineStore('mapData', () => {
 
             // Update the store's state
             // provinceData.value 已经在上面被转换并赋值
-            scatterData.value = fetchedScatterData;
             pieSeriesData.value = processedPieSeriesData;
             // 将更新后的数据赋值给 store 的 scatterData 状态
             scatterData.value = updatedScatterData;

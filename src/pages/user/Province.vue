@@ -17,7 +17,7 @@
 
     <!-- 新增的 card 组件包裹 div，限定大小并定位在左上方 -->
     <div class="card-display-area">
-      <card></card>
+      <card :componentsList="myCustomComponents"></card>
     </div>
     <div class="scroll-display-area">
       <scroll></scroll>
@@ -43,6 +43,10 @@ import {useRegionStore} from '@/stores/RegionData.js';
 import {ElMessage} from "element-plus";
 import card from '../card/CardContainer.vue'; // 导入 CardContainer.vue 组件
 import scroll from './scroll.vue';
+import MyComponentA from '../card/MyComponentA.vue';
+import MyComponentB from '../card/MyComponentB.vue';
+import MyComponentC from '../card/MyComponentC.vue';
+import MyComponentD from '../card/MyComponentD.vue';
 
 export default {
   components: {
@@ -52,6 +56,12 @@ export default {
     scroll
   },
   setup() {
+    const myCustomComponents = ref([
+      MyComponentA,
+      MyComponentB,
+      MyComponentC,
+      MyComponentD,
+    ]);
     const mapDataStore = useMapDataStore();
     const regionStore = useRegionStore();
 
@@ -83,6 +93,7 @@ export default {
     return {
       handleRegionClick,
       mapDataStore,
+      myCustomComponents
     };
   },
 };
