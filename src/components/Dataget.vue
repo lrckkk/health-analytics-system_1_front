@@ -70,7 +70,7 @@
           </div>
           <div class="data-item">
             <span class="label">人口数量:</span>
-            <span class="value">{{ formatValue(currentYearData.populationData?.count) }}</span>
+            <span class="value">{{ formatValue(currentYearData.populationData?.count, true) }}</span>
           </div>
         </div>
 
@@ -84,27 +84,27 @@
             max-height="600"
             class="futuristic-table"
         >
-          <el-table-column prop="year" label="年份" width="80" fixed sortable></el-table-column>
-          <el-table-column label="医疗机构" width="120">
+          <el-table-column prop="year" label="年份" width="90" fixed sortable></el-table-column> <!-- 增加宽度 -->
+          <el-table-column label="医疗机构" width="130"> <!-- 增加宽度 -->
             <template #default="{ row }">{{ formatValue(row.medicalData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="病床数量" width="120">
+          <el-table-column label="病床数量" width="130"> <!-- 增加宽度 -->
             <template #default="{ row }">{{ formatValue(row.medicalData2?.count) }}</template>
           </el-table-column>
-          <el-table-column label="医疗花费" width="120">
+          <el-table-column label="医疗花费" width="130"> <!-- 增加宽度 -->
             <template #default="{ row }">{{ formatValue(row.costData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="医疗人员" width="120">
+          <el-table-column label="医疗人员" width="130"> <!-- 增加宽度 -->
             <template #default="{ row }">{{ formatValue(row.personnelData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="门诊量" width="120">
+          <el-table-column label="门诊量" width="130"> <!-- 增加宽度 -->
             <template #default="{ row }">{{ formatValue(row.serviceData?.outpatientVisits) }}</template>
           </el-table-column>
-          <el-table-column label="住院量" width="120">
+          <el-table-column label="住院量" width="130"> <!-- 增加宽度 -->
             <template #default="{ row }">{{ formatValue(row.serviceData?.inpatientAdmissions) }}</template>
           </el-table-column>
-          <el-table-column label="人口数量" width="120">
-            <template #default="{ row }">{{ formatValue(row.populationData?.count) }}</template>
+          <el-table-column label="人口数量" width="130"> <!-- 增加宽度 -->
+            <template #default="{ row }">{{ formatValue(row.populationData?.count, true) }}</template>
           </el-table-column>
         </el-table>
       </div>
@@ -137,15 +137,20 @@ const hasData = computed(() => {
  * Formats a numerical value for display.
  * Displays '-' if the value is null, undefined, or NaN.
  * Returns an integer if the value is an integer, otherwise rounds to one decimal place.
+ * Optionally adds '万' suffix.
  * @param {number} value - The numerical value to format.
+ * @param {boolean} addWanSuffix - Whether to add '万' suffix.
  * @returns {string|number} The formatted string or the original number.
  */
-const formatValue = (value) => {
+const formatValue = (value, addWanSuffix = false) => {
   if (value === null || value === undefined || isNaN(value)) {
     return '-';
   }
-  // If it's an integer, return as integer; otherwise, round to one decimal place.
-  return Number.isInteger(value) ? value : value.toFixed(1);
+  let formatted = Number.isInteger(value) ? value : value.toFixed(1);
+  if (addWanSuffix) {
+    return `${formatted}万`;
+  }
+  return formatted;
 };
 
 /**
@@ -308,7 +313,7 @@ const exportDataToTxt = () => {
     }
     // Population Count
     if (yearData.populationData?.count !== undefined) {
-      exportContent += `  ${dataLabels.populationData}: ${formatValue(yearData.populationData.count)}\n`;
+      exportContent += `  ${dataLabels.populationData}: ${formatValue(yearData.populationData.count, true)}\n`;
     }
     exportContent += '\n'; // Add a newline between data for each year
   });
@@ -356,7 +361,7 @@ $tech-text: #CAF0F8; // Original text color, might be light
 
 .province-data-viewer-card {
   width: 100%;
-  max-width: 800px; /* 保持最大宽度 */
+  max-width: 1200px; /* 保持最大宽度 */
   margin: 10px auto; /* 缩小外边距 */
   border: none;
   background: linear-gradient(135deg, $tech-blue 0%, $tech-darkblue 100%);

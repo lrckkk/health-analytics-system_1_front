@@ -31,13 +31,12 @@ const medicalLoading = ref(true)
 watch(
     () => regionStore.getRegionId, // 侦听 Pinia store 中的 ID
     async (newRegionId) => {
-      console.log(`检测到区域1111111变化: ${newRegionId}，准备从 Store 获取数据...`);
+
       medicalLoading.value = true;
       try {
         // 直接调用 store 的 action，它会处理缓存逻辑
         const data = await regionStore.fetchserviceDataIfNeeded(newRegionId);
         medicalServiceData.value = data;
-        console.log(medicalServiceData.value+'woooooo');
       } catch (error) {
         console.error("在组件中处理数据获取失败:", error);
         medicalServiceData.value = [];

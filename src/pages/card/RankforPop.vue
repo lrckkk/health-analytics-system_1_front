@@ -2,21 +2,21 @@
 
 
 
-    <div class="rankings-grid">
+  <div class="rankings-grid">
 
-      <RankingList
-          title="病床数排行榜"
-          :data="mapDataStore.bedData"
-          :selected-region-id="regionStore.getRegionId"
-      />
+    <RankingList
+        title="人口排行榜"
+        :data="mapDataStore.populationData"
+        :selected-region-id="regionStore.getRegionId"
+    />
 
-<!--      <RankingList-->
-<!--          title="人口排行榜"-->
-<!--          :data="mapDataStore.populationData"-->
-<!--          :selected-region-id="regionStore.getRegionId"-->
-<!--      />-->
+    <!--      <RankingList-->
+    <!--          title="人口排行榜"-->
+    <!--          :data="mapDataStore.populationData"-->
+    <!--          :selected-region-id="regionStore.getRegionId"-->
+    <!--      />-->
 
-    </div>
+  </div>
 
 </template>
 
@@ -24,7 +24,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRegionStore } from '@/stores/RegionData.js'; // 保持不变，用于区域选择
 import { useMapDataStore } from '@/stores/TotalData.js'; // 引入新的 store
-import RankingList from './RankingList.vue';
+import RankingList from '@/components/RankingList.vue';
 
 const regionStore = useRegionStore();
 const mapDataStore = useMapDataStore(); // 初始化新的 mapDataStore
@@ -74,8 +74,8 @@ const populationRankingData = computed(() => {
 }
 .rankings-grid {
   display: grid;
-  width: 30%;
-  height: 20%;
+  width: 100%;
+  height: 100%;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
 }

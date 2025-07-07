@@ -52,10 +52,8 @@
       </div>
 
       <!-- 引入 ProvinceDataViewer 组件，并在展开时显示 -->
-      <!-- 新增：监听 ProvinceDataViewer 发出的 select-visible-change 事件 -->
       <ProvinceDataViewer
           v-if="isExpanded"
-          @select-visible-change="handleProvinceDataViewerSelectVisibleChange"
       />
     </div>
   </div>
@@ -63,7 +61,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import ProvinceDataViewer from './Dataget.vue'; // 修复：确保路径正确，指向 ProvinceDataViewer.vue
+import ProvinceDataViewer from './Dataget.vue'; // 确保路径正确，指向 ProvinceDataViewer.vue
 
 // 定义组件接收的 props
 const props = defineProps({
@@ -97,10 +95,6 @@ const emit = defineEmits(['button-clicked']);
 const isExpanded = ref(false);
 // 用于存储 setTimeout 的 ID，以便在鼠标快速移入移出时清除计时器
 const collapseTimeoutId = ref(null);
-// 新增：跟踪鼠标是否在 button-container 上
-const isMouseOverButtonContainer = ref(false);
-// 新增：跟踪 ProvinceDataViewer 中 el-select 下拉菜单的打开状态
-const isProvinceDataViewerSelectOpen = ref(false);
 
 // 存储第一行当前被选中的按钮ID
 // 默认选中第一行的第一个按钮
@@ -118,47 +112,16 @@ const startExpandTimer = () => {
     collapseTimeoutId.value = null;
   }
   isExpanded.value = true;
-  isMouseOverButtonContainer.value = true; // 鼠标移入主容器
 };
 
 /**
  * 处理鼠标移出事件，设置收起计时器。
  */
 const startCollapseTimer = () => {
-  isMouseOverButtonContainer.value = false; // 鼠标移出主容器
-  // 只有当 ProvinceDataViewer 的 el-select 下拉菜单关闭时，才允许设置收起计时器
-  // 如果下拉菜单是打开的，即使鼠标移出容器，也不应该立即收起
-  if (!isProvinceDataViewerSelectOpen.value) {
-    collapseTimeoutId.value = setTimeout(() => {
-      isExpanded.value = false;
-      collapseTimeoutId.value = null;
-    }, 100); // 100毫秒的延迟，允许快速重新进入
-  }
-};
-
-/**
- * 处理 ProvinceDataViewer 中 el-select 下拉菜单可见性变化的事件。
- * @param {boolean} visible - 下拉菜单是否可见。
- */
-const handleProvinceDataViewerSelectVisibleChange = (visible) => {
-  isProvinceDataViewerSelectOpen.value = visible;
-  // 如果下拉菜单变为可见，确保父容器展开并清除任何收起计时器
-  if (visible) {
-    isExpanded.value = true;
-    if (collapseTimeoutId.value) {
-      clearTimeout(collapseTimeoutId.value);
-      collapseTimeoutId.value = null;
-    }
-  } else {
-    // 如果下拉菜单关闭了，并且鼠标不在主容器上，则触发收起
-    // 使用一个小的延迟，以防鼠标在下拉菜单关闭后立即移动到其他地方
-    if (!isMouseOverButtonContainer.value) {
-      collapseTimeoutId.value = setTimeout(() => {
-        isExpanded.value = false;
-        collapseTimeoutId.value = null;
-      }, 100);
-    }
-  }
+  collapseTimeoutId.value = setTimeout(() => {
+    isExpanded.value = false;
+    collapseTimeoutId.value = null;
+  }, 100); // 100毫秒的延迟，允许快速重新进入
 };
 
 /**
@@ -176,7 +139,7 @@ const handleButtonClick = (row, buttonId) => {
   } else if (row === 2) {
     // 如果点击的不是当前行已选中的按钮，则更新选中状态并发出事件
     if (activeButtonRow2.value !== buttonId) {
-      activeButtonRow2.value = buttonId;
+      activeButton2.value = buttonId;
       emit('button-clicked', { id: buttonId });
     }
   }
@@ -208,12 +171,12 @@ const handleButtonClick = (row, buttonId) => {
   flex-direction: column;
 
   /* 动画效果 - 展开状态 */
-  max-height: 900px; /* 修复：增加高度以容纳更大的 ProvinceDataViewer */
+  max-height: 900px; /* 保持高度以容纳 ProvinceDataViewer */
   padding: 16px; /* 展开时恢复内边距 */
   gap: 16px; /* 行间距 */
   opacity: 1; /* 展开时完全显示 */
   pointer-events: auto; /* 展开时可点击 */
-  overflow: hidden; /* 隐藏溢出内容，防止 max-height 动画期间内容溢出 */
+  /* 移除 overflow: hidden; 避免阻止内部滚动 */
 
   transition: max-height 0.3s ease-out, padding 0.3s ease-out, opacity 0.3s ease-out; /* 平滑过渡 */
 }
@@ -226,6 +189,13 @@ const handleButtonClick = (row, buttonId) => {
   gap: 0; /* 间距也为0 */
   opacity: 0; /* 隐藏时透明 */
   pointer-events: none; /* 隐藏时不可点击 */
+  overflow: hidden; /* 仅在收起状态下隐藏溢出内容，以保证动画平滑 */
+}
+
+/* 展开状态下允许内容滚动 */
+.button-wrapper:not(.is-collapsed) {
+  overflow-y: auto; /* 允许垂直滚动 */
+  overflow-x: auto; /* 允许水平滚动 */
 }
 
 /* 按钮行样式 */

@@ -68,7 +68,7 @@ export default defineComponent({
     };
 
     const goTocard = () => {
-      router.push({ name: 'Card' }); // 假设 Card 是您的卡片视图路由名称
+      router.push({ name: 'Text' }); // 假设 Card 是您的卡片视图路由名称
       ElMessage({
         message: '跳转到卡片视图！',
         type: 'info',

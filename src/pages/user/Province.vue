@@ -70,6 +70,7 @@ import MyComponentC from '../card/MyComponentC.vue';
 import MyComponentD from '../card/MyComponentD.vue';
 import ServiceforML from "@/pages/card/ServiceforML.vue";
 import PopulationLine from "@/pages/card/PopulationLine.vue";
+import RankforPop from "@/pages/card/RankforPop.vue";
 
 export default {
   components: {
@@ -87,6 +88,7 @@ export default {
       MyComponentD,
       ServiceforML,
       PopulationLine,
+      RankforPop,
     ]);
 
 
@@ -145,6 +147,7 @@ export default {
     ]);
     const myCustomComponents5 = ref([
       PopulationLine,
+      RankforPop,
     ]);
     const myCustomComponents6 = ref([
       ServiceforML,
