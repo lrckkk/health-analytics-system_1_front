@@ -5,6 +5,7 @@ import Province from "@/pages/user/Province.vue";
 import RegisterPage from "@/components/Register.vue";
 import Card from "@/pages/card/CardContainer.vue";
 import Scroll from "./scroll.vue"
+import ManagementPage from "@/pages/management/ManagementPage.vue";
 
 
 // 您的路由定义
@@ -49,7 +50,12 @@ const routes = [
         name:'Scroll',
         path: '/scroll',
         component: Scroll
-    }
+    },
+    {
+        path: '/manage',
+        name: 'ManagementPage',
+        component: ManagementPage
+    },
 
 
 ]

@@ -1,102 +1,86 @@
 <template>
   <header class="app-header tech-header">
+    <div class="real-time">
+      <el-icon><Clock /></el-icon>
+      <span>{{ currentTime }}</span>
+    </div>
     <div class="header-title">
       <el-icon class="title-icon"><Opportunity /></el-icon>
       <span>大数据医疗可视化平台</span>
     </div>
-    <nav class="header-nav fill-width">
-      <el-button @click="goToTargetPage" class="nav-button tech-button" link>
-        <el-icon><Monitor /></el-icon>
-        <span>页面跳转</span>
-      </el-button>
-      <el-button @click="goTocard" class="nav-button tech-button" link>
-        <el-icon><Grid /></el-icon>
-        <span>卡片视图</span>
-      </el-button>
-      <el-button @click="handleNewButtonClick('数据概览')" class="nav-button tech-button" link>
-        <el-icon><DataAnalysis /></el-icon>
-        <span>数据概览</span>
-      </el-button>
-      <el-button @click="handleNewButtonClick('区域分析')" class="nav-button tech-button" link>
-        <el-icon><MapLocation /></el-icon>
-        <span>区域分析</span>
-      </el-button>
-      <el-button @click="handleNewButtonClick('趋势预测')" class="nav-button tech-button" link>
-        <el-icon><TrendCharts /></el-icon>
-        <span>趋势预测</span>
-      </el-button>
-      <el-button @click="handleNewButtonClick('系统设置')" class="nav-button tech-button" link>
-        <el-icon><Setting /></el-icon>
-        <span>系统设置</span>
-      </el-button>
-    </nav>
+    <el-button @click="handleNewButtonClick('管理设置')" class="nav-button tech-button" link>
+      <el-icon><Setting /></el-icon>
+      <span>管理设置</span>
+    </el-button>
   </header>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { defineComponent } from 'vue';
 import router from "@/pages/user/router.js"; // 保持路由引入
 import { ElButton, ElMessage, ElIcon } from 'element-plus'; // 导入 Element Plus 组件和消息提示
 
 // 导入 Element Plus 图标
-import { Monitor, Grid, DataAnalysis, MapLocation, TrendCharts, Setting, Opportunity } from '@element-plus/icons-vue';
+import { Clock, Monitor, Grid, DataAnalysis, MapLocation, TrendCharts, Setting, Opportunity } from '@element-plus/icons-vue';
+const currentTime = ref('')
 
-export default defineComponent({
-  name: 'AppHeader', // 组件名称
-  components: {
-    ElButton,
-    ElIcon,
-    // 注册 Element Plus 图标组件
-    Monitor,
-    Grid,
-    DataAnalysis,
-    MapLocation,
-    TrendCharts,
-    Setting,
-    Opportunity,
-  },
-  setup() {
-    // 页面跳转方法
-    const goToTargetPage = () => {
-      router.push({ name: 'Home' }); // 假设 Home 是您的目标路由名称
-      ElMessage({
-        message: '跳转到首页！',
-        type: 'info',
-        duration: 2000,
-        customClass: 'tech-message'
-      });
-    };
+const updateTime = () => {
+  const now = new Date()
+  const format = (n) => String(n).padStart(2, '0')
+  currentTime.value = `${now.getFullYear()}-${format(now.getMonth() + 1)}-${format(now.getDate())} ${format(now.getHours())}:${format(now.getMinutes())}:${format(now.getSeconds())}`
+}
 
-    const goTocard = () => {
-      router.push({ name: 'Card' }); // 假设 Card 是您的卡片视图路由名称
-      ElMessage({
-        message: '跳转到卡片视图！',
-        type: 'info',
-        duration: 2000,
-        customClass: 'tech-message'
-      });
-    };
+let timer = null
 
-    // 其他按钮的点击处理
-    const handleNewButtonClick = (buttonName) => {
-      ElMessage({
-        message: `你点击了：${buttonName}！`,
-        type: 'success',
-        duration: 2000,
-        customClass: 'tech-message'
-      });
-    };
+onMounted(() => {
+  updateTime()
+  timer = setInterval(updateTime, 1000)
+})
 
-    return {
-      goToTargetPage,
-      goTocard,
-      handleNewButtonClick,
-    };
-  },
-});
+onBeforeUnmount(() => {
+  clearInterval(timer)
+})
+
+const handleNewButtonClick = (name) => {
+  console.log('点击了按钮：', name)
+}
 </script>
 
 <style scoped>
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+}
+
+.title-icon {
+  margin-right: 5px;
+}
+
+/* 实时时间样式 */
+.real-time {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #666;
+  margin-right: auto;
+  margin-left: 30px;
+}
+
+.real-time el-icon {
+  margin-right: 4px;
+}
+
+.nav-button {
+  margin-left: auto;
+}
 /* 科技风页眉样式 - 从原有文件中剪切并粘贴到这里 */
 .app-header.tech-header {
   width: 100%;
