@@ -46,7 +46,7 @@
 
 <script>
 import ChinaMap from '../../components/Map.vue';
-import AppHeader from '../../components/Header.vue'; // 导入 AppHeader 组件
+// import AppHeader from '../../components/Header.vue'; // 导入 AppHeader 组件
 import Timer from '../../components/Timer.vue';// 导入 Timer 组件
 import Title from '../../components/Title.vue';
 import { ref, onMounted } from 'vue';
@@ -66,7 +66,6 @@ export default {
     Timer,
     Title,
     ChinaMap,
-    AppHeader,
     card,
     scroll,
     Role, // 新增
