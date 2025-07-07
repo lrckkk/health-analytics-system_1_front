@@ -1,299 +1,9 @@
-<!--<template>-->
-<!--  <div class="pie-chart-container">-->
-<!--    <el-card class="chart-card">-->
-<!--      <template #header>-->
-<!--        <div class="card-header">-->
-<!--          <div class="chart-controls">-->
-<!--            <el-select-->
-<!--                v-model="selectedNameField"-->
-<!--                placeholder="选择名称字段"-->
-<!--                @change="updateChart"-->
-<!--            >-->
-<!--              <el-option-->
-<!--                  v-for="field in availableFields"-->
-<!--                  :key="field"-->
-<!--                  :label="field"-->
-<!--                  :value="field"-->
-<!--              />-->
-<!--            </el-select>-->
-
-<!--            <el-select-->
-<!--                v-model="selectedValueField"-->
-<!--                placeholder="选择数值字段"-->
-<!--                @change="updateChart"-->
-<!--            >-->
-<!--              <el-option-->
-<!--                  v-for="field in availableFields"-->
-<!--                  :key="field"-->
-<!--                  :label="field"-->
-<!--                  :value="field"-->
-<!--              />-->
-<!--            </el-select>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </template>-->
-
-<!--      <div ref="chartRef" class="chart" :style="{ height: height, width: width }"></div>-->
-<!--    </el-card>-->
-<!--  </div>-->
-<!--</template>-->
-
-<!--<script setup>-->
-<!--import { ref, onMounted, watch, nextTick } from 'vue'-->
-<!--import * as echarts from 'echarts'-->
-<!--import { ElCard, ElSelect, ElOption } from 'element-plus'-->
-
-<!--const props = defineProps({-->
-<!--  chartData: {-->
-<!--    type: Array,-->
-<!--    default: () => []-->
-<!--  },-->
-<!--  title: {-->
-<!--    type: String,-->
-<!--    default: '扇形统计图'-->
-<!--  },-->
-<!--  height: {-->
-<!--    type: String,-->
-<!--    default: '400px'-->
-<!--  },-->
-<!--  width: {-->
-<!--    type: String,-->
-<!--    default: '100%'-->
-<!--  },-->
-<!--  nameField: {-->
-<!--    type: String,-->
-<!--    default: ''-->
-<!--  },-->
-<!--  valueField: {-->
-<!--    type: String,-->
-<!--    default: ''-->
-<!--  },-->
-<!--  colorPalette: {-->
-<!--    type: Array,-->
-<!--    default: () => [-->
-<!--      '#5470C6', '#91CC75', '#EE6666', '#FAC858', '#73C0DE',-->
-<!--      '#3BA272', '#FC8452', '#9A60B4', '#EA7CCC'-->
-<!--    ]-->
-<!--  },-->
-<!--  showLegend: {-->
-<!--    type: Boolean,-->
-<!--    default: true-->
-<!--  },-->
-<!--  showLabel: {-->
-<!--    type: Boolean,-->
-<!--    default: true-->
-<!--  },-->
-<!--  roseType: {-->
-<!--    type: String,-->
-<!--    default: '' // 'radius' 为南丁格尔玫瑰图-->
-<!--  }-->
-<!--})-->
-
-<!--const chartRef = ref(null)-->
-<!--let chartInstance = null-->
-<!--const availableFields = ref([])-->
-<!--const selectedNameField = ref(props.nameField)-->
-<!--const selectedValueField = ref(props.valueField)-->
-
-<!--// 初始化图表-->
-<!--const initChart = () => {-->
-<!--  if (!chartRef.value) return-->
-
-<!--  if (chartInstance) {-->
-<!--    chartInstance.dispose()-->
-<!--  }-->
-
-<!--  chartInstance = echarts.init(chartRef.value)-->
-<!--  updateChart()-->
-<!--}-->
-
-<!--// 更新图表数据-->
-<!--const updateChart = () => {-->
-<!--  if (!chartInstance || !props.chartData.length) return-->
-
-<!--  const seriesData = props.chartData.map(item => ({-->
-<!--    name: selectedNameField.value ? item[selectedNameField.value] : '',-->
-<!--    value: selectedValueField.value ? item[selectedValueField.value] : 0-->
-<!--  }))-->
-
-<!--  const option = {-->
-<!--    title: {-->
-<!--      text: props.title,-->
-<!--      left: 'center'-->
-<!--    },-->
-<!--    tooltip: {-->
-<!--      trigger: 'item',-->
-<!--      formatter: '{a} <br/>{b}: {c} ({d}%)'-->
-<!--    },-->
-<!--    legend: {-->
-<!--      show: props.showLegend,-->
-<!--      orient: 'vertical',-->
-<!--      left: 'left',-->
-<!--      data: seriesData.map(item => item.name)-->
-<!--    },-->
-<!--    series: [-->
-<!--      {-->
-<!--        name: props.title,-->
-<!--        type: 'pie',-->
-<!--        radius: ['40%', '70%'],-->
-<!--        avoidLabelOverlap: false,-->
-<!--        itemStyle: {-->
-<!--          borderRadius: 10,-->
-<!--          borderColor: '#fff',-->
-<!--          borderWidth: 2-->
-<!--        },-->
-<!--        label: {-->
-<!--          show: props.showLabel,-->
-<!--          formatter: '{b}: {c} ({d}%)'-->
-<!--        },-->
-<!--        emphasis: {-->
-<!--          label: {-->
-<!--            show: true,-->
-<!--            fontSize: '18',-->
-<!--            fontWeight: 'bold'-->
-<!--          }-->
-<!--        },-->
-<!--        labelLine: {-->
-<!--          show: props.showLabel-->
-<!--        },-->
-<!--        data: seriesData,-->
-<!--        roseType: props.roseType,-->
-<!--        color: props.colorPalette,-->
-<!--        animationType: 'scale',-->
-<!--        animationEasing: 'elasticOut',-->
-<!--        animationDelay: function (idx) {-->
-<!--          return Math.random() * 200-->
-<!--        }-->
-<!--      }-->
-<!--    ]-->
-<!--  }-->
-
-<!--  chartInstance.setOption(option)-->
-<!--}-->
-
-<!--// 提取可用字段-->
-<!--const extractAvailableFields = () => {-->
-<!--  if (!props.chartData.length) {-->
-<!--    availableFields.value = []-->
-<!--    return-->
-<!--  }-->
-
-<!--  const fields = new Set()-->
-<!--  props.chartData.forEach(item => {-->
-<!--    Object.keys(item).forEach(key => {-->
-<!--      fields.add(key)-->
-<!--    })-->
-<!--  })-->
-
-<!--  availableFields.value = Array.from(fields)-->
-
-<!--  if (!selectedNameField.value && availableFields.value.length > 0) {-->
-<!--    selectedNameField.value = availableFields.value[0]-->
-<!--  }-->
-<!--  if (!selectedValueField.value && availableFields.value.length > 1) {-->
-<!--    selectedValueField.value = availableFields.value[1]-->
-<!--  }-->
-<!--}-->
-
-<!--// 监听数据变化-->
-<!--watch(() => props.chartData, (newVal) => {-->
-<!--  extractAvailableFields()-->
-<!--  nextTick(() => {-->
-<!--    updateChart()-->
-<!--  })-->
-<!--}, { deep: true })-->
-
-<!--// 组件挂载时初始化-->
-<!--onMounted(() => {-->
-<!--  extractAvailableFields()-->
-<!--  initChart()-->
-
-<!--  window.addEventListener('resize', () => {-->
-<!--    if (chartInstance) {-->
-<!--      chartInstance.resize()-->
-<!--    }-->
-<!--  })-->
-<!--})-->
-<!--</script>-->
-
-<!--<style scoped>-->
-<!--.pie-chart-container {-->
-<!--  width: 100%;-->
-<!--}-->
-
-<!--.chart-card {-->
-<!--  margin: 20px 0;-->
-<!--}-->
-
-<!--.card-header {-->
-<!--  display: flex;-->
-<!--  justify-content: space-between;-->
-<!--  align-items: center;-->
-<!--}-->
-
-<!--.chart-controls {-->
-<!--  display: flex;-->
-<!--  gap: 10px;-->
-<!--  flex-wrap: wrap;-->
-<!--}-->
-
-<!--.chart {-->
-<!--  width: 100%;-->
-<!--}-->
-<!--</style>-->
-
-
 <template>
   <div class="pie-chart-container" :style="{ width: computedWidth }">
     <el-card class="chart-card futuristic-card">
-      <template #header>
-        <div class="card-header">
-          <h3 class="futuristic-title">{{ title }}</h3>
-          <div class="chart-controls">
-            <div class="control-group">
-              <span class="control-label">名称</span>
-              <el-select
-                  v-model="selectedNameField"
-                  placeholder="选择名称字段"
-                  @change="updateChart"
-                  class="futuristic-select"
-                  :clearable="false"
-                  size="small"
-              >
-                <el-option
-                    v-for="field in availableFields"
-                    :key="field"
-                    :label="field"
-                    :value="field"
-                    class="futuristic-option"
-                />
-              </el-select>
-            </div>
-
-            <div class="control-group">
-              <span class="control-label">数值</span>
-              <el-select
-                  v-model="selectedValueField"
-                  placeholder="选择数值字段"
-                  @change="updateChart"
-                  class="futuristic-select"
-                  :clearable="false"
-                  size="small"
-              >
-                <el-option
-                    v-for="field in availableFields"
-                    :key="field"
-                    :label="field"
-                    :value="field"
-                    class="futuristic-option"
-                />
-              </el-select>
-            </div>
-          </div>
-        </div>
-      </template>
-
       <div class="chart-wrapper">
+
+        <router-link :to="{ name: 'Home' }" class="futuristic-title" > <h3 >{{ title }}</h3></router-link>
         <div
             ref="chartRef"
             class="chart futuristic-chart"
@@ -312,7 +22,7 @@
 <script setup>
 import { ref, onMounted, watch, nextTick, onUnmounted, computed } from 'vue'
 import * as echarts from 'echarts'
-import { ElCard, ElSelect, ElOption } from 'element-plus'
+import { ElCard } from 'element-plus'
 
 const props = defineProps({
   chartData: {
@@ -365,16 +75,13 @@ const particleCanvas = ref(null)
 let chartInstance = null
 let particleCtx = null
 let animationFrameId = null
-const availableFields = ref([])
-const selectedNameField = ref(props.nameField)
-const selectedValueField = ref(props.valueField)
-// 添加计算属性处理宽度
+
 const computedWidth = computed(() => {
   return typeof props.width === 'number' ? `${props.width}px` : props.width
 })
-// 计算属性
+
 const hasData = computed(() => {
-  return props.chartData && props.chartData.length > 0 && selectedNameField.value && selectedValueField.value
+  return props.chartData && props.chartData.length > 0 && props.nameField && props.valueField
 })
 
 // 粒子系统
@@ -450,14 +157,14 @@ const updateChart = () => {
   if (!chartInstance || !hasData.value) return
 
   const seriesData = props.chartData.map(item => ({
-    name: selectedNameField.value ? item[selectedNameField.value] : '',
-    value: selectedValueField.value ? item[selectedValueField.value] : 0
+    name: props.nameField ? item[props.nameField] : '',
+    value: props.valueField ? item[props.valueField] : 0
   }))
 
   const option = {
     backgroundColor: 'transparent',
     title: {
-      text: props.title,
+      // text: props.title,
       left: 'center',
       textStyle: {
         color: '#7DF9FF',
@@ -505,10 +212,10 @@ const updateChart = () => {
           color: '#CAF0F8',
           formatter: '{b}: {c} ({d}%)'
         },
-        selectedMode: false, // 禁用选中模式
+        selectedMode: false,
         emphasis: {
-          scale: true, // 鼠标悬停时放大
-          scaleSize: 10, // 放大尺寸
+          scale: true,
+          scaleSize: 10,
           itemStyle: {
             shadowBlur: 15,
             shadowOffsetX: 0,
@@ -534,37 +241,12 @@ const updateChart = () => {
         animationEasing: 'elasticOut',
         animationDelay: function (idx) {
           return Math.random() * 200
-        },
-
+        }
       }
     ]
   }
 
   chartInstance.setOption(option)
-}
-
-// 提取可用字段
-const extractAvailableFields = () => {
-  if (!props.chartData.length) {
-    availableFields.value = []
-    return
-  }
-
-  const fields = new Set()
-  props.chartData.forEach(item => {
-    Object.keys(item).forEach(key => {
-      fields.add(key)
-    })
-  })
-
-  availableFields.value = Array.from(fields)
-
-  if (!selectedNameField.value && availableFields.value.length > 0) {
-    selectedNameField.value = availableFields.value[0]
-  }
-  if (!selectedValueField.value && availableFields.value.length > 1) {
-    selectedValueField.value = availableFields.value[1]
-  }
 }
 
 // 响应式调整
@@ -578,7 +260,6 @@ const handleResize = () => {
 
 // 监听数据变化
 watch(() => props.chartData, () => {
-  extractAvailableFields()
   nextTick(() => {
     updateChart()
   })
@@ -586,7 +267,6 @@ watch(() => props.chartData, () => {
 
 // 初始化
 onMounted(() => {
-  extractAvailableFields()
   nextTick(() => {
     initChart()
     window.addEventListener('resize', handleResize)
@@ -607,84 +287,43 @@ $tech-cyan: #7DF9FF;
 $tech-lightblue: #90E0EF;
 $tech-darkblue: #023E8A;
 $tech-text: #CAF0F8;
-//
-//.pie-chart-container {
-//  width: 100%;
-//  position: relative;
-//}
+
 .pie-chart-container {
-  /* 移除固定宽度设置 */
   min-width: 300px;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0; /* 防止flex布局时缩小 */
 }
+
 .futuristic-card {
   margin: 0;
   border: none;
-  background: linear-gradient(135deg, $tech-blue 0%, $tech-darkblue 100%);
-  box-shadow: 0 0 20px rgba(0, 180, 216, 0.5);
-  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
 
-  :deep(.el-card__header) {
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(72, 202, 228, 0.3);
-    background: rgba(0, 53, 102, 0.3);
+  :deep(.el-card__header),
+  :deep(.el-card__body) {
+    padding: 0;
+    border: none;
+    background: transparent;
   }
 }
 
 .futuristic-title {
   color: $tech-cyan;
   font-size: 18px;
-  margin: 0 0 12px 0;
+  text-align: center;
+  margin: 10px 0;
+  padding-top: 10px;
   font-weight: 500;
   text-shadow: 0 0 8px rgba($tech-cyan, 0.5);
-}
+  position: relative;
+  z-index: 4;
+  cursor: pointer; /* 添加指针样式 */
+  text-decoration: none; /* 移除下划线 */
 
-.chart-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 20px;
-  width: 100%;
-}
-
-.control-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 220px;
-
-  .control-label {
-    color: $tech-cyan;
-    font-size: 14px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    text-shadow: 0 0 4px rgba($tech-cyan, 0.3);
-  }
-}
-
-.futuristic-select {
-  width: 180px;
-
-  :deep(.el-input__wrapper) {
-    background: rgba(0, 119, 182, 0.3) !important;
-    border: 1px solid rgba(72, 202, 228, 0.5) !important;
-    box-shadow: 0 0 8px rgba(125, 249, 255, 0.2) !important;
-    height: 32px;
-
-    .el-input__inner {
-      color: $tech-text !important;
-      font-size: 13px;
-
-      &::placeholder {
-        color: rgba($tech-lightblue, 0.7) !important;
-      }
-    }
-  }
-
-  :deep(.el-select__caret) {
-    color: $tech-cyan !important;
+  &:hover {
+    color: #0059ff; /* 悬停时改变颜色 */
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.5); /* 悬停时增强阴影 */
   }
 }
 
@@ -693,13 +332,17 @@ $tech-text: #CAF0F8;
   width: 100%;
   height: v-bind(height);
   min-height: 200px;
+  background: linear-gradient(135deg, rgba($tech-blue, 0.8) 0%, rgba($tech-darkblue, 0.8) 100%);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .chart {
   width: 100%;
-  height: 100%;
+  height: calc(100% - 40px);
   position: relative;
   z-index: 2;
+  margin-top: -10px;
 }
 
 .particle-canvas {
@@ -733,27 +376,5 @@ $tech-text: #CAF0F8;
     display: block;
     font-size: 14px;
   }
-}
-
-:deep(.el-select-dropdown) {
-  background: $tech-darkblue !important;
-  border: 1px solid $tech-cyan !important;
-  box-shadow: 0 0 15px rgba($tech-cyan, 0.3) !important;
-
-  .el-select-dropdown__item {
-    color: $tech-text;
-
-    &:hover {
-      background: rgba($tech-cyan, 0.1) !important;
-    }
-
-    &.selected {
-      color: $tech-cyan;
-      font-weight: normal;
-    }
-  }
-}
-:deep(.el-card .el-card__body) {
-  padding: 0 !important;
 }
 </style>

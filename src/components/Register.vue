@@ -157,15 +157,16 @@ import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Refresh, User, Lock, Message, Avatar, UserFilled, Setting, View, Connection } from '@element-plus/icons-vue';
 import axios from 'axios';
+import request from '@/utils/request';
 
 // 角色图标映射（包含所有角色）
 const roleIcons = {
-  admin: Setting,
-  researcher: UserFilled,
-  analyst: View,
-  auditor: Avatar,
-  user: User,
-  guest: Connection
+  ADMIN: Setting,
+  RESEARCHER: UserFilled,
+  ANALYST: View,
+  AUDITOR: Avatar,
+  USER: User,
+  GUEST: Connection
 };
 
 // 响应式数据
@@ -174,19 +175,19 @@ const form = ref({
   password: '',
   confirmPassword: '',
   email: '',
-  role: '',
+  role: 'USER', // 默认角色
   code: '',
   agreed: false
 });
 
 // 角色选项（包含所有角色）
 const roleOptions = ref([
-  { label: '管理员', value: 'admin' },
-  { label: '研究员', value: 'researcher' },
-  { label: '分析师', value: 'analyst' },
-  { label: '审核员', value: 'auditor' },
-  { label: '普通用户', value: 'user' },
-  { label: '游客', value: 'guest' }
+  { label: '管理员', value: 'ADMIN' },
+  { label: '研究员', value: 'RESEARCHER' },
+  { label: '分析师', value: 'ANALYST' },
+  { label: '审核员', value: 'AUDITOR' },
+  { label: '普通用户', value: 'USER' },
+  { label: '游客', value: 'GUEST' }
 ]);
 
 const loading = ref(false);
@@ -259,64 +260,78 @@ const showAgreement = () => {
   ElMessage.info('用户注册协议内容将在弹窗中显示');
 };
 
-// 跳转到登录页面（带动画）
+// 跳转到登录页面
 const goToLogin = () => {
-  router.push({
-    name: 'Login',
-    state: {
-      transitionType: 'tech' // 标识使用科技风过渡
-    }
-  })
+  router.push({ name: 'Login' });
 };
+
+// 表单验证
+const validateForm = () => {
+  if (!form.value.username || form.value.username.length < 2 || form.value.username.length > 20) {
+    ElMessage.error('用户名长度需在2-20个字符之间');
+    return false;
+  }
+
+  if (!form.value.password || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,20}$/.test(form.value.password)) {
+    ElMessage.error('密码需包含大小写字母和数字，长度6-20位');
+    return false;
+  }
+
+  if (form.value.password !== form.value.confirmPassword) {
+    ElMessage.error('两次输入的密码不一致');
+    return false;
+  }
+
+  if (form.value.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email)) {
+    ElMessage.error('邮箱格式不正确');
+    return false;
+  }
+
+  if (!form.value.role) {
+    ElMessage.error('请选择角色');
+    return false;
+  }
+
+  if (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value) {
+    ElMessage.error('验证码错误');
+    refreshCaptcha();
+    return false;
+  }
+
+  if (!form.value.agreed) {
+    ElMessage.error('请先同意用户注册协议');
+    return false;
+  }
+
+  return true;
+};
+
 
 // 注册处理逻辑
 const handleRegister = async () => {
+  if (!validateForm()) return;
+
   try {
     loading.value = true;
 
-    // 表单验证
-    if (!form.value.username || !form.value.password || !form.value.confirmPassword ||
-        !form.value.email || !form.value.role || !form.value.code) {
-      ElMessage.error('所有字段都必须填写');
-      loading.value = false;
-      return;
-    }
-
-    if (form.value.password !== form.value.confirmPassword) {
-      ElMessage.error('两次输入的密码不一致');
-      loading.value = false;
-      return;
-    }
-
-    if (!form.value.agreed) {
-      ElMessage.error('请先同意用户注册协议');
-      loading.value = false;
-      return;
-    }
-
-    if (form.value.code.toUpperCase() !== captchaToken.value) {
-      ElMessage.error('验证码错误');
-      loading.value = false;
-      refreshCaptcha();
-      return;
-    }
-
-    // 发送注册请求
-    const response = await axios.post('localhost:8080/api/register', {
+    const response = await request.post('/api/auth/register', {
       username: form.value.username,
       password: form.value.password,
-      email: form.value.email,
-      role: form.value.role
+      role: form.value.role,
+      email: form.value.email || null,
+      phone: null, // 根据需求可以添加
+      address: null // 根据需求可以添加
     });
 
-    if (response.data.success) {
+    if (response.code === 200) {
       ElMessage.success('注册成功，请登录');
       await router.push({ name: 'Login' });
     } else {
-      ElMessage.error(response.data.message || '注册失败');
+      ElMessage.error(response.message || '注册失败');
     }
   } catch (error) {
-    ElMessage.error('网络错误，请重试');
+    console.error('注册失败:', error);
+    ElMessage.error(error.message || '注册失败，请重试');
   } finally {
     loading.value = false;
   }
