@@ -1,7 +1,7 @@
 <template>
   <div>
     <CardSwitcher
-        :components="cardComponents"
+        :components="componentsList"
         :swipeThreshold="80"
         :rotationFactor="0.2"
         :stackDepthFactor="0.05"
@@ -21,12 +21,19 @@ import MyComponentD from './MyComponentD.vue';
 
 
 // 定义要传入 CardSwitcher 的组件数组
-const cardComponents = [
-  MyComponentA,
-  MyComponentB,
-  MyComponentC,
-  MyComponentD,
-];
+const props = defineProps({
+  componentsList: {
+    type: Array,
+    required: false, // 可以设置为 false，如果希望在没有传入时使用默认值
+    default: () => [ // 提供一个默认值，以防外部没有传入
+      MyComponentA,
+      MyComponentB,
+      MyComponentC,
+      MyComponentD,
+    ],
+  },
+});
+
 </script>
 
 <style>

@@ -1,12 +1,7 @@
 <template>
   <div class="scatter-chart-container" :style="{ width: computedWidth }">
     <el-card class="chart-card futuristic-card">
-      <template #header>
-        <div class="card-header">
-          <h3 class="futuristic-title">{{ title }}</h3>
-        </div>
-      </template>
-
+      <router-link :to="{ name: 'Home' }" class="chart-title">{{ title }}</router-link>
       <div class="chart-wrapper">
         <div
             ref="chartRef"
@@ -52,11 +47,11 @@ const props = defineProps({
   },
   maxBubbleSize: {
     type: Number,
-    default: 23
+    default: 20
   },
   minBubbleSize: {
     type: Number,
-    default: 10
+    default: 13
   }
 })
 
@@ -73,66 +68,145 @@ const computedWidth = computed(() => {
 const hasData = computed(() => {
   return props.chartData && props.chartData.length > 0
 })
-
+const globalParticles = ref({
+  active: false,
+  animationFrameId: null,
+  particles: [],
+  lastCleanup: 0,
+  lastFrameTime: 0
+})
+// 辅助函数：将hex颜色转换为rgba
+const hexToRgba = (hex, alpha) => {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
 // 粒子系统
+// 初始化粒子系统
 const initParticles = () => {
   if (!particleCanvas.value || !hasData.value) return
+
+  // 如果粒子系统已经在运行，先停止它
+  if (globalParticles.value.active) {
+    stopParticles()
+  }
 
   const canvas = particleCanvas.value
   canvas.width = canvas.offsetWidth
   canvas.height = canvas.offsetHeight
 
-  particleCtx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')
 
-  // 创建粒子 - 数量减少到40个以降低负载
-  const particles = Array.from({ length: 40 }, () => ({
+  // 粒子配置 - 使用MultipleLineChart风格的参数
+  const config = {
+    MAX_PARTICLES: 40,          // 粒子数量
+    PARTICLE_SIZE: 1.5,         // 粒子基础大小
+    SPEED: 0.2,                // 基础速度
+    TRAIL_LENGTH: 15,          // 拖尾长度
+    FPS: 30,                   // 目标帧率
+    COLORS: ['#7DF9FF', '#00B4D8', '#90E0EF'] // 粒子颜色
+  }
+
+  // 粒子生成函数
+  const createParticle = () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    size: Math.random() * 1 + 0.5, // 减小粒子大小
-    speed: Math.random() * 0.15 + 0.05, // 降低速度
-    opacity: Math.random() * 0.3 + 0.1, // 降低不透明度
-    direction: Math.random() * Math.PI * 2
-  }))
+    size: Math.random() * 1.5 + 0.5,
+    speed: config.SPEED * (0.8 + Math.random() * 1.4),
+    opacity: Math.random() * 0.4 + 0.2,
+    direction: Math.random() * Math.PI * 2,
+    color: config.COLORS[Math.floor(Math.random() * config.COLORS.length)],
+    history: [],
+    life: 1 + Math.random() * 0.3
+  })
 
-  const animate = () => {
-    if (!particleCtx || !canvas) return
+  // 标记为活跃
+  globalParticles.value.active = true
 
-    // 使用更透明的背景让拖尾更快消失
-    particleCtx.fillStyle = 'rgba(3, 4, 94, 0.05)' // 更透明
-    particleCtx.fillRect(0, 0, canvas.width, canvas.height)
+  // 初始填充粒子
+  globalParticles.value.particles = Array.from(
+      { length: config.MAX_PARTICLES / 2 }, // 初始只填充一半粒子
+      createParticle
+  )
 
-    // 绘制粒子
-    particles.forEach(p => {
+  const animate = (timestamp) => {
+    if (!globalParticles.value.active) return
+
+    // 控制帧率
+    const deltaTime = timestamp - globalParticles.value.lastFrameTime
+    if (deltaTime < 1000 / config.FPS) {
+      globalParticles.value.animationFrameId = requestAnimationFrame(animate)
+      return
+    }
+    globalParticles.value.lastFrameTime = timestamp
+
+    // 清除画布 - 使用更透明的背景让拖尾更快消失
+    ctx.fillStyle = 'rgba(3, 4, 94, 0.08)'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    // 定期清理死亡粒子
+    const now = Date.now()
+    if (now - globalParticles.value.lastCleanup > 2000) {
+      globalParticles.value.particles = globalParticles.value.particles.filter(p => p.life > 0)
+      globalParticles.value.lastCleanup = now
+    }
+
+    // 补充新粒子 (不超过最大值)
+    if (globalParticles.value.particles.length < config.MAX_PARTICLES && Math.random() > 0.7) {
+      globalParticles.value.particles.push(createParticle())
+    }
+
+    // 更新和绘制粒子
+    globalParticles.value.particles.forEach(p => {
+      // 更新生命周期
+      p.life -= 0.002
+
+      // 更新位置
       p.x += Math.cos(p.direction) * p.speed
       p.y += Math.sin(p.direction) * p.speed
 
-      // 边界检查
+      // 边界检查并反弹
       if (p.x < 0 || p.x > canvas.width) p.direction = Math.PI - p.direction
       if (p.y < 0 || p.y > canvas.height) p.direction = -p.direction
 
-      const gradient = particleCtx.createRadialGradient(
+      // 创建粒子光晕效果 - MultipleLineChart风格
+      const gradient = ctx.createRadialGradient(
           p.x, p.y, 0,
           p.x, p.y, p.size
       )
-      // 使用更浅的颜色
-      gradient.addColorStop(0, 'rgba(180, 250, 255, 0.6)') // 更浅的蓝色
-      gradient.addColorStop(1, 'rgba(180, 250, 255, 0)')
+      gradient.addColorStop(0, `rgba(125, 249, 255, ${p.opacity * 0.7})`)
+      gradient.addColorStop(0.7, `rgba(125, 249, 255, ${p.opacity * 0.2})`)
+      gradient.addColorStop(1, 'rgba(125, 249, 255, 0)')
 
-      particleCtx.beginPath()
-      particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-      particleCtx.fillStyle = gradient
-      particleCtx.fill()
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+      ctx.fillStyle = gradient
+      ctx.fill()
     })
 
-    // 添加帧率控制 - 每两帧渲染一次
-    animationFrameId = requestAnimationFrame(() => {
-      setTimeout(() => {
-        requestAnimationFrame(animate)
-      }, 0)
-    })
+    globalParticles.value.animationFrameId = requestAnimationFrame(animate)
   }
 
-  animate()
+  globalParticles.value.animationFrameId = requestAnimationFrame(animate)
+}
+
+
+
+// 停止粒子系统
+const stopParticles = () => {
+  if (globalParticles.value.animationFrameId) {
+    cancelAnimationFrame(globalParticles.value.animationFrameId)
+    globalParticles.value.animationFrameId = null
+  }
+  globalParticles.value.active = false
+  globalParticles.value.particles = []
+
+  // 清除画布
+  if (particleCanvas.value) {
+    const ctx = particleCanvas.value.getContext('2d')
+    ctx.clearRect(0, 0, particleCanvas.value.width, particleCanvas.value.height)
+  }
 }
 
 // 初始化图表
@@ -163,11 +237,12 @@ const updateChart = () => {
     return Math.round(value) // 小于1000的直接取整
   }
   // 准备数据 - 假设数据格式为 [{ year: '2020', count: 100 }, ...]
-  const seriesData = props.chartData.map(item => ({
+  const seriesData = props.chartData.map((item, index) => ({
     name: String(item.year), // 确保年份是字符串
     value: [String(item.year), Number(item.count)], // 确保类型正确
     symbolSize: calculateBubbleSize(item.count),
-    formattedValue: formatNumber(item.count)
+    formattedValue: formatNumber(item.count),
+
   }))
 
   // 计算最大值并向上取整到最近的合适刻度
@@ -211,8 +286,8 @@ const updateChart = () => {
     grid: {
       left: '5%',
       right: '10%',
-      bottom: '15%',
-      top: '20%',
+      bottom: '0%',
+      top: '28%',
       // position: 'center',
       containLabel: true
     },
@@ -263,9 +338,12 @@ const updateChart = () => {
       },
       splitLine: {
         lineStyle: {
-          color: 'rgba(72, 202, 228, 0.15)'
-        }
+          color: 'rgba(72, 202, 228, 0.15)',
+          width: 1  // 可以适当增加分割线宽度
+        },
+        interval: 'auto'  // 确保自动计算间隔
       },
+      splitNumber: 4,  // 增加这个属性可以控制分割段数，使y轴刻度更稀疏
       axisTick: {
         lineStyle: {
           color: '#48CAE4'
@@ -297,7 +375,10 @@ const updateChart = () => {
         color: '#CAF0F8',
         fontSize: 9,
         offset: [0, 5],
-        formatter: (params) => formatNumber(params.data.value[1])
+        formatter: (params) => {
+          // 只有当数据索引是偶数时才显示标签
+          return params.dataIndex % 2 === 0 ? formatNumber(params.data.value[1]) : ''
+        }
       },
       // 添加缩放动画效果
       animationType: 'scale',
@@ -383,6 +464,7 @@ onMounted(() => {
 // 清理
 onUnmounted(() => {
   if (chartInstance) chartInstance.dispose()
+  stopParticles()
   if (animationFrameId) cancelAnimationFrame(animationFrameId)
   window.removeEventListener('resize', handleResize)
 })
@@ -400,12 +482,35 @@ $tech-text: #CAF0F8;
 //
 //}
 .scatter-chart-container {
-  /* 移除固定宽度设置 */
   min-width: 300px;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  background: linear-gradient(135deg, #03045E 0%, #023E8A 100%);
+  box-shadow: 0 2px 12px rgba(0, 119, 182, 0.3);
+  border-radius: 4px;
+  padding: 1px;
 }
+.chart-title {
+  position: absolute;
+  top: 55px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #7DF9FF;
+  font-size: 14px;
+  margin: 0;
+  font-weight: 500;
+  text-shadow: 0 0 8px rgba(125, 249, 255, 0.3);
+  z-index: 10;
+  cursor: pointer; /* 添加指针样式 */
+  text-decoration: none; /* 移除下划线 */
+  &:hover {
+    color: #0059ff; /* 悬停时改变颜色 */
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.5); /* 悬停时增强阴影 */
+  }
+}
+
 .futuristic-card {
   margin: 0;
   border: none;
@@ -433,6 +538,8 @@ $tech-text: #CAF0F8;
   width: 100%;
   height: v-bind(height);
   min-height: 200px;
+  flex-grow: 1;
+  padding-top: 70px;
 }
 
 .chart {
@@ -441,7 +548,25 @@ $tech-text: #CAF0F8;
   position: relative;
   z-index: 2;
 }
+.chart-card {
+  margin: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  position: relative;
 
+  :deep(.el-card__header) {
+    padding: 0;
+    border-bottom: none;
+  }
+
+  :deep(.el-card__body) {
+    padding: 0 !important;
+  }
+}
 .particle-canvas {
   position: absolute;
   top: 0;
@@ -450,7 +575,6 @@ $tech-text: #CAF0F8;
   height: 100%;
   z-index: 1;
   pointer-events: none;
-  opacity: 0.6;
 }
 :deep(.el-card .el-card__body) {
   padding: 0 !important;

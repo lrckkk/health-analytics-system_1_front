@@ -6,7 +6,7 @@
       <simpleline
           :chart-data="medicalData2"
           title="病床机构数量变化趋势"
-          height=22vh
+          height=16vh
           width=100%
           x-field="year"
           y-field="count"

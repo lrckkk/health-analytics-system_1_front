@@ -24,15 +24,35 @@
           :pieSeriesData="mapDataStore.pieSeriesData"
       />
     </div>
+<!--    医疗机构卡片-->
 
      新增的 card 组件包裹 div，限定大小并定位在左上方
     <div class="card-display-area">
-      <card></card>
+      <card :componentsList="myCustomComponents1"></card>
+    </div>
+    <div class="card-display-area2">
+      <card :componentsList="myCustomComponents2"></card>
+    </div>
+    <div class="card-display-area3">
+      <card :componentsList="myCustomComponents3"></card>
+    </div>
+    <div class="card-display-area4">
+      <card :componentsList="myCustomComponents4"></card>
+    </div>
+    <div class="card-display-area5">
+      <card :componentsList="myCustomComponents5"></card>
+    </div>
+    <div class="card-display-area6">
+      <card :componentsList="myCustomComponents6"></card>
     </div>
     <div class="scroll-display-area">
       <scroll></scroll>
     </div>
-
+    <InteractiveButtonContainer
+        :buttonsRow1="myCustomButtonsRow1"
+        :buttonsRow2="myCustomButtonsRow2"
+        @button-clicked="handleChildButtonClick"
+    />
     <div v-if="mapDataStore.isLoading" class="loading-overlay tech-loading">
       <div class="loading-spinner"></div>
       <p>数据加载中，请稍候...</p>
@@ -54,10 +74,21 @@ import { useMapDataStore } from '@/stores/TotalData.js';
 import {useRegionStore} from '@/stores/RegionData.js';
 import {ElMessage} from "element-plus";
 import card from '../card/CardContainer.vue'; // 导入 CardContainer.vue 组件
+import InteractiveButtonContainer from '@/components/ButtonContainer.vue';
 import scroll from './scroll.vue';
+
 import Settings from "@/components/Settings.vue";
 import Role from '../../components/Role.vue'; // 新增
 import Exit from '../../components/Exit.vue'; // 新增
+
+
+import MyComponentA from '../card/MyComponentA.vue';
+import MyComponentB from '../card/MyComponentB.vue';
+import MyComponentC from '../card/MyComponentC.vue';
+import MyComponentD from '../card/MyComponentD.vue';
+import ServiceforML from "@/pages/card/ServiceforML.vue";
+import PopulationLine from "@/pages/card/PopulationLine.vue";
+import RankforPop from "@/pages/card/RankforPop.vue";
 
 
 export default {
@@ -68,10 +99,25 @@ export default {
     ChinaMap,
     card,
     scroll,
+
     Role, // 新增
     Exit  // 新增
+
+    InteractiveButtonContainer,
+
   },
   setup() {
+    const myCustomComponents1 = ref([
+      MyComponentA,
+      MyComponentB,
+      MyComponentC,
+      MyComponentD,
+      ServiceforML,
+      PopulationLine,
+      RankforPop,
+    ]);
+
+
     const mapDataStore = useMapDataStore();
     const regionStore = useRegionStore();
 
@@ -93,8 +139,47 @@ export default {
         });
       }
     };
+    const handleChildButtonClick = (event) => {
+      console.log(`按钮点击事件：行 ID ${event.id}`);
 
+      mapDataStore.fetchsatterdata(event.id);
+
+
+    };
+    const myCustomButtonsRow1 = ref([
+      { id: 'populationData', label: '人口' },
+      { id: 'institutionData', label: '医疗机构' },
+      { id: 'personnelData', label: '医疗人员' },
+      { id: 'bedData', label: '床位总数' },
+      { id: 'outpatientVisitsData', label: '就诊人数' },
+      { id:'totalCostData',label:'医疗费用'},
+    ]);
+
+    const myCustomButtonsRow2 = ref([
+      { id: 'view_map', label: '查看地图' },
+      { id: 'chart_display', label: '图表展示' },
+      { id: 'table_data', label: '表格数据' },
+      { id: 'export_data', label: '导出数据' },
+    ]);
+
+    const myCustomComponents2 = ref([
+      MyComponentB,
+    ]);
+    const myCustomComponents3 = ref([
+      MyComponentC,
+    ]);
+    const myCustomComponents4 = ref([
+      MyComponentD,
+    ]);
+    const myCustomComponents5 = ref([
+      PopulationLine,
+      RankforPop,
+    ]);
+    const myCustomComponents6 = ref([
+      ServiceforML,
+    ]);
     onMounted(() => {
+      mapDataStore.fetchcountryData()
       if (mapDataStore.provinceData.length === 0 && !mapDataStore.isLoading) {
         mapDataStore.fetchMapData();
       }
@@ -102,7 +187,16 @@ export default {
 
     return {
       handleRegionClick,
+      handleChildButtonClick,
       mapDataStore,
+      myCustomButtonsRow1,
+      myCustomButtonsRow2,
+      myCustomComponents1: myCustomComponents1,
+      myCustomComponents2: myCustomComponents2,
+      myCustomComponents3: myCustomComponents3,
+      myCustomComponents4: myCustomComponents4,
+      myCustomComponents5: myCustomComponents5,
+      myCustomComponents6: myCustomComponents6,
     };
   },
 };
@@ -118,6 +212,13 @@ body {
   overflow-x: hidden;
 }
 .page-container {
+
+
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+
   position: relative;
 }
 
@@ -128,12 +229,149 @@ body {
   height: 80px; /* 根据 Timer 和 Title 高度调整 */
 }
 
+
 /* 左上角 */
 .top-left {
   position: absolute;
   top: 10px;
   left: 20px;
   z-index: 10;
+
+/* card 组件的包裹 div 样式，定位在左上方 */
+.card-display-area {
+  position: fixed;
+  top: 7%; /* 与地图顶部对齐 */
+  left: 1%; /* 距离左侧边缘 */
+  width: 20%; /* 限定宽度 */
+  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
+  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
+  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
+
+  /* 边框效果：通过多层box-shadow模拟发光边框 */
+  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
+  box-shadow:
+      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
+      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
+      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
+
+  /* 圆角：如果图片中有圆角，可以添加 */
+  border-radius: 8px; /* 适当的圆角 */
+}
+.card-display-area2 {
+  position: fixed;
+  top: 30%; /* 与地图顶部对齐 */
+  left: 1%; /* 距离左侧边缘 */
+  width: 20%; /* 限定宽度 */
+  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
+  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
+  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
+
+  /* 边框效果：通过多层box-shadow模拟发光边框 */
+  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
+  box-shadow:
+      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
+      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
+      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
+
+  /* 圆角：如果图片中有圆角，可以添加 */
+  border-radius: 8px; /* 适当的圆角 */
+}
+.card-display-area3 {
+  position: fixed;
+  top: 53%; /* 与地图顶部对齐 */
+  left: 1%; /* 距离左侧边缘 */
+  width: 20%; /* 限定宽度 */
+  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
+  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
+  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
+
+  /* 边框效果：通过多层box-shadow模拟发光边框 */
+  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
+  box-shadow:
+      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
+      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
+      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
+
+  /* 圆角：如果图片中有圆角，可以添加 */
+  border-radius: 8px; /* 适当的圆角 */
+}
+.Dataget-display-area{
+  position: fixed;
+  top: 70%; /* 与地图顶部对齐 */
+  left: 1%; /* 距离左侧边缘 */
+  width: 30%; /* 限定宽度 */
+  height: 30%; /* 限定高度，与地图高度相同，保持视觉平衡 */
+
+}
+.card-display-area4 {
+  position: fixed;
+  top: 7%; /* 与地图顶部对齐 */
+  left: 77%; /* 距离左侧边缘 */
+  width: 20%; /* 限定宽度 */
+  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
+  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
+  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
+
+  /* 边框效果：通过多层box-shadow模拟发光边框 */
+  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
+  box-shadow:
+      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
+      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
+      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
+
+  /* 圆角：如果图片中有圆角，可以添加 */
+  border-radius: 8px; /* 适当的圆角 */
+}
+.card-display-area5 {
+  position: fixed;
+  top: 30%; /* 与地图顶部对齐 */
+  left: 77%; /* 距离左侧边缘 */
+  width: 20%; /* 限定宽度 */
+  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
+  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
+  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
+
+  /* 边框效果：通过多层box-shadow模拟发光边框 */
+  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
+  box-shadow:
+      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
+      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
+      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
+
+  /* 圆角：如果图片中有圆角，可以添加 */
+  border-radius: 8px; /* 适当的圆角 */
+}
+.card-display-area6 {
+  position: fixed;
+  top: 53%; /* 与地图顶部对齐 */
+  left: 77%; /* 距离左侧边缘 */
+  width: 20%; /* 限定宽度 */
+  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
+  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
+  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
+
+  /* 边框效果：通过多层box-shadow模拟发光边框 */
+  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
+  box-shadow:
+      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
+      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
+      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
+
+  /* 圆角：如果图片中有圆角，可以添加 */
+  border-radius: 8px; /* 适当的圆角 */
+}
+.scroll-display-area {
+  position: absolute;
+  left: 31%;
+  top: 70%;
+  width: 40%;
+
 }
 
 /* 中间 */
