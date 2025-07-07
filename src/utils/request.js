@@ -8,21 +8,33 @@ const request = axios.create({
 
 // 请求拦截器
 request.interceptors.request.use(
+    // (config) => {
+    //     //由发送方决定转换形式
+    //     // if (config.method?.toLowerCase() === 'post') {
+    //     //     config.data = qs.stringify(config.data)
+    //     //     config.headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    //     // }
+    //     // 自动带上token
+    //     // const token = localStorage.getItem('jwt_token')
+    //     // if (token) {
+    //     //     config.headers.Authorization = `Bearer ${token}`
+    //     // }
+    //
+    //
+    //     return config
+    // },
+
+    // (error) => Promise.reject(error)
     (config) => {
-        //由发送方决定转换形式
-        // if (config.method?.toLowerCase() === 'post') {
-        //     config.data = qs.stringify(config.data)
-        //     config.headers['Content-Type'] = 'application/x-www-form-urlencoded'
-        // }
         // 自动带上token
-        // const token = localStorage.getItem('jwt_token')
-        // if (token) {
-        //     config.headers.Authorization = `Bearer ${token}`
-        // }
+        const token = localStorage.getItem('jwt_token')
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+        }
         return config
     },
-
     (error) => Promise.reject(error)
+
 )
 
 // 响应拦截器

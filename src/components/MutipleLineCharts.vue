@@ -1,64 +1,57 @@
 <template>
   <div class="multi-line-chart-container" :style="{ width: computedWidth }">
     <el-card class="chart-card futuristic-card">
-      <template #header>
-        <div class="card-header">
-          <h3 class="futuristic-title">{{ title }}</h3>
-          <div class="chart-controls">
-            <div class="control-group">
-              <span class="control-label">省份</span>
-              <el-select
-                  v-model="selectedProvinces"
-                  multiple
-                  placeholder=" "
-                  collapse-tags
-                  collapse-tags-tooltip
-                  @change="handleProvinceChange"
-                  class="futuristic-select"
-                  size="small"
-                  :teleported="false"
-
-              >
-                <template #prefix>
-                  <span class="select-placeholder">选择省份</span>
-                </template>
-                <template #tag="{ item }">
-                  <!-- 完全隐藏标签 -->
-                  <span style="display: none;"></span>
-                </template>
-                <el-option
-                    v-for="province in allProvinces"
-                    :key="province.provinceId"
-                    :label="province.provinceName"
-                    :value="province.provinceId"
-
-                />
-              </el-select>
-
-            </div>
-
-            <div class="legend-controls">
-              <div
-                  v-for="(field, index) in valueFields"
-                  :key="field"
-                  class="legend-item"
-                  :class="{ hidden: !visibleLines[field] }"
-                  @click="toggleLineVisibility(field)"
-              >
-                <div
-                    class="legend-color"
-                    :style="{
-                      backgroundColor: colorPalette[index % colorPalette.length],
-                      boxShadow: `0 0 6px ${colorPalette[index % colorPalette.length]}`
-                    }"
-                ></div>
-                <span>{{ field }}</span>
-                <i class="el-icon-close" @click.stop="removeProvince(field)"></i>
-              </div>
-            </div>
+      <!-- 标题和控制区域 -->
+      <div class="chart-header">
+        <router-link :to="{ name: 'Home' }" class="chart-title">{{ title }}</router-link>
+        <div class="chart-controls">
+          <div class="control-group">
+            <el-select
+                v-model="selectedProvinces"
+                multiple
+                placeholder=" "
+                collapse-tags
+                collapse-tags-tooltip
+                @change="handleProvinceChange"
+                class="futuristic-select"
+                size="small"
+                :teleported="false"
+            >
+              <template #prefix>
+                <span class="select-placeholder">选择省份</span>
+              </template>
+              <template #tag="{ item }">
+                <span style="display: none;"></span>
+              </template>
+              <el-option
+                  v-for="province in allProvinces"
+                  :key="province.provinceId"
+                  :label="province.provinceName"
+                  :value="province.provinceId"
+              />
+            </el-select>
           </div>
         </div>
-      </template>
+        <div class="legend-controls">
+          <div
+              v-for="(field, index) in valueFields"
+              :key="field"
+              class="legend-item"
+              :class="{ hidden: !visibleLines[field] }"
+              @click="toggleLineVisibility(field)"
+          >
+            <div
+                class="legend-color"
+                :style="{
+                  backgroundColor: colorPalette[index % colorPalette.length],
+                  boxShadow: `0 0 6px ${colorPalette[index % colorPalette.length]}`
+                }"
+            ></div>
+            <span>{{ field }}</span>
+            <i class="el-icon-close" @click.stop="removeProvince(field)"></i>
+          </div>
+        </div>
+      </div>
 
       <div class="chart-wrapper">
         <canvas ref="particleCanvas" class="particle-canvas"></canvas>
@@ -441,55 +434,39 @@ const toggleLineVisibility = (field) => {
 
 // 移除省份
 const removeProvince = (provinceName) => {
-  // 找到对应的省份ID
   const provinceId = provinceMapper.getId(provinceName) || parseInt(provinceName.replace('省份', ''))
-
-  // 从selectedProvinces中移除
   const index = selectedProvinces.value.indexOf(provinceId)
   if (index !== -1) {
     selectedProvinces.value.splice(index, 1)
   }
-  // 从valueFields中移除
   const fieldIndex = valueFields.value.indexOf(provinceName)
   if (fieldIndex !== -1) {
     valueFields.value.splice(fieldIndex, 1)
   }
-
-  // 从visibleLines中移除
   if (visibleLines.value[provinceName] !== undefined) {
     delete visibleLines.value[provinceName]
   }
-
-  // 立即更新图表
   updateChart()
-
 }
 
 // 处理省份变化
 const handleProvinceChange = () => {
-  // 清理不再选择的省份数据
   const currentProvinceNames = selectedProvinces.value.map(id =>
       provinceMapper.getName(id) || `省份${id}`
   )
-// 清理不再选择的省份数据
   Object.keys(populationData.value).forEach(provinceName => {
     if (!currentProvinceNames.includes(provinceName)) {
       delete populationData.value[provinceName]
-
-      // 从valueFields中移除
       const index = valueFields.value.indexOf(provinceName)
       if (index !== -1) {
         valueFields.value.splice(index, 1)
       }
-
-      // 从visibleLines中移除
       if (visibleLines.value[provinceName] !== undefined) {
         delete visibleLines.value[provinceName]
       }
     }
   })
 
-  // 添加新选择的省份数据
   selectedProvinces.value.forEach(provinceId => {
     const provinceName = provinceMapper.getName(provinceId) || `省份${provinceId}`
     if (!populationData.value[provinceName]) {
@@ -497,24 +474,16 @@ const handleProvinceChange = () => {
     }
   })
 
-  // 更新可见的折线
   valueFields.value.forEach(field => {
     visibleLines.value[field] = selectedProvinces.value.some(provinceId =>
         provinceMapper.getName(provinceId) === field
     )
   })
-  // 更新图表
   updateChart()
 }
 
 // 监听选择的省份变化
 watch(selectedProvinces, (newVal) => {
-  // if (newVal.length === 0) {
-  //   // 如果全部取消选择，添加默认省份
-  //   selectedProvinces.value = [23]
-  //   return
-  // }
-  // 直接调用handleProvinceChange来同步所有数据
   handleProvinceChange()
 }, { deep: true })
 
@@ -556,58 +525,78 @@ $tech-text: #CAF0F8;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  background: linear-gradient(135deg, $tech-blue 0%, $tech-darkblue 100%);
+  box-shadow: 0 2px 12px rgba(0, 119, 182, 0.3);
+  border-radius: 4px;
+  padding: 1px;
 }
 
 .futuristic-card {
   margin: 0;
   border: none;
-  background: linear-gradient(135deg, $tech-blue 0%, $tech-darkblue 100%);
-  box-shadow: 0 0 20px rgba(0, 180, 216, 0.5);
-  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  position: relative;
 
   :deep(.el-card__header) {
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(72, 202, 228, 0.3);
-    background: rgba(0, 53, 102, 0.3);
+    padding: 0;
+    border-bottom: none;
+    background: transparent;
+  }
+
+  :deep(.el-card__body) {
+    padding: 0 !important;
   }
 }
 
-.futuristic-title {
+.chart-header {
+  position: absolute;
+  top: 30px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  gap: 10px;
+  padding: 0 20px;
+}
+
+.chart-title {
   color: $tech-cyan;
-  font-size: 18px;
-  margin: 0 0 12px 0;
+  font-size: 16px;
+  margin: 0;
   font-weight: 500;
-  text-shadow: 0 0 8px rgba($tech-cyan, 0.5);
+  text-shadow: 0 0 8px rgba($tech-cyan, 0.3);
+  text-align: center;
+  cursor: pointer; /* 添加指针样式 */
+  text-decoration: none; /* 移除下划线 */
+
+  &:hover {
+    color: #0059ff; /* 悬停时改变颜色 */
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.5); /* 悬停时增强阴影 */
+  }
 }
 
 .chart-controls {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 20px;
+  justify-content: center;
   width: 100%;
 }
 
 .control-group {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 220px;
-  :deep(.el-select) {
-    width: 180px;
-    min-width: 180px;
-  }
-  .control-label {
-    color: $tech-cyan;
-    font-size: 14px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    text-shadow: 0 0 4px rgba($tech-cyan, 0.3);
-  }
+  justify-content: center;
+  width: 100%;
+  max-width: 300px;
 }
-/* 优化下拉框输入区域样式 */
-/* 修改选择栏样式 */
+
 .futuristic-select {
+  width: 100%;
+
   :deep(.el-select__wrapper) {
     background: rgba(0, 53, 102, 0.5) !important;
     border: 1px solid rgba(72, 202, 228, 0.5) !important;
@@ -626,10 +615,6 @@ $tech-text: #CAF0F8;
     font-size: 13px;
   }
 
-  :deep(.el-select__selection) {
-    color: #CAF0F8 !important;
-  }
-
   :deep(.el-select__prefix) {
     .select-placeholder {
       color: #90E0EF;
@@ -638,36 +623,32 @@ $tech-text: #CAF0F8;
     }
   }
 
-  :deep(.el-select__suffix) {
-    color: #7DF9FF !important;
-  }
-
   :deep(.el-select__tags) {
-    display: none; /* 完全隐藏标签 */
+    display: none;
   }
 }
-
-/* 修改下拉框输入区域样式 */
 
 .legend-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin-left: 0;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 0 10px;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  padding: 6px 24px 6px 12px;
+  padding: 4px 20px 4px 10px;
   background: rgba(0, 119, 182, 0.3);
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.2s;
   border: 1px solid rgba(72, 202, 228, 0.3);
   position: relative;
-
+  font-size: 12px;
+  color: rgba($tech-lightblue, 0.9);
   &:hover {
     background: rgba(0, 180, 216, 0.4);
     transform: translateY(-1px);
@@ -678,20 +659,21 @@ $tech-text: #CAF0F8;
     background: rgba(0, 53, 102, 0.3);
   }
 
-  span {
-    color: $tech-text;
-    font-size: 13px;
-    margin-left: 6px;
+  .legend-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+
   }
 
   .el-icon-close {
     position: absolute;
-    right: 6px;
+    right: 4px;
     top: 50%;
     transform: translateY(-50%);
     font-size: 12px;
     color: #f56c6c;
-    cursor: pointer;
     opacity: 0.6;
     transition: opacity 0.2s;
 
@@ -701,19 +683,13 @@ $tech-text: #CAF0F8;
   }
 }
 
-.legend-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
 .chart-wrapper {
   position: relative;
   width: 100%;
   height: v-bind(height);
   min-height: 200px;
-  overflow: hidden;
+  flex-grow: 1;
+  padding-top: 120px; /* 为标题和控制区域留出足够空间 */
 }
 
 .chart {
@@ -754,94 +730,23 @@ $tech-text: #CAF0F8;
     font-size: 14px;
   }
 }
-/* 新增下拉框选项样式 */
-:deep(.el-select-dropdown) {
-  background: $tech-darkblue !important;
-  border: 1px solid $tech-cyan !important;
-  box-shadow: 0 0 15px rgba($tech-cyan, 0.3) !important;
-  border-radius: 6px;
 
-  .el-select-dropdown__list {
-    padding: 6px 0;
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .chart-header {
+    top: 5px;
+    gap: 5px;
   }
 
-  .el-select-dropdown__item {
-    color: $tech-lightblue;
-    font-size: 13px;
-    height: 36px;
-    line-height: 36px;
-    padding: 0 16px;
-    transition: all 0.2s;
 
-    /* 未选中状态 */
-    &:not(.selected) {
-      background: transparent;
 
-      &:hover {
-        background: rgba($tech-cyan, 0.1) !important;
-        color: $tech-cyan;
-      }
-    }
-
-    /* 选中状态 */
-    &.selected {
-      color: $tech-cyan !important;
-      background: rgba($tech-cyan, 0.15) !important;
-      font-weight: normal;
-      position: relative;
-
-      &::after {
-        content: "";
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 12px;
-        height: 12px;
-        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%237DF9FF'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/%3E%3C/svg%3E") no-repeat center;
-      }
-    }
-
-    /* 禁用状态 */
-    &.is-disabled {
-      color: rgba($tech-lightblue, 0.5) !important;
-    }
+  .legend-item {
+    padding: 3px 16px 3px 8px;
+    font-size: 11px;
   }
 
-  /* 多选框样式 */
-  .el-checkbox {
-    margin-right: 8px;
-
-    .el-checkbox__inner {
-      background-color: rgba($tech-lightblue, 0.1);
-      border-color: rgba($tech-cyan, 0.5);
-
-      &:hover {
-        border-color: $tech-cyan;
-      }
-
-      &::after {
-        border-color: $tech-cyan;
-      }
-    }
-
-    .el-checkbox__label {
-      color: $tech-lightblue;
-    }
-
-    &.is-checked {
-      .el-checkbox__inner {
-        background-color: rgba($tech-cyan, 0.2);
-        border-color: $tech-cyan;
-      }
-
-      .el-checkbox__label {
-        color: $tech-cyan;
-      }
-    }
+  .chart-wrapper {
+    padding-top: 100px;
   }
-}
-:deep(.el-card .el-card__body) {
-  padding: 0 !important;
 }
 </style>

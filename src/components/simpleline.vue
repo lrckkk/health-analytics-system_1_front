@@ -2,26 +2,15 @@
 <template>
   <div class="line-chart-container" :style="{ width: computedWidth }">
     <el-card class="chart-card futuristic-card">
-      <template #header>
-        <div class="card-header">
-          <h3 class="futuristic-title">{{ title }}</h3>
-          <div class="chart-controls">
-          </div>
-        </div>
-      </template>
 
-
+      <router-link :to="{ name: 'Home' }" class="chart-title">{{ title }}</router-link>
       <div class="chart-wrapper">
         <div
             ref="chartRef"
             class="chart futuristic-chart"
             :style="{ height: '100%' ,width: '100%' }"
-
         ></div>
         <canvas ref="particleCanvas" class="particle-canvas"></canvas>
-<!--        <div v-if="isLoading" class="loading-overlay">-->
-<!--          <div class="loading-spinner"></div>-->
-<!--        </div>-->
         <div v-if="!hasData" class="empty-placeholder">
           <i class="el-icon-data-line"></i>
           <span>暂无数据</span>
@@ -35,7 +24,7 @@
 import {ref, onMounted, watch, nextTick, onUnmounted, computed, onBeforeUnmount} from 'vue'
 import * as echarts from 'echarts'
 import { ElCard, ElSelect, ElOption } from 'element-plus'
-
+import { useRouter } from 'vue-router'
 const props = defineProps({
   chartData: {
     type: Array,
@@ -86,67 +75,146 @@ const computedWidth = computed(() => {
 const hasData = computed(() => {
   return props.chartData && props.chartData.length > 0 && selectedXField.value && selectedYField.value
 })
+const globalParticles = ref({
+  active: false,
+  animationFrameId: null,
+  particles: [],
+  lastCleanup: 0,
+  lastFrameTime: 0
+})
+// 辅助函数：将hex颜色转换为rgba
+const hexToRgba = (hex, alpha) => {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
 
 // 初始化粒子系统
+// 初始化粒子系统 - 使用MultipleLineChart风格的粒子效果
 const initParticles = () => {
   if (!particleCanvas.value || !hasData.value) return
+
+  // 如果粒子系统已经在运行，先停止它
+  if (globalParticles.value.active) {
+    stopParticles()
+  }
 
   const canvas = particleCanvas.value
   canvas.width = canvas.offsetWidth
   canvas.height = canvas.offsetHeight
 
-  particleCtx = canvas.getContext('2d')
+  const ctx = canvas.getContext('2d')
 
-  // 创建粒子 - 数量减少到40个以降低负载
-  const particles = Array.from({ length: 40 }, () => ({
+  // 粒子配置 - 使用MultipleLineChart风格的参数
+  const config = {
+    MAX_PARTICLES: 40,          // 粒子数量
+    PARTICLE_SIZE: 1.5,         // 粒子基础大小
+    SPEED: 0.2,                // 基础速度
+    TRAIL_LENGTH: 15,          // 拖尾长度
+    FPS: 30,                   // 目标帧率
+    COLORS: ['#7DF9FF', '#00B4D8', '#90E0EF'] // 粒子颜色
+  }
+
+  // 粒子生成函数
+  const createParticle = () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    size: Math.random() * 1 + 0.5, // 减小粒子大小
-    speed: Math.random() * 0.15 + 0.05, // 降低速度
-    opacity: Math.random() * 0.3 + 0.1, // 降低不透明度
-    direction: Math.random() * Math.PI * 2
-  }))
+    size: Math.random() * 1.5 + 0.5,
+    speed: config.SPEED * (0.8 + Math.random() * 1.4),
+    opacity: Math.random() * 0.4 + 0.2,
+    direction: Math.random() * Math.PI * 2,
+    color: config.COLORS[Math.floor(Math.random() * config.COLORS.length)],
+    history: [],
+    life: 1 + Math.random() * 0.3
+  })
 
-  const animate = () => {
-    if (!particleCtx || !canvas) return
+  // 标记为活跃
+  globalParticles.value.active = true
 
-    // 使用更透明的背景让拖尾更快消失
-    particleCtx.fillStyle = 'rgba(3, 4, 94, 0.05)' // 更透明
-    particleCtx.fillRect(0, 0, canvas.width, canvas.height)
+  // 初始填充粒子
+  globalParticles.value.particles = Array.from(
+      { length: config.MAX_PARTICLES / 2 }, // 初始只填充一半粒子
+      createParticle
+  )
 
-    // 绘制粒子
-    particles.forEach(p => {
+  const animate = (timestamp) => {
+    if (!globalParticles.value.active) return
+
+    // 控制帧率
+    const deltaTime = timestamp - globalParticles.value.lastFrameTime
+    if (deltaTime < 1000 / config.FPS) {
+      globalParticles.value.animationFrameId = requestAnimationFrame(animate)
+      return
+    }
+    globalParticles.value.lastFrameTime = timestamp
+
+    // 清除画布 - 使用更透明的背景让拖尾更快消失
+    ctx.fillStyle = 'rgba(3, 4, 94, 0.08)'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    // 定期清理死亡粒子
+    const now = Date.now()
+    if (now - globalParticles.value.lastCleanup > 2000) {
+      globalParticles.value.particles = globalParticles.value.particles.filter(p => p.life > 0)
+      globalParticles.value.lastCleanup = now
+    }
+
+    // 补充新粒子 (不超过最大值)
+    if (globalParticles.value.particles.length < config.MAX_PARTICLES && Math.random() > 0.7) {
+      globalParticles.value.particles.push(createParticle())
+    }
+
+    // 更新和绘制粒子
+    globalParticles.value.particles.forEach(p => {
+      // 更新生命周期
+      p.life -= 0.002
+
+      // 更新位置
       p.x += Math.cos(p.direction) * p.speed
       p.y += Math.sin(p.direction) * p.speed
 
-      // 边界检查
+      // 边界检查并反弹
       if (p.x < 0 || p.x > canvas.width) p.direction = Math.PI - p.direction
       if (p.y < 0 || p.y > canvas.height) p.direction = -p.direction
 
-      const gradient = particleCtx.createRadialGradient(
+      // 创建粒子光晕效果 - MultipleLineChart风格
+      const gradient = ctx.createRadialGradient(
           p.x, p.y, 0,
           p.x, p.y, p.size
       )
-      // 使用更浅的颜色
-      gradient.addColorStop(0, 'rgba(180, 250, 255, 0.6)') // 更浅的蓝色
-      gradient.addColorStop(1, 'rgba(180, 250, 255, 0)')
+      gradient.addColorStop(0, `rgba(125, 249, 255, ${p.opacity * 0.7})`)
+      gradient.addColorStop(0.7, `rgba(125, 249, 255, ${p.opacity * 0.2})`)
+      gradient.addColorStop(1, 'rgba(125, 249, 255, 0)')
 
-      particleCtx.beginPath()
-      particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-      particleCtx.fillStyle = gradient
-      particleCtx.fill()
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+      ctx.fillStyle = gradient
+      ctx.fill()
     })
 
-    // 添加帧率控制 - 每两帧渲染一次
-    animationFrameId = requestAnimationFrame(() => {
-      setTimeout(() => {
-        requestAnimationFrame(animate)
-      }, 0)
-    })
+    globalParticles.value.animationFrameId = requestAnimationFrame(animate)
   }
 
-  animate()
+  globalParticles.value.animationFrameId = requestAnimationFrame(animate)
 }
+
+// 停止粒子系统
+const stopParticles = () => {
+  if (globalParticles.value.animationFrameId) {
+    cancelAnimationFrame(globalParticles.value.animationFrameId)
+    globalParticles.value.animationFrameId = null
+  }
+  globalParticles.value.active = false
+  globalParticles.value.particles = []
+
+  // 清除画布
+  if (particleCanvas.value) {
+    const ctx = particleCanvas.value.getContext('2d')
+    ctx.clearRect(0, 0, particleCanvas.value.width, particleCanvas.value.height)
+  }
+}
+
 
 // 初始化图表
 
@@ -247,7 +315,7 @@ const updateChart = () => {
     grid: {
       left: '5%',
       right: '5%',
-      bottom: '10%',
+      bottom: '20%',
       top: '20%',
       containLabel: true
     },
@@ -290,9 +358,12 @@ const updateChart = () => {
       },
       splitLine: {
         lineStyle: {
-          color: 'rgba(72, 202, 228, 0.15)'
-        }
-      }
+          color: 'rgba(72, 202, 228, 0.15)',
+          width: 1  // 可以适当增加分割线宽度
+        },
+        interval: 'auto'  // 确保自动计算间隔
+      },
+      splitNumber: 4  // 增加这个属性可以控制分割段数，使y轴刻度更稀疏
     },
     series: [{
       name: selectedYField.value,
@@ -329,7 +400,10 @@ const updateChart = () => {
         color: '#CAF0F8',
         fontSize: 9,
         offset: [0, 5],
-        formatter: (params) => formatNumber(params.value)
+        formatter: (params) => {
+          // 只显示偶数索引的标签（每隔一个显示一个）
+          return params.dataIndex % 2 === 0 ? formatNumber(params.value) : '';
+        },
       }
 
     }],
@@ -410,10 +484,17 @@ onMounted(() => {
 // 添加对数据的主动监听
   watch(() => props.chartData, (newData) => {
     if (newData.length > 0) {
-      nextTick(initChart); // 数据变化时重新初始化
-      nextTick(initParticles); // 数据变化时重新初始化
+      // 先取消之前的动画
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
+        animationFrameId = null
+        stopParticles()
+      }
+      stopParticles()
+      nextTick(initChart)
+      nextTick(initParticles)
     }
-  }, { immediate: true, deep: true });
+  }, { immediate: true, deep: true })
   window.addEventListener('resize', resizeChart);
   window.addEventListener('resize', handleResize)
 })
@@ -423,9 +504,15 @@ onBeforeUnmount(() => {
 });
 onUnmounted(() => {
   if (chartInstance) chartInstance.dispose()
-  if (animationFrameId) cancelAnimationFrame(animationFrameId)
+  stopParticles()
   window.removeEventListener('resize', handleResize)
 })
+//
+// onUnmounted(() => {
+//   if (chartInstance) chartInstance.dispose()
+//   if (animationFrameId) cancelAnimationFrame(animationFrameId)
+//   window.removeEventListener('resize', handleResize)
+// })
 </script>
 <style scoped lang="scss">
 /* 容器样式 */
@@ -434,7 +521,50 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  background: linear-gradient(135deg, #03045E 0%, #023E8A 100%);
+  box-shadow: 0 2px 12px rgba(0, 119, 182, 0.3);
+  border-radius: 4px;
+  padding: 1px;
 }
+.chart-title {
+  position: absolute;
+  top: 35px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #7DF9FF;
+  font-size: 14px;
+  margin: 0;
+  font-weight: 500;
+  text-shadow: 0 0 8px rgba(125, 249, 255, 0.3);
+  z-index: 10;
+  cursor: pointer; /* 添加指针样式 */
+  text-decoration: none; /* 移除下划线 */
+
+  &:hover {
+    color: #0059ff; /* 悬停时改变颜色 */
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.5); /* 悬停时增强阴影 */
+  }
+}
+/* 图表容器样式 */
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: v-bind(height);
+  min-height: 200px;
+  flex-grow: 1;
+  padding-top: 30px; /* 为标题留出空间 */
+}
+
+
+.chart {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+
 
 /* 卡片样式 */
 .chart-card {
@@ -445,10 +575,15 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  position: relative; /* 为绝对定位的标题提供参考 */
 
   :deep(.el-card__header) {
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(72, 202, 228, 0.2);
+    padding: 0;
+    border-bottom: none; /* 移除头部边框 */
+  }
+
+  :deep(.el-card__body) {
+    padding: 0 !important;
   }
 }
 
@@ -489,136 +624,16 @@ onUnmounted(() => {
     text-shadow: 0 0 5px rgba(125, 249, 255, 0.3);
   }
 
-  /* 选择器样式 */
-  :deep(.el-select) {
-    flex-grow: 1;
-    width: 100%;
-
-    .el-input {
-      .el-input__inner {
-        background: rgba(0, 119, 182, 0.3) !important;
-        border: 1px solid rgba(72, 202, 228, 0.6) !important;
-        color: #CAF0F8 !important;
-        height: 32px;
-        font-size: 12px;
-        transition: all 0.3s ease;
-        box-shadow: 0 0 8px rgba(0, 180, 216, 0.2);
-        border-radius: 4px;
-
-        &::placeholder {
-          color: rgba(202, 240, 248, 0.6) !important;
-        }
-
-        &:hover {
-          border-color: #7DF9FF !important;
-          box-shadow: 0 0 12px rgba(125, 249, 255, 0.4) !important;
-        }
-
-        &:focus {
-          border-color: #7DF9FF !important;
-          box-shadow: 0 0 15px rgba(125, 249, 255, 0.6) !important;
-        }
-      }
-
-      .el-select__caret {
-        color: #7DF9FF !important;
-        transition: transform 0.3s;
-      }
-    }
-
-    &.is-focus {
-      .el-input__inner {
-        border-color: #7DF9FF !important;
-      }
-      .el-select__caret {
-        transform: rotate(180deg);
-      }
-    }
-  }
-}
-
-/* 下拉菜单样式 */
-:deep(.el-select-dropdown) {
-  background: linear-gradient(135deg, #03045E 0%, #023E8A 100%) !important;
-  border: 1px solid rgba(72, 202, 228, 0.6) !important;
-  box-shadow: 0 5px 20px rgba(0, 119, 182, 0.4) !important;
-  border-radius: 4px !important;
-  overflow: hidden !important;
-
-  .el-select-dropdown__item {
-    color: #CAF0F8 !important;
-    font-size: 12px !important;
-    padding: 8px 16px !important;
-    transition: all 0.2s ease !important;
-    position: relative !important;
-
-    &:before {
-      content: '' !important;
-      position: absolute !important;
-      left: 0 !important;
-      top: 0 !important;
-      width: 3px !important;
-      height: 100% !important;
-      background: transparent !important;
-      transition: all 0.2s ease !important;
-    }
-
-    &:hover {
-      background: rgba(0, 180, 216, 0.2) !important;
-      color: #7DF9FF !important;
-
-      &:before {
-        background: #7DF9FF !important;
-      }
-    }
-
-    &.selected {
-      background: rgba(0, 150, 199, 0.3) !important;
-      color: #7DF9FF !important;
-      font-weight: bold !important;
-
-      &:before {
-        background: #7DF9FF !important;
-      }
-    }
-  }
-
-  .el-select-dropdown__empty {
-    color: rgba(202, 240, 248, 0.6) !important;
-    padding: 10px !important;
-    font-size: 12px !important;
-  }
-
-  .popper__arrow {
-    border-bottom-color: rgba(72, 202, 228, 0.6) !important;
-
-    &:after {
-      border-bottom-color: #03045E !important;
-    }
-  }
-}
-
-/* 图表容器样式 */
-.chart-wrapper {
-  position: relative;
-  width: 100%;
-  height: v-bind(height);
-  min-height: 200px;
-  flex-grow: 1;
 
 }
 
-.chart {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  z-index: 2;
-}
+
+
 
 /* 粒子画布样式 */
 .particle-canvas {
   position: absolute;
-  top: 0;
+  top: 0; /* 从顶部开始 */
   left: 0;
   width: 100%;
   height: 100%;
@@ -649,27 +664,7 @@ onUnmounted(() => {
   }
 }
 
-/* 空状态提示样式 */
-.empty-placeholder {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 3;
-  color: rgba(144, 224, 239, 0.7);
-  font-size: 13px;
 
-  .el-icon-data-line {
-    font-size: 32px;
-    margin-bottom: 8px;
-    color: rgba(125, 249, 255, 0.4);
-  }
-}
 
 /* 动画定义 */
 @keyframes spin {
@@ -678,12 +673,12 @@ onUnmounted(() => {
 
 /* 响应式调整 */
 @media (max-width: 768px) {
-  .chart-controls {
-    flex-direction: column;
+  .line-chart-container {
+    padding: 8px;
   }
 
-  .control-group {
-    min-width: 100%;
+  .futuristic-title {
+    font-size: 14px;
   }
 }
 :deep(.el-card .el-card__body) {
