@@ -139,15 +139,15 @@ import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Refresh, User, Lock, Key, Avatar, UserFilled, Setting, View, Connection } from '@element-plus/icons-vue';
 import axios from 'axios';
-
+import request from '@/utils/request';
 // 角色图标映射
 const roleIcons = {
-  admin: Setting,
-  researcher: UserFilled,
-  analyst: View,
-  auditor: Avatar,
-  user: User,          // 普通用户图标
-  guest: Connection    // 游客图标
+  ADMIN: Setting,
+  RESEARCHER: UserFilled,
+  ANALYST: View,
+  AUDITOR: Avatar,
+  USER: User,
+  GUEST: Connection
 };
 
 // 响应式数据
@@ -160,12 +160,12 @@ const form = ref({
 });
 
 const roleOptions = ref([
-  { label: '管理员', value: 'admin' },
-  { label: '研究员', value: 'researcher' },
-  { label: '分析师', value: 'analyst' },
-  { label: '审核员', value: 'auditor' },
-  { label: '普通用户', value: 'user' },  // 新增普通用户
-  { label: '游客', value: 'guest' }     // 新增游客
+  { label: '管理员', value: 'ADMIN' },
+  { label: '研究员', value: 'RESEARCHER' },
+  { label: '分析师', value: 'ANALYST' },
+  { label: '审核员', value: 'AUDITOR' },
+  { label: '普通用户', value: 'USER' },
+  { label: '游客', value: 'GUEST' }
 ]);
 
 const loading = ref(false);
@@ -173,16 +173,39 @@ const router = useRouter();
 const captchaImage = ref('');
 const captchaToken = ref('');
 
-
+// 跳转到注册页面
 const handleRegister = () => {
-  router.push({
-    name: 'Register',
-    state: {
-      transitionType: 'tech' // 标识使用科技风过渡
-    }
-  })
+  router.push({ name: 'Register' });
 };
+// 表单验证
+const validateForm = () => {
+  if (!form.value.username) {
+    ElMessage.error('请输入用户名');
+    return false;
+  }
 
+  if (!form.value.password) {
+    ElMessage.error('请输入密码');
+    return false;
+  }
+
+  if (!form.value.role) {
+    ElMessage.error('请选择角色');
+    return false;
+  }
+
+  if (form.value.role === 'ADMIN' && (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value)) {
+    ElMessage.error('验证码错误');
+    refreshCaptcha();
+    return false;
+  }
+  if (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value) {
+    ElMessage.error('验证码错误');
+    refreshCaptcha();
+    return false;
+  }
+  return true;
+};
 // 生成验证码
 const generateCaptcha = async () => {
   try {
@@ -245,38 +268,32 @@ const refreshCaptcha = () => {
 
 // 登录处理逻辑
 const handleLogin = async () => {
+  if (!validateForm()) return;
+
   try {
     loading.value = true;
 
-    if (!form.value.username || !form.value.password || !form.value.role) {
-      ElMessage.error('所有字段都必须填写');
-      loading.value = false;
-      return;
-    }
+    const response = await request.post('/api/auth/login', {
+      username: form.value.username,
+      password: form.value.password,
+      captcha: form.value.role === 'ADMIN' ? form.value.code : null
+    });
 
-    if (form.value.code.toUpperCase() !== captchaToken.value) {
-      ElMessage.error('验证码错误');
-      loading.value = false;
-      refreshCaptcha();
-      return;
-    }
-
-    if (form.value.cert && form.value.cert !== 'valid-cert') {
-      ElMessage.error('数字证书无效');
-      loading.value = false;
-      return;
-    }
-
-    const response = await axios.post('localhost:8080/api/login', form.value);
-
-    if (response.data.success) {
+    if (response.code === 200) {
+      // 存储token和用户信息
+      localStorage.setItem('jwt_token', response.data.token);
+      localStorage.setItem('user_info', JSON.stringify(response.data.user));
+      console.log('[路由守卫] token:', localStorage.getItem('jwt_token')) // 检查 token 是否正确
       ElMessage.success('登录成功');
-      await router.push({name: 'Home'});
+      await router.push({ name: 'province' });
     } else {
-      ElMessage.error('登录失败，用户名或密码错误');
+      ElMessage.error(response.message || '登录失败');
+      refreshCaptcha();
     }
   } catch (error) {
-    ElMessage.error('网络错误，请重试');
+    console.error('登录失败:', error);
+    ElMessage.error(error.message || '登录失败，请重试');
+    refreshCaptcha();
   } finally {
     loading.value = false;
   }

@@ -1,8 +1,8 @@
 <template>
   <div class="card-content-inner-a">
     <simpleline
-        :chart-data="medicalData"
-        :title="`医疗机构数量变化趋势 - ${regionStore.getDisplayRegion}`"
+        :chart-data="populationData"
+        :title="`人口数量变化趋势 - ${regionStore.getDisplayRegion}`"
         height=16vh
         width=100%
         x-field="year"
@@ -26,7 +26,7 @@ import request from '@/utils/request'  // 确保 request 路径正确
 import {useRegionStore} from '@/stores/RegionData.js';
 import axios from "axios";
 const regionStore = useRegionStore();
-const medicalData = ref([])
+const populationData = ref([])
 const medicalLoading = ref(true)
 //
 // const currentProvinceId = ref()//默认北京
@@ -80,11 +80,11 @@ watch(
       medicalLoading.value = true;
       try {
         // 直接调用 store 的 action，它会处理缓存逻辑
-        const data = await regionStore.fetchMedicalDataIfNeeded(newRegionId);
-        medicalData.value = data;
+        const data = await regionStore.fetchPopulationDataIfNeeded(newRegionId);
+        populationData.value = data;
       } catch (error) {
         console.error("在组件中处理数据获取失败:", error);
-        medicalData.value = [];
+        populationData.value = [];
       } finally {
         medicalLoading.value = false;
       }

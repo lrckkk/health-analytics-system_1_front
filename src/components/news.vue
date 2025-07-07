@@ -176,6 +176,20 @@ onUnmounted(() => {
   background-color: rgba(10, 25, 40, 0.6); /* 科技感背景 */
   box-shadow: 0 0 15px rgba(0, 150, 255, 0.2); /* 科技感阴影 */
 }
+/* 穿透作用域设置 <a> 标签样式，使其在深色背景下更显眼 */
+.message-scroller-container :deep(a) {
+  color: #00FFFF; /* **青色：在深蓝色背景下非常醒目** */
+  text-decoration: underline; /* **下划线：增强可点击性** */
+  font-weight: bold; /* **加粗：进一步突出** */
+  transition: color 0.3s ease; /* 添加颜色过渡效果 */
+}
+.message-scroller-container :deep(a:hover) {
+  color: #FFFF00; /* **鼠标悬停时变为黄色：提供视觉反馈** */
+}
+
+.message-scroller-container :deep(a:hover) {
+  color: #FFFF00; /* **鼠标悬停时变为黄色：提供视觉反馈** */
+}
 
 .message-list-wrapper {
   position: absolute;
@@ -185,6 +199,7 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: flex-start; /* 从顶部开始排列 */
 }
+
 
 .message-item {
   height: 50px; /* 每条消息项的固定高度 */
@@ -208,7 +223,7 @@ onUnmounted(() => {
 
 /* 突出显示中间的活动消息 */
 .message-item.is-active {
-  color: #00e0ff; /* 亮蓝色 */
+  color: #e0e0e0; /* 亮蓝色 */
   font-weight: bold;
   background-color: rgba(0, 150, 255, 0.1);
   box-shadow: inset 0 0 10px rgba(0, 180, 255, 0.3);

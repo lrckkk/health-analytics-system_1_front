@@ -22,6 +22,7 @@ import router from "@/pages/user/router.js"; // 保持路由引入
 import { ElButton, ElMessage, ElIcon } from 'element-plus'; // 导入 Element Plus 组件和消息提示
 
 // 导入 Element Plus 图标
+
 import { Clock, Monitor, Grid, DataAnalysis, MapLocation, TrendCharts, Setting, Opportunity } from '@element-plus/icons-vue';
 const currentTime = ref('')
 
@@ -45,6 +46,63 @@ onBeforeUnmount(() => {
 const handleNewButtonClick = (name) => {
   console.log('点击了按钮：', name)
 }
+
+import { Monitor, Grid, DataAnalysis, MapLocation, TrendCharts, Setting, Opportunity } from '@element-plus/icons-vue';
+
+export default defineComponent({
+  name: 'AppHeader', // 组件名称
+  components: {
+    ElButton,
+    ElIcon,
+    // 注册 Element Plus 图标组件
+    Monitor,
+    Grid,
+    DataAnalysis,
+    MapLocation,
+    TrendCharts,
+    Setting,
+    Opportunity,
+  },
+  setup() {
+    // 页面跳转方法
+    const goToTargetPage = () => {
+      router.push({ name: 'Home' }); // 假设 Home 是您的目标路由名称
+      ElMessage({
+        message: '跳转到首页！',
+        type: 'info',
+        duration: 2000,
+        customClass: 'tech-message'
+      });
+    };
+
+    const goTocard = () => {
+      router.push({ name: 'Text' }); // 假设 Card 是您的卡片视图路由名称
+      ElMessage({
+        message: '跳转到卡片视图！',
+        type: 'info',
+        duration: 2000,
+        customClass: 'tech-message'
+      });
+    };
+
+    // 其他按钮的点击处理
+    const handleNewButtonClick = (buttonName) => {
+      ElMessage({
+        message: `你点击了：${buttonName}！`,
+        type: 'success',
+        duration: 2000,
+        customClass: 'tech-message'
+      });
+    };
+
+    return {
+      goToTargetPage,
+      goTocard,
+      handleNewButtonClick,
+    };
+  },
+});
+
 </script>
 
 <style scoped>
