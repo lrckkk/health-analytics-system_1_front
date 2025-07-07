@@ -54,6 +54,42 @@ const chinaGeoJson = ref(null);
 // 存储当前显示的模式，用于 watch 逻辑判断
 const currentViewMode = ref('scatter'); // 默认模式
 
+// 用于 visualMap 的动态最大值和最小值
+const visualMapMin = ref(0); // 默认最小值
+const visualMapMax = ref(200); // 默认最大值，将在数据加载后更新
+
+/**
+ * 根据散点数据计算 visualMap 的动态范围。
+ * @param {Array} data - 散点数据数组。
+ */
+const updateVisualMapRange = (data) => {
+  if (!data || data.length === 0) {
+    visualMapMin.value = 0;
+    visualMapMax.value = 200; // 默认值
+    return;
+  }
+
+  let minVal = Infinity;
+  let maxVal = -Infinity;
+  data.forEach(item => {
+    if (item.value && item.value[2] !== undefined) {
+      const val = item.value[2];
+      if (val < minVal) minVal = val;
+      if (val > maxVal) maxVal = val;
+    }
+  });
+
+  // 设置 visualMap 的最小值和最大值
+  visualMapMin.value = minVal === Infinity ? 0 : minVal;
+  visualMapMax.value = maxVal === -Infinity ? 200 : maxVal; // 如果没有有效数据，保留默认最大值
+
+  // 确保最大值不小于最小值，并给一个缓冲，防止所有数据相同导致范围为0
+  if (visualMapMax.value <= visualMapMin.value) {
+    visualMapMax.value = visualMapMin.value + 1; // 至少保证有1的范围
+  }
+};
+
+
 /**
  * 销毁当前的 ECharts 实例。
  * 在切换图表模式前调用，以释放资源并避免图表叠加。
@@ -147,7 +183,9 @@ const initChart = (mode) => {
   if (mode === 'scatter') {
     // 散点图模式：显示 visualMap，作用于地图和散点图
     option.visualMap = {
-      show: true, min: 0, max: 200, // visualMap 的 min/max 仍可用于颜色映射
+      show: true,
+      min: visualMapMin.value, // 动态最小值
+      max: visualMapMax.value, // 动态最大值
       inRange: { color: ['#0080F5', '#143E9F'] },
       text: ['高', '低'], calculable: true, orient: 'vertical',
       right: 10, top: '50%',
@@ -166,12 +204,15 @@ const initChart = (mode) => {
         // val[2] 是散点数据的第三个值 (通常是指标值)，用于决定大小
         symbolSize: val => {
           const dataVal = val && val[2] !== undefined ? val[2] : 0;
-          // 尝试从 props.scatterData[5].value[2] 获取除数，如果不存在或无效则默认为 1
-          const divisor = props.scatterData[23].value[2]
+          // 确保 divisor 是一个有效数字且不为零
+          // 使用 visualMapMax.value 作为除数，或者一个安全默认值
+          const divisor = (visualMapMax.value !== 0) ? visualMapMax.value : 1;
 
-          // 执行除法，并确保结果不会过小，给一个最小尺寸
-          // 增加乘数因子 1.5，并提高最小尺寸到 8 像素
-          return Math.max((dataVal / divisor) * 8+6, 8);
+          // 调整乘数因子和最小尺寸，使点更大
+          // 这里的逻辑可以根据实际数据分布进行微调
+          const baseSize = 8; // 基础大小
+          const scaleFactor = 30; // 缩放因子，可以调整以控制点大小的整体范围
+          return Math.max((dataVal / divisor) * scaleFactor + baseSize, baseSize);
         },
         itemStyle: { color: 'yellow', borderColor: 'yellow', borderWidth: 1 }, // **散点颜色设置为黄色**
         data: props.scatterData // 从 props 获取数据
@@ -180,7 +221,8 @@ const initChart = (mode) => {
   } else if (mode === 'pie') {
     // 饼图模式：显示 visualMap (根据之前的要求，这里也显示 visualMap)
     option.visualMap = { show: true,
-      min: 0, max: 200,
+      min: visualMapMin.value, // 动态最小值
+      max: visualMapMax.value, // 动态最大值
       inRange: { color: ['#0080F5', '#143E9F'] },
       text: ['高', '低'], calculable: true, orient: 'vertical',
       right: 10, top: '50%',
@@ -231,7 +273,9 @@ const initChart = (mode) => {
   } else if (mode === 'map_only') {
     // 仅显示地图模式：显示 visualMap，仅作用于地图
     option.visualMap = {
-      show: true, min: 0, max: 200,
+      show: true,
+      min: visualMapMin.value, // 动态最小值
+      max: visualMapMax.value, // 动态最大值
       inRange: { color: ['#0080F5', '#143E9F'] },
       text: ['高', '低'], calculable: true, orient: 'vertical',
       right: 10, top: '50%',
@@ -272,6 +316,9 @@ onMounted(async () => {
     console.error('加载中国GeoJSON数据失败:', error);
   }
 
+  // 初始加载时计算 visualMap 范围
+  updateVisualMapRange(props.scatterData);
+
   // 默认显示散点图模式
   initChart('scatter');
 });
@@ -279,12 +326,17 @@ onMounted(async () => {
 // --- 监听 props 变化并更新图表 ---
 // 当 scatterData 变化时，如果当前是散点图模式，则更新散点图数据
 watch(() => props.scatterData, (newVal) => {
+  updateVisualMapRange(newVal); // 重新计算 visualMap 范围
   if (chartInstance.value && currentViewMode.value === 'scatter') {
     chartInstance.value.setOption({
+      visualMap: { // 同时更新 visualMap 的 min/max
+        min: visualMapMin.value,
+        max: visualMapMax.value
+      },
       series: [{
         id: 'scatter', // 确保ID匹配
         data: newVal
-        // symbolSize 函数会因为 props.scatterData 的变化而自动更新
+        // symbolSize 函数会因为 visualMapMax.value 的变化而自动更新
       }]
     });
   }

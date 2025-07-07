@@ -68,6 +68,8 @@ import MyComponentA from '../card/MyComponentA.vue';
 import MyComponentB from '../card/MyComponentB.vue';
 import MyComponentC from '../card/MyComponentC.vue';
 import MyComponentD from '../card/MyComponentD.vue';
+import ServiceforML from "@/pages/card/ServiceforML.vue";
+import PopulationLine from "@/pages/card/PopulationLine.vue";
 
 export default {
   components: {
@@ -83,6 +85,8 @@ export default {
       MyComponentB,
       MyComponentC,
       MyComponentD,
+      ServiceforML,
+      PopulationLine,
     ]);
 
 
@@ -140,10 +144,10 @@ export default {
       MyComponentD,
     ]);
     const myCustomComponents5 = ref([
-      MyComponentA,
+      PopulationLine,
     ]);
     const myCustomComponents6 = ref([
-      MyComponentA,
+      ServiceforML,
     ]);
     onMounted(() => {
       mapDataStore.fetchcountryData()
@@ -268,6 +272,14 @@ body {
 
   /* 圆角：如果图片中有圆角，可以添加 */
   border-radius: 8px; /* 适当的圆角 */
+}
+.Dataget-display-area{
+  position: fixed;
+  top: 70%; /* 与地图顶部对齐 */
+  left: 1%; /* 距离左侧边缘 */
+  width: 30%; /* 限定宽度 */
+  height: 30%; /* 限定高度，与地图高度相同，保持视觉平衡 */
+
 }
 .card-display-area4 {
   position: fixed;

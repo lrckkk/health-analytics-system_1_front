@@ -5,8 +5,8 @@
   -->
   <div
       class="button-container"
-      @mouseenter="isExpanded = true"
-      @mouseleave="isExpanded = false"
+      @mouseenter="startExpandTimer"
+      @mouseleave="startCollapseTimer"
   >
     <!--
       箭头指示器：在组件未弹出时显示，指示组件位置。
@@ -50,12 +50,20 @@
           {{ button.label }}
         </button>
       </div>
+
+      <!-- 引入 ProvinceDataViewer 组件，并在展开时显示 -->
+      <!-- 新增：监听 ProvinceDataViewer 发出的 select-visible-change 事件 -->
+      <ProvinceDataViewer
+          v-if="isExpanded"
+          @select-visible-change="handleProvinceDataViewerSelectVisibleChange"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
+import ProvinceDataViewer from './Dataget.vue'; // 修复：确保路径正确，指向 ProvinceDataViewer.vue
 
 // 定义组件接收的 props
 const props = defineProps({
@@ -87,6 +95,12 @@ const emit = defineEmits(['button-clicked']);
 
 // 控制组件是否展开的响应式状态
 const isExpanded = ref(false);
+// 用于存储 setTimeout 的 ID，以便在鼠标快速移入移出时清除计时器
+const collapseTimeoutId = ref(null);
+// 新增：跟踪鼠标是否在 button-container 上
+const isMouseOverButtonContainer = ref(false);
+// 新增：跟踪 ProvinceDataViewer 中 el-select 下拉菜单的打开状态
+const isProvinceDataViewerSelectOpen = ref(false);
 
 // 存储第一行当前被选中的按钮ID
 // 默认选中第一行的第一个按钮
@@ -94,6 +108,58 @@ const activeButtonRow1 = ref(props.buttonsRow1.length > 0 ? props.buttonsRow1[0]
 // 存储第二行当前被选中的按钮ID
 // 默认选中第二行的第二个按钮
 const activeButtonRow2 = ref(props.buttonsRow2.length > 1 ? props.buttonsRow2[1].id : null);
+
+/**
+ * 处理鼠标移入事件，清除收起计时器并展开组件。
+ */
+const startExpandTimer = () => {
+  if (collapseTimeoutId.value) {
+    clearTimeout(collapseTimeoutId.value);
+    collapseTimeoutId.value = null;
+  }
+  isExpanded.value = true;
+  isMouseOverButtonContainer.value = true; // 鼠标移入主容器
+};
+
+/**
+ * 处理鼠标移出事件，设置收起计时器。
+ */
+const startCollapseTimer = () => {
+  isMouseOverButtonContainer.value = false; // 鼠标移出主容器
+  // 只有当 ProvinceDataViewer 的 el-select 下拉菜单关闭时，才允许设置收起计时器
+  // 如果下拉菜单是打开的，即使鼠标移出容器，也不应该立即收起
+  if (!isProvinceDataViewerSelectOpen.value) {
+    collapseTimeoutId.value = setTimeout(() => {
+      isExpanded.value = false;
+      collapseTimeoutId.value = null;
+    }, 100); // 100毫秒的延迟，允许快速重新进入
+  }
+};
+
+/**
+ * 处理 ProvinceDataViewer 中 el-select 下拉菜单可见性变化的事件。
+ * @param {boolean} visible - 下拉菜单是否可见。
+ */
+const handleProvinceDataViewerSelectVisibleChange = (visible) => {
+  isProvinceDataViewerSelectOpen.value = visible;
+  // 如果下拉菜单变为可见，确保父容器展开并清除任何收起计时器
+  if (visible) {
+    isExpanded.value = true;
+    if (collapseTimeoutId.value) {
+      clearTimeout(collapseTimeoutId.value);
+      collapseTimeoutId.value = null;
+    }
+  } else {
+    // 如果下拉菜单关闭了，并且鼠标不在主容器上，则触发收起
+    // 使用一个小的延迟，以防鼠标在下拉菜单关闭后立即移动到其他地方
+    if (!isMouseOverButtonContainer.value) {
+      collapseTimeoutId.value = setTimeout(() => {
+        isExpanded.value = false;
+        collapseTimeoutId.value = null;
+      }, 100);
+    }
+  }
+};
 
 /**
  * 处理按钮点击事件。
@@ -142,7 +208,7 @@ const handleButtonClick = (row, buttonId) => {
   flex-direction: column;
 
   /* 动画效果 - 展开状态 */
-  max-height: 450px; /* 高度增加 50% (300px * 1.5 = 450px) */
+  max-height: 900px; /* 修复：增加高度以容纳更大的 ProvinceDataViewer */
   padding: 16px; /* 展开时恢复内边距 */
   gap: 16px; /* 行间距 */
   opacity: 1; /* 展开时完全显示 */

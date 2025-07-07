@@ -9,21 +9,19 @@
           </span>
         </h3>
         <div class="controls">
-          <el-select
-              v-model="selectedYear"
-              placeholder="选择年份"
-              size="small"
-              class="futuristic-select year-select"
-              :disabled="availableYears.length === 0 || isLoading"
-          >
-            <el-option
+          <!-- 移除 el-select，替换为自定义年份选择按钮 -->
+          <div class="year-selection-buttons" :class="{ 'is-disabled': availableYears.length === 0 || isLoading }">
+            <button
                 v-for="year in availableYears"
                 :key="year"
-                :label="year"
-                :value="year"
-                class="futuristic-option"
-            />
-          </el-select>
+                @click="selectedYear = year"
+                class="futuristic-year-button"
+                :class="{ 'is-active': selectedYear === year }"
+                :disabled="isLoading"
+            >
+              {{ year }}
+            </button>
+          </div>
           <el-button
               type="primary"
               class="futuristic-button export-button"
@@ -83,7 +81,7 @@
         <el-table
             :data="Object.values(historicalData)"
             style="width: 100%"
-            max-height="150"
+            max-height="600"
             class="futuristic-table"
         >
           <el-table-column prop="year" label="年份" width="80" fixed sortable></el-table-column>
@@ -117,7 +115,7 @@
 <script setup>
 import { ref, onMounted, watch, computed, nextTick } from 'vue';
 import { useRegionStore } from '@/stores/RegionData.js'; // 确保路径正确
-import { ElCard, ElSelect, ElOption, ElButton, ElTable, ElTableColumn, ElIcon, ElLoading } from 'element-plus';
+import { ElCard, ElButton, ElTable, ElTableColumn, ElIcon, ElLoading } from 'element-plus'; // 移除 ElSelect, ElOption
 import { Calendar, TrendCharts } from '@element-plus/icons-vue';
 
 // Pinia Store 实例
@@ -410,25 +408,47 @@ $tech-text: #CAF0F8; // Original text color, might be light
     margin-left: auto; /* Push to the right */
   }
 
-  .futuristic-select.year-select {
-    width: 120px; /* 恢复年份选择器宽度 */
-    flex-shrink: 0;
-    :deep(.el-input__wrapper) {
-      background: rgba(0, 119, 182, 0.3) !important;
-      border: 1px solid rgba(72, 202, 228, 0.5) !important;
-      box-shadow: 0 0 8px rgba(125, 249, 255, 0.2) !important;
-      height: 28px; /* 缩小高度 */
-      .el-input__inner {
-        color: $tech-text !important;
-        font-size: 12px; /* 缩小字体大小 */
-        &::placeholder {
-          color: rgba($tech-lightblue, 0.7) !important;
-        }
-      }
+  /* 新增：年份选择按钮容器样式 */
+  .year-selection-buttons {
+    display: flex;
+    gap: 5px; /* 按钮间距 */
+    flex-wrap: wrap;
+    align-items: center;
+
+    &.is-disabled {
+      opacity: 0.6;
+      pointer-events: none; /* 禁用鼠标事件 */
     }
-    :deep(.el-select__caret) {
-      color: $tech-cyan !important;
-      font-size: 1em; /* 缩小图标大小 */
+  }
+
+  /* 新增：单个年份按钮样式 */
+  .futuristic-year-button {
+    background: rgba(0, 119, 182, 0.3);
+    border: 1px solid rgba(72, 202, 228, 0.5);
+    color: $tech-text;
+    padding: 4px 8px; /* 缩小内边距 */
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 4px rgba(125, 249, 255, 0.2);
+
+    &:hover:not(:disabled) {
+      background: rgba(0, 119, 182, 0.5);
+      box-shadow: 0 0 8px rgba(125, 249, 255, 0.4);
+    }
+
+    &.is-active:not(:disabled) {
+      background: linear-gradient(90deg, #007bff, #00c0ff);
+      border-color: #00aaff;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
     }
   }
 
@@ -464,7 +484,7 @@ $tech-text: #CAF0F8; // Original text color, might be light
 
   .data-content {
     padding: 15px; /* 缩小内边距 */
-    min-height: 150px; /* 缩小最小高度 */
+    min-height: 200px; /* 修复：缩小最小高度 */
     position: relative; /* For loading overlay positioning */
   }
 
@@ -483,8 +503,8 @@ $tech-text: #CAF0F8; // Original text color, might be light
   .section-title {
     color: $tech-cyan;
     font-size: 15px; /* 缩小字体大小 */
-    margin-top: 15px; /* 缩小上边距 */
-    margin-bottom: 10px; /* 缩小下边距 */
+    margin-top: 10px; /* 修复：缩小上边距 */
+    margin-bottom: 8px; /* 修复：缩小下边距 */
     display: flex;
     align-items: center;
     gap: 6px; /* 缩小间距 */
@@ -498,25 +518,25 @@ $tech-text: #CAF0F8; // Original text color, might be light
   .current-year-data-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* 恢复最小宽度 */
-    gap: 8px; /* 修复：缩小间距 */
-    margin-bottom: 15px; /* 缩小下边距 */
+    gap: 8px; /* 缩小间距 */
+    margin-bottom: 10px; /* 修复：缩小下边距 */
 
     .data-item {
       background-color: rgba($tech-darkblue, 0.5);
       border: 1px solid rgba($tech-lightblue, 0.3);
       border-radius: 5px; /* 缩小圆角 */
-      padding: 4px; /* 修复：进一步减少内边距 */
+      padding: 4px; /* 进一步减少内边距 */
       text-align: left;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* 缩小阴影 */
 
       .label {
-        font-size: 10px; /* 修复：进一步减小字体大小 */
+        font-size: 10px; /* 进一步减小字体大小 */
         color: $tech-lightblue;
         display: block;
-        margin-bottom: 0px; /* 修复：进一步减少下边距 */
+        margin-bottom: 0px; /* 进一步减少下边距 */
       }
       .value {
-        font-size: 13px; /* 修复：进一步减小字体大小 */
+        font-size: 13px; /* 进一步减小字体大小 */
         font-weight: bold;
         color: $tech-cyan;
       }
@@ -563,27 +583,6 @@ $tech-text: #CAF0F8; // Original text color, might be light
             background-color: rgba($tech-lightblue, 0.1) !important; /* 悬停时稍微亮一点的背景 */
           }
         }
-      }
-    }
-  }
-
-  // Element Plus Dropdown style overrides
-  :deep(.el-select-dropdown) {
-    background: $tech-darkblue !important;
-    border: 1px solid $tech-cyan !important;
-    box-shadow: 0 0 15px rgba($tech-cyan, 0.3) !important;
-
-    .el-select-dropdown__item {
-      color: $tech-text;
-      font-size: 12px; /* 缩小下拉菜单字体 */
-
-      &:hover {
-        background: rgba($tech-cyan, 0.1) !important;
-      }
-
-      &.selected {
-        color: $tech-cyan;
-        font-weight: normal;
       }
     }
   }
