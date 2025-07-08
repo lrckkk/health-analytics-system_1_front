@@ -19,6 +19,7 @@
               v-model="form.username"
               placeholder="请输入用户名"
               class="futuristic-input"
+              autocomplete="off"
           >
             <template #prefix>
               <el-icon><User /></el-icon>
@@ -34,6 +35,7 @@
               placeholder="请输入密码"
               show-password
               class="futuristic-input"
+              autocomplete="new-password"
           >
             <template #prefix>
               <el-icon><Lock /></el-icon>
@@ -42,25 +44,25 @@
         </el-form-item>
 
         <!-- 角色选择框 -->
-        <el-form-item label="角色" class="futuristic-form-item">
-          <div class="role-selector">
-            <div
-                v-for="role in roleOptions"
-                :key="role.value"
-                class="role-option"
-                :class="{ 'active': form.role === role.value }"
-                @click="form.role = role.value"
-            >
-              <div class="role-icon">
-                <el-icon>
-                  <component :is="roleIcons[role.value]" />
-                </el-icon>
-              </div>
-              <span class="role-label">{{ role.label }}</span>
-              <div class="active-indicator"></div>
-            </div>
-          </div>
-        </el-form-item>
+<!--        <el-form-item label="角色" class="futuristic-form-item">-->
+<!--          <div class="role-selector">-->
+<!--            <div-->
+<!--                v-for="role in roleOptions"-->
+<!--                :key="role.value"-->
+<!--                class="role-option"-->
+<!--                :class="{ 'active': form.role === role.value }"-->
+<!--                @click="form.role = role.value"-->
+<!--            >-->
+<!--              <div class="role-icon">-->
+<!--                <el-icon>-->
+<!--                  <component :is="roleIcons[role.value]" />-->
+<!--                </el-icon>-->
+<!--              </div>-->
+<!--              <span class="role-label">{{ role.label }}</span>-->
+<!--              <div class="active-indicator"></div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </el-form-item>-->
 
         <!-- 验证码 -->
         <el-form-item label="验证码" class="futuristic-form-item">
@@ -184,10 +186,10 @@ const validateForm = () => {
     return false;
   }
 
-  if (!form.value.role) {
-    ElMessage.error('请选择角色');
-    return false;
-  }
+  // if (!form.value.role) {
+  //   ElMessage.error('请选择角色');
+  //   return false;
+  // }
 
   if (form.value.role === 'ADMIN' && (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value)) {
     ElMessage.error('验证码错误');

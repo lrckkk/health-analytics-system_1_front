@@ -301,8 +301,8 @@ const updateChart = () => {
     grid: {
       left: '5%',
       right: '5%',
-      bottom: '0%',
-      top: '30%',
+      bottom: '20%',
+      top: '15%',
       containLabel: true
     },
     xAxis: {
@@ -359,7 +359,7 @@ const updateChart = () => {
           color: '#48CAE4'
         }
       },
-      splitNumber: 4  // 增加这个属性可以控制分割段数，使y轴刻度更稀疏
+      splitNumber: 3  // 增加这个属性可以控制分割段数，使y轴刻度更稀疏
     },
     series: [{
       name: selectedYField.value,

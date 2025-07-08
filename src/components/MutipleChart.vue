@@ -228,7 +228,16 @@ const initChart = () => {
   chartInstance = echarts.init(chartRef.value, 'dark')
   updateChart()
 }
-
+const formatNumber = (value) => {
+  if (value >= 100000000) {
+    return (value / 100000000).toFixed(1) + '亿'
+  } else if (value >= 10000) {
+    return (value / 10000).toFixed(1) + '万'
+  } else if (value >= 1000) {
+    return (value / 1000).toFixed(1) + '千'
+  }
+  return Math.round(value) // 小于1000的直接取整
+}
 // 更新图表数据
 const updateChart = () => {
   if (!chartInstance || !hasData.value) return
@@ -353,8 +362,8 @@ const updateChart = () => {
     grid: {
       left: '10%',
       right: '5%',
-      bottom: '15%',
-      top: '30%',
+      bottom: '25%',
+      top: '38%',
       containLabel: true
     },
     xAxis: {
@@ -406,7 +415,7 @@ const updateChart = () => {
         },
         interval: 'auto'  // 确保自动计算间隔
       },
-      splitNumber: 4 , // 增加这个属性可以控制分割段数，使y轴刻度更稀疏
+      splitNumber: 3 , // 增加这个属性可以控制分割段数，使y轴刻度更稀疏
       axisTick: {
         lineStyle: {
           color: '#48CAE4'
@@ -534,7 +543,7 @@ $tech-text: #CAF0F8;
   -ms-user-select: none;
   user-select: none;
   position: absolute;
-  top: 35px;
+  top: 75px;
   left: 0;
   right: 0;
   text-align: center;

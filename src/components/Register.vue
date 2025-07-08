@@ -20,6 +20,7 @@
               v-model="form.username"
               placeholder="请输入用户名"
               class="futuristic-input"
+              autocomplete="off"
           >
             <template #prefix>
               <el-icon><User /></el-icon>
@@ -35,6 +36,7 @@
               placeholder="请输入密码"
               show-password
               class="futuristic-input"
+              autocomplete="new-password"
           >
             <template #prefix>
               <el-icon><Lock /></el-icon>
@@ -50,6 +52,7 @@
               placeholder="请再次输入密码"
               show-password
               class="futuristic-input"
+              autocomplete="new-password"
           >
             <template #prefix>
               <el-icon><Lock /></el-icon>

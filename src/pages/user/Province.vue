@@ -24,27 +24,56 @@
           :pieSeriesData="mapDataStore.pieSeriesData"
       />
     </div>
-<!--    医疗机构卡片-->
+    <!--    医疗机构卡片-->
 
     <!-- 新增的 card 组件包裹 div，限定大小并定位在左上方 -->
+<!--    <div class="card-display-area">-->
+<!--      <card :componentsList="myCustomComponents1"></card>-->
+<!--    </div>-->
+<!--    <div class="card-display-area2">-->
+<!--      <card :componentsList="myCustomComponents2"></card>-->
+<!--    </div>-->
+<!--    <div class="card-display-area3">-->
+<!--      <card :componentsList="myCustomComponents3"></card>-->
+<!--    </div>-->
+<!--    <div class="card-display-area4">-->
+<!--      <card :componentsList="myCustomComponents4"></card>-->
+<!--    </div>-->
+<!--    <div class="card-display-area5">-->
+<!--      <card :componentsList="myCustomComponents5"></card>-->
+<!--    </div>-->
+<!--    <div class="card-display-area6">-->
+<!--      <card :componentsList="myCustomComponents6"></card>-->
+<!--    </div>-->
     <div class="card-display-area">
       <card :componentsList="myCustomComponents1"></card>
     </div>
+    <TechEdgeButton position="right1" />
+
     <div class="card-display-area2">
       <card :componentsList="myCustomComponents2"></card>
     </div>
+    <TechEdgeButton position="right2"  />
+
     <div class="card-display-area3">
       <card :componentsList="myCustomComponents3"></card>
     </div>
+    <TechEdgeButton position="right3"  />
+
     <div class="card-display-area4">
       <card :componentsList="myCustomComponents4"></card>
     </div>
+    <TechEdgeButton position="left1"  />
+
     <div class="card-display-area5">
       <card :componentsList="myCustomComponents5"></card>
     </div>
+    <TechEdgeButton position="left2"  />
+
     <div class="card-display-area6">
       <card :componentsList="myCustomComponents6"></card>
     </div>
+    <TechEdgeButton position="left3"  />
     <div class="scroll-display-area">
       <scroll></scroll>
     </div>
@@ -92,6 +121,7 @@ import RankforPop from "@/pages/card/RankforPop.vue";
 import RankforCos from "@/pages/card/RankforCos.vue";
 import Rankforbed from "@/pages/card/Rankforbed.vue";
 import request from "@/utils/request.js";
+import TechEdgeButton from '../card/TechEdgeButton.vue';
 
 
 export default {
@@ -102,7 +132,7 @@ export default {
     ChinaMap,
     card,
     scroll,
-
+    TechEdgeButton,
     Role, // 新增
     Exit,  // 新增
 
@@ -169,7 +199,7 @@ export default {
 
     const myCustomComponents2 = ref([
       MyComponentB,
-        Rankforbed,
+      Rankforbed,
     ]);
     const myCustomComponents3 = ref([
       MyComponentC,
@@ -180,7 +210,7 @@ export default {
     ]);
     const myCustomComponents5 = ref([
       PopulationLine,
-        RankforPop,
+      RankforPop,
 
     ]);
     const myCustomComponents6 = ref([

@@ -221,14 +221,16 @@
                 :rules="passwordRules"
                 ref="passwordFormRef"
                 class="tech-form"
+                autocomplete="off"
             >
-              <el-form-item label="原密码" prop="oldPassword">
+              <el-form-item label="原密码" prop="oldPassword" class="password-form-item">
                 <el-input
                     type="password"
                     v-model="passwordForm.oldPassword"
                     placeholder="请输入原密码"
                     show-password
                     class="tech-input"
+                    autocomplete="new-password"
                 >
                   <template #prefix>
                     <el-icon><Lock /></el-icon>
@@ -236,13 +238,14 @@
                 </el-input>
               </el-form-item>
 
-              <el-form-item label="新密码" prop="newPassword">
+              <el-form-item label="新密码" prop="newPassword" class="password-form-item">
                 <el-input
                     type="password"
                     v-model="passwordForm.newPassword"
                     placeholder="请输入新密码"
                     show-password
                     class="tech-input"
+                    autocomplete="new-password"
                 >
                   <template #prefix>
                     <el-icon><Lock /></el-icon>
@@ -250,13 +253,14 @@
                 </el-input>
               </el-form-item>
 
-              <el-form-item label="确认密码" prop="confirmPassword">
+              <el-form-item label="确认密码" prop="confirmPassword" class="password-form-item">
                 <el-input
                     type="password"
                     v-model="passwordForm.confirmPassword"
                     placeholder="请再次输入新密码"
                     show-password
                     class="tech-input"
+                    autocomplete="new-password"
                 >
                   <template #prefix>
                     <el-icon><Lock /></el-icon>
@@ -519,6 +523,9 @@ $tech-dialog-border: rgba(16, 26, 60, 0.9);
   font-size: 18px;
   text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
 }
+
+
+
 </style>
 <style scoped lang="scss">
 /* 科技风样式变量 */
@@ -532,6 +539,14 @@ $tech-border: rgba(0, 240, 255, 0.4);
 $tech-highlight: rgba(0, 240, 255, 0.2);
 $tech-dialog-border: rgba(16, 26, 60, 0.9);
 
+.password-form-item {
+  :deep(.el-form-item__label) {
+    color: $tech-primary; // 使用科技蓝作为标签颜色
+    font-weight: 500;
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+    padding-right: 10px;
+  }
+}
 .profile-container {
   display: flex;
   justify-content: center;
@@ -631,37 +646,6 @@ $tech-dialog-border: rgba(16, 26, 60, 0.9);
   }
 }
 
-.tech-dialog {
-  :deep(.el-dialog) {
-    background: $tech-card-bg;
-    border-radius: 12px;
-    border: 1px solid $tech-border;
-    box-shadow:
-        0 0 30px rgba(0, 240, 255, 0.4),
-        0 0 60px rgba(125, 95, 255, 0.3);
-  }
-
-  :deep(.el-dialog__header) {
-    border-bottom: 1px solid $tech-border;
-    padding: 15px 20px;
-    margin: 0;
-    background: rgba(16, 26, 60, 0.7);
-
-    .el-dialog__title {
-      color: $tech-primary;
-      font-size: 18px;
-      text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
-    }
-  }
-
-  :deep(.el-dialog__body) {
-    padding: 0;
-  }
-
-  :deep(.el-dialog__footer) {
-    padding: 0;
-  }
-}
 
 .dialog-tech-container {
   position: relative;
@@ -733,20 +717,6 @@ $tech-dialog-border: rgba(16, 26, 60, 0.9);
   color: $tech-text;
 }
 
-.password-dialog {
-  .tech-form {
-    width: 100%;
-    padding: 0 10px;
-
-    :deep(.el-form-item) {
-      margin-bottom: 18px !important;
-    }
-
-    :deep(.el-input) {
-      width: 100%;
-    }
-  }
-}
 
 .dialog-tech-footer {
   display: flex;
@@ -798,19 +768,6 @@ $tech-dialog-border: rgba(16, 26, 60, 0.9);
   margin: 0;
   line-height: 1.6;
   text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
-}
-
-.tech-form,
-.tech-input,
-.tech-button {
-  :deep(*) {
-    margin: 0;
-    padding: 0;
-    border: none;
-    outline: none;
-    box-shadow: none;
-    background: transparent;
-  }
 }
 
 :deep(.el-input__wrapper) {
