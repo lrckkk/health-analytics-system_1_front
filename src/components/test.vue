@@ -314,8 +314,8 @@ onBeforeUnmount(() => {
 <style scoped>
 /* CSS 样式与之前相同 */
 .radar-chart-container {
-  width: 100%;
-  height: 100%;
+  width: 50%;
+  height: 50%;
   display: flex;
   flex-direction: column;
   justify-content: center;

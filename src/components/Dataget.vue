@@ -79,6 +79,31 @@
             <span class="label">人口数量:</span>
             <span class="value">{{ formatValue(currentYearData.populationData?.count, true) }}</span>
           </div>
+
+          <div class="data-item">
+            <span class="label">每万人床位:</span>
+            <span class="value">{{ formatValue(currentYearData.bedavg?.count) }}</span>
+          </div>
+          <div class="data-item">
+            <span class="label">每万人门诊:</span>
+            <span class="value">{{ formatValue(currentYearData.outpatientavg?.count) }}</span>
+          </div>
+          <div class="data-item">
+            <span class="label">每万人住院:</span>
+            <span class="value">{{ formatValue(currentYearData.inpatientavg?.count) }}</span>
+          </div>
+          <div class="data-item">
+            <span class="label">每万人机构:</span>
+            <span class="value">{{ formatValue(currentYearData.institutionavg?.count) }}</span>
+          </div>
+          <div class="data-item">
+            <span class="label">人均医疗费:</span>
+            <span class="value">{{ formatValue(currentYearData.costavg?.count) }}</span>
+          </div>
+          <div class="data-item">
+            <span class="label">每万人人员:</span>
+            <span class="value">{{ formatValue(currentYearData.personnelavg?.count) }}</span>
+          </div>
         </div>
 
         <h4 class="section-title mt-4">
@@ -88,30 +113,49 @@
         <el-table
             :data="Object.values(historicalData)"
             style="width: 100%"
-            max-height="600"
+            max-height="450"
             class="futuristic-table"
         >
-          <el-table-column prop="year" label="年份" width="90" fixed sortable></el-table-column>
-          <el-table-column label="医疗机构" width="130">
+          <el-table-column prop="year" label="年份" width="77" fixed sortable></el-table-column>
+          <el-table-column label="医疗机构" width="78">
             <template #default="{ row }">{{ formatValue(row.medicalData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="病床数量" width="130">
+          <el-table-column label="病床数量" width="78">
             <template #default="{ row }">{{ formatValue(row.medicalData2?.count) }}</template>
           </el-table-column>
-          <el-table-column label="医疗花费" width="130">
+          <el-table-column label="医疗花费" width="78">
             <template #default="{ row }">{{ formatValue(row.costData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="医疗人员" width="130">
+          <el-table-column label="医疗人员" width="78">
             <template #default="{ row }">{{ formatValue(row.personnelData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="门诊量" width="130">
+          <el-table-column label="门诊量" width="78">
             <template #default="{ row }">{{ formatValue(row.serviceData?.outpatientVisits) }}</template>
           </el-table-column>
-          <el-table-column label="住院量" width="130">
+          <el-table-column label="住院量" width="78">
             <template #default="{ row }">{{ formatValue(row.serviceData?.inpatientAdmissions) }}</template>
           </el-table-column>
-          <el-table-column label="人口数量" width="130">
+          <el-table-column label="人口数量" width="78">
             <template #default="{ row }">{{ formatValue(row.populationData?.count, true) }}</template>
+          </el-table-column>
+
+          <el-table-column label="每万人床位" width="90">
+            <template #default="{ row }">{{ formatValue(row.bedavg?.count) }}</template>
+          </el-table-column>
+          <el-table-column label="每万人门诊" width="90">
+            <template #default="{ row }">{{ formatValue(row.outpatientavg?.count) }}</template>
+          </el-table-column>
+          <el-table-column label="每万人住院" width="90">
+            <template #default="{ row }">{{ formatValue(row.inpatientavg?.count) }}</template>
+          </el-table-column>
+          <el-table-column label="每万人机构" width="90">
+            <template #default="{ row }">{{ formatValue(row.institutionavg?.count) }}</template>
+          </el-table-column>
+          <el-table-column label="人均医疗费" width="90">
+            <template #default="{ row }">{{ formatValue(row.costavg?.count) }}</template>
+          </el-table-column>
+          <el-table-column label="每万人人员" width="90">
+            <template #default="{ row }">{{ formatValue(row.personnelavg?.count) }}</template>
           </el-table-column>
         </el-table>
       </div>
@@ -121,7 +165,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed, nextTick } from 'vue';
-import { useRegionStore } from '@/stores/RegionData.js';
+import { useRegionStore } from '@/stores/RegionData.js'; // 确保路径正确
 import { ElCard, ElButton, ElTable, ElTableColumn, ElIcon, ElLoading } from 'element-plus';
 import { Calendar, TrendCharts } from '@element-plus/icons-vue';
 
@@ -165,7 +209,7 @@ const formatValue = (value, addWanSuffix = false) => {
 };
 
 /**
- * 异步获取并处理所有六种数据类型。
+ * 异步获取并处理所有数据类型，包括新增的平均数据。
  * 将数据整合到 historicalData 对象中，并更新可用年份。
  */
 const fetchAndProcessAllData = async () => {
@@ -182,21 +226,35 @@ const fetchAndProcessAllData = async () => {
   currentYearData.value = {};
 
   try {
-    // 并发请求所有数据
+    // 并发请求所有数据，包括新增的平均数据
     const [
       medicalData,
       medicalData2,
       costData,
-      personnelData, // 在 store 中对应 fetchbarChartWidthIfNeeded
+      personnelData,
       serviceData,
-      populationData
+      populationData,
+      // --- 新增：平均数据请求 ---
+      bedavgData,
+      outpatientavgData,
+      inpatientavgData,
+      institutionavgData,
+      costavgData,
+      personnelavgData
     ] = await Promise.all([
       regionStore.fetchMedicalDataIfNeeded(regionId),
       regionStore.fetchMedicalData2IfNeeded(regionId),
       regionStore.fetchCostDataIfNeeded(regionId),
-      regionStore.fetchbarChartWidthIfNeeded(regionId),
+      regionStore.fetchbarChartWidthIfNeeded(regionId), // 对应 medical personnel 数据
       regionStore.fetchserviceDataIfNeeded(regionId),
       regionStore.fetchPopulationDataIfNeeded(regionId),
+      // --- 新增：平均数据请求 Pinia action ---
+      regionStore.fetchbedavgIfNeeded(regionId),
+      regionStore.fetchoutpatientavgIfNeeded(regionId),
+      regionStore.fetchoinpatientavgavgIfNeeded(regionId),
+      regionStore.fetchinstitutionavgIfNeeded(regionId),
+      regionStore.fetchcostavgIfNeeded(regionId),
+      regionStore.fetchpersonnelavgIfNeeded(regionId)
     ]);
 
     // 将数据整合到 historicalData 对象中
@@ -227,12 +285,22 @@ const fetchAndProcessAllData = async () => {
       });
     };
 
+    // 现有数据合并
     mergeData(medicalData, 'medicalData');
     mergeData(medicalData2, 'medicalData2');
     mergeData(costData, 'costData');
-    mergeData(personnelData, 'personnelData');
+    mergeData(personnelData, 'personnelData'); // 确认这里使用 'personnelData'
     mergeData(serviceData, 'serviceData');
     mergeData(populationData, 'populationData');
+
+    // --- 新增：平均数据合并 ---
+    mergeData(bedavgData, 'bedavg');
+    mergeData(outpatientavgData, 'outpatientavg');
+    mergeData(inpatientavgData, 'inpatientavg');
+    mergeData(institutionavgData, 'institutionavg');
+    mergeData(costavgData, 'costavg');
+    mergeData(personnelavgData, 'personnelavg');
+    // --- 新增数据合并结束 ---
 
     // 更新并排序可用年份
     availableYears.value = Array.from(allYears).sort((a, b) => parseInt(a) - parseInt(b));
@@ -279,14 +347,21 @@ const exportDataToTxt = () => {
   let exportContent = `--- ${regionName} (ID: ${regionId}) 历年医疗数据概览 ---\n`;
   exportContent += `导出时间: ${new Date().toLocaleString()}\n\n`;
 
-  // 定义数据类型到中文标签的映射
+  // 定义数据类型到中文标签的映射，包括新增项
   const dataLabels = {
     medicalData: '医疗机构数量',
     medicalData2: '病床数量',
     costData: '医疗花费',
     personnelData: '医疗人员',
     serviceData: '医疗服务',
-    populationData: '人口数量'
+    populationData: '人口数量',
+    // --- 新增标签 ---
+    bedavg: '每万人床位',
+    outpatientavg: '每万人门诊诊疗人次',
+    inpatientavg: '每万人住院人数',
+    institutionavg: '每万人医疗机构',
+    costavg: '人均医疗费用',
+    personnelavg: '每万人医疗人员数'
   };
 
   // 遍历所有年份的数据
@@ -296,32 +371,49 @@ const exportDataToTxt = () => {
     const yearData = historicalData.value[year];
     exportContent += `=== 年份: ${year} ===\n`;
 
-    // 医疗机构数据
+    // 现有数据
     if (yearData.medicalData?.count !== undefined) {
       exportContent += `  ${dataLabels.medicalData}: ${formatValue(yearData.medicalData.count)}\n`;
     }
-    // 病床数量
     if (yearData.medicalData2?.count !== undefined) {
       exportContent += `  ${dataLabels.medicalData2}: ${formatValue(yearData.medicalData2.count)}\n`;
     }
-    // 医疗花费
     if (yearData.costData?.count !== undefined) {
       exportContent += `  ${dataLabels.costData}: ${formatValue(yearData.costData.count)}\n`;
     }
-    // 医疗人员
     if (yearData.personnelData?.count !== undefined) {
       exportContent += `  ${dataLabels.personnelData}: ${formatValue(yearData.personnelData.count)}\n`;
     }
-    // 医疗服务 (门诊量和住院量)
     if (yearData.serviceData?.outpatientVisits !== undefined || yearData.serviceData?.inpatientAdmissions !== undefined) {
       exportContent += `  ${dataLabels.serviceData}:\n`;
       exportContent += `    门诊量: ${formatValue(yearData.serviceData?.outpatientVisits)}\n`;
       exportContent += `    住院量: ${formatValue(yearData.serviceData?.inpatientAdmissions)}\n`;
     }
-    // 人口数量
     if (yearData.populationData?.count !== undefined) {
       exportContent += `  ${dataLabels.populationData}: ${formatValue(yearData.populationData.count, true)}\n`;
     }
+
+    // --- 新增数据 for TXT ---
+    if (yearData.bedavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.bedavg}: ${formatValue(yearData.bedavg.count)}\n`;
+    }
+    if (yearData.outpatientavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.outpatientavg}: ${formatValue(yearData.outpatientavg.count)}\n`;
+    }
+    if (yearData.inpatientavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.inpatientavg}: ${formatValue(yearData.inpatientavg.count)}\n`;
+    }
+    if (yearData.institutionavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.institutionavg}: ${formatValue(yearData.institutionavg.count)}\n`;
+    }
+    if (yearData.costavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.costavg}: ${formatValue(yearData.costavg.count)}\n`;
+    }
+    if (yearData.personnelavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.personnelavg}: ${formatValue(yearData.personnelavg.count)}\n`;
+    }
+    // --- 新增数据 for TXT 结束 ---
+
     exportContent += '\n'; // 每年数据之间添加空行
   });
 
@@ -336,7 +428,7 @@ const exportDataToTxt = () => {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  console.log(`Data exported to ${a.download}`);
+  console.log(`数据已导出到 ${a.download}`);
 };
 
 /**
@@ -349,9 +441,8 @@ const exportDataToExcel = () => {
   }
 
   const regionName = regionStore.getDisplayRegion;
-  // const regionId = regionStore.getRegionId; // 暂时用不到，但可以用于文件名
 
-  // 定义 Excel 表格的列头
+  // 定义 Excel 表格的列头，包括新增项
   const headers = [
     "年份",
     "医疗机构数量",
@@ -360,7 +451,14 @@ const exportDataToExcel = () => {
     "医疗人员",
     "门诊量",
     "住院量",
-    "人口数量"
+    "人口数量",
+    // --- 新增表头 ---
+    "每万人床位",
+    "每万人门诊",
+    "每万人住院",
+    "每万人机构",
+    "人均医疗费",
+    "每万人人员"
   ];
 
   // 为 Excel 准备数据
@@ -374,7 +472,14 @@ const exportDataToExcel = () => {
       formatValue(yearData.personnelData?.count),
       formatValue(yearData.serviceData?.outpatientVisits),
       formatValue(yearData.serviceData?.inpatientAdmissions),
-      formatValue(yearData.populationData?.count, true)
+      formatValue(yearData.populationData?.count, true),
+      // --- 新增数据 for Excel rows ---
+      formatValue(yearData.bedavg?.count),
+      formatValue(yearData.outpatientavg?.count),
+      formatValue(yearData.inpatientavg?.count),
+      formatValue(yearData.institutionavg?.count),
+      formatValue(yearData.costavg?.count),
+      formatValue(yearData.personnelavg?.count)
     ];
   });
 
@@ -395,7 +500,7 @@ const exportDataToExcel = () => {
   const fileName = `${regionName}_历年医疗数据.xlsx`;
   saveAs(new Blob([wbout], { type: 'application/octet-stream' }), fileName);
 
-  console.log(`Data exported to ${fileName}`);
+  console.log(`数据已导出到 ${fileName}`);
 };
 
 
@@ -428,7 +533,7 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
 
 .province-data-viewer-card {
   width: 100%;
-  max-width: 1200px; /* 保持最大宽度 */
+  max-width: 1232px; /* 保持最大宽度 */
   margin: 10px auto; /* 缩小外边距 */
   border: none;
   background: linear-gradient(135deg, $tech-blue 0%, $tech-darkblue 100%); /* 渐变背景 */
@@ -483,7 +588,7 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
   /* 新增：年份选择按钮容器样式 */
   .year-selection-buttons {
     display: flex;
-    gap: 5px; /* 按钮间距 */
+    gap: 15px; /* 按钮间距 */
     flex-wrap: wrap;
     align-items: center;
 
@@ -526,7 +631,6 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
 
   /* 导出TXT按钮样式 */
   .futuristic-button.export-button {
-
     background: linear-gradient(90deg, #007bff, #00c0ff); /* 蓝色渐变，与TXT按钮区分 */
     border: 1px solid #00aaff;
     color: white;
@@ -539,7 +643,7 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
     flex-shrink: 0;
 
     &:hover {
-      background: linear-gradient(90deg, #2ea043, #3cb353);
+      background: linear-gradient(90deg, #00c0ff, #007bff); /* Adjusted hover gradient for blue button */
       transform: translateY(-1px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
@@ -570,7 +674,7 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
     flex-shrink: 0;
 
     &:hover {
-      background: linear-gradient(90deg, #00c0ff, #00d4ff);
+      background: linear-gradient(90deg, #2ea043, #238636); /* Adjusted hover gradient for green button */
       transform: translateY(-1px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
@@ -623,7 +727,10 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
 
   .current-year-data-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* 自动适应列宽，最小180px */
+    /* Adjusted grid-template-columns to fit more items per row,
+       allowing 3 or 4 items per row depending on screen size,
+       making each item smaller */
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); /* Adjusted min-width for more columns */
     gap: 8px; /* 缩小间距 */
     margin-bottom: 10px; /* 缩小下边距 */
 
@@ -634,6 +741,12 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
       padding: 4px; /* 进一步减少内边距 */
       text-align: left;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* 缩小阴影 */
+      display: flex; /* Make it a flex container */
+      flex-direction: column; /* Stack label and value vertically */
+      justify-content: center; /* Center content vertically */
+      align-items: flex-start; /* Align text to the start */
+      min-height: 40px; /* Ensure a consistent minimum height for data items */
+
 
       .label {
         font-size: 10px; /* 进一步减小字体大小 */

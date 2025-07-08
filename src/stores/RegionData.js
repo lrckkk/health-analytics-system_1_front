@@ -28,6 +28,19 @@ export const useRegionStore = defineStore('regionStore', {
         //F数据，人口
         populationDataCache:{},
 
+        //下面是人均数据
+        // 每万人床位
+        bedavg:{},
+        // 每万人门诊诊疗人次
+        outpatientavg:{},
+        // 每万人住院人数
+        inpatientavg:{},
+        // 每万人医疗机构
+        institutionavg:{},
+        // 人均医疗费用
+        costavg:{},
+        // 每万人医疗人员数
+        personnelavg:{},
     }),
     actions: {
         /**
@@ -75,7 +88,6 @@ export const useRegionStore = defineStore('regionStore', {
                 // 2. 如果存在，直接返回缓存的数据
                 return this.medicalDataCache[effectiveRegionId];
             }
-
             // 3. 如果不存在，发起网络请求
             console.log(`缓存未命中，正在从 API 请求数据, regionId: ${effectiveRegionId}`);
             try {
@@ -276,6 +288,212 @@ export const useRegionStore = defineStore('regionStore', {
             }
 
         },
+        async fetchinstitutionavgIfNeeded(regionId) {
+            // 如果没有传入 regionId 或者为 0，我们默认查北京(id=1)
+            const effectiveRegionId = regionId === undefined || regionId === 0 ? 0 : regionId;
+
+            // 1. 检查缓存中是否存在数据
+            if (this.institutionavg[effectiveRegionId]) {
+                console.log(`从 Pinia 缓存中命中数据, regionId: ${effectiveRegionId}`);
+                // 2. 如果存在，直接返回缓存的数据
+                return this.institutionavg[effectiveRegionId];
+            }
+
+            // 3. 如果不存在，发起网络请求
+            try {
+                const response = await request.get(`/api/provinces/${effectiveRegionId}/institution/per10k`)
+                const processedData = (response.data || response).map(item => ({
+                    year: String(item.year),
+                    count: Number(item.total)
+                }));
+
+                // 4. 请求成功后，将数据存入缓存
+                this.institutionavg[effectiveRegionId] = processedData;
+                console.log(`数据已存入 Pinia 缓存, regionId: ${effectiveRegionId}`);
+
+                // 5. 返回新获取的数据
+                return processedData;
+
+            } catch (error) {
+                console.error(`获取 regionId: ${effectiveRegionId} 的医疗机构数据失败:`, error);
+                // 发生错误时，可以缓存一个空数组防止重复请求错误接口
+                this.institutionavg[effectiveRegionId] = [];
+                return []; // 或者可以抛出错误 throw error;
+            }
+
+        },
+        async fetchbedavgIfNeeded(regionId) {
+            // 如果没有传入 regionId 或者为 0，我们默认查北京(id=1)
+            const effectiveRegionId = regionId === undefined || regionId === 0 ? 0 : regionId;
+
+            // 1. 检查缓存中是否存在数据
+            if (this.bedavg[effectiveRegionId]) {
+                console.log(`从 Pinia 缓存中命中数据, regionId: ${effectiveRegionId}`);
+                // 2. 如果存在，直接返回缓存的数据
+                return this.bedavg[effectiveRegionId];
+            }
+
+            // 3. 如果不存在，发起网络请求
+            try {
+                const response = await request.get(`/api/provinces/${effectiveRegionId}/bed/per10k`)
+                const processedData = (response.data || response).map(item => ({
+                    year: String(item.year),
+                    count: Number(item.total)
+                }));
+
+                // 4. 请求成功后，将数据存入缓存
+                this.bedavg[effectiveRegionId] = processedData;
+                console.log(`数据已存入 Pinia 缓存, regionId: ${effectiveRegionId}`);
+
+                // 5. 返回新获取的数据
+                return processedData;
+
+            } catch (error) {
+                console.error(`获取 regionId: ${effectiveRegionId} 的医疗机构数据失败:`, error);
+                // 发生错误时，可以缓存一个空数组防止重复请求错误接口
+                this.bedavg[effectiveRegionId] = [];
+                return []; // 或者可以抛出错误 throw error;
+            }
+
+        },
+        async fetchpersonnelavgIfNeeded(regionId) {
+            // 如果没有传入 regionId 或者为 0，我们默认查北京(id=1)
+            const effectiveRegionId = regionId === undefined || regionId === 0 ? 0 : regionId;
+
+            // 1. 检查缓存中是否存在数据
+            if (this.personnelavg[effectiveRegionId]) {
+                console.log(`从 Pinia 缓存中命中数据, regionId: ${effectiveRegionId}`);
+                // 2. 如果存在，直接返回缓存的数据
+                return this.personnelavg[effectiveRegionId];
+            }
+
+            // 3. 如果不存在，发起网络请求
+            try {
+                const response = await request.get(`/api/provinces/${effectiveRegionId}/personnel/per10k`)
+                const processedData = (response.data || response).map(item => ({
+                    year: String(item.year),
+                    count: Number(item.total)
+                }));
+
+                // 4. 请求成功后，将数据存入缓存
+                this.personnelavg[effectiveRegionId] = processedData;
+                console.log(`数据已存入 Pinia 缓存, regionId: ${effectiveRegionId}`);
+
+                // 5. 返回新获取的数据
+                return processedData;
+
+            } catch (error) {
+                console.error(`获取 regionId: ${effectiveRegionId} 的医疗机构数据失败:`, error);
+                // 发生错误时，可以缓存一个空数组防止重复请求错误接口
+                this.personnelavg[effectiveRegionId] = [];
+                return []; // 或者可以抛出错误 throw error;
+            }
+
+        },
+        async fetchcostavgIfNeeded(regionId) {
+            // 如果没有传入 regionId 或者为 0，我们默认查北京(id=1)
+            const effectiveRegionId = regionId === undefined || regionId === 0 ? 0 : regionId;
+
+            // 1. 检查缓存中是否存在数据
+            if (this.costavg[effectiveRegionId]) {
+                console.log(`从 Pinia 缓存中命中数据, regionId: ${effectiveRegionId}`);
+                // 2. 如果存在，直接返回缓存的数据
+                return this.costavg[effectiveRegionId];
+            }
+
+            // 3. 如果不存在，发起网络请求
+            try {
+                const response = await request.get(`/api/provinces/${effectiveRegionId}/cost/percapita`)
+                const processedData = (response.data || response).map(item => ({
+                    year: String(item.year),
+                    count: Number(item.total)
+                }));
+
+                // 4. 请求成功后，将数据存入缓存
+                this.costavg[effectiveRegionId] = processedData;
+                console.log(`数据已存入 Pinia 缓存, regionId: ${effectiveRegionId}`);
+
+                // 5. 返回新获取的数据
+                return processedData;
+
+            } catch (error) {
+                console.error(`获取 regionId: ${effectiveRegionId} 的医疗机构数据失败:`, error);
+                // 发生错误时，可以缓存一个空数组防止重复请求错误接口
+                this.costavg[effectiveRegionId] = [];
+                return []; // 或者可以抛出错误 throw error;
+            }
+
+        },
+
+        async fetchoinpatientavgavgIfNeeded(regionId) {
+            // 如果没有传入 regionId 或者为 0，我们默认查北京(id=1)
+            const effectiveRegionId = regionId === undefined || regionId === 0 ? 0 : regionId;
+
+            // 1. 检查缓存中是否存在数据
+            if (this.inpatientavg[effectiveRegionId]) {
+                console.log(`从 Pinia 缓存中命中数据, regionId: ${effectiveRegionId}`);
+                // 2. 如果存在，直接返回缓存的数据
+                return this.inpatientavg[effectiveRegionId];
+            }
+
+            // 3. 如果不存在，发起网络请求
+            try {
+                const response = await request.get(`/api/provinces/${effectiveRegionId}/service/inpatient/per10k`)
+                const processedData = (response.data || response).map(item => ({
+                    year: String(item.year),
+                    count: Number(item.total)
+                }));
+
+                // 4. 请求成功后，将数据存入缓存
+                this.inpatientavg[effectiveRegionId] = processedData;
+                console.log(`数据已存入 Pinia 缓存, regionId: ${effectiveRegionId}`);
+
+                // 5. 返回新获取的数据
+                return processedData;
+
+            } catch (error) {
+                console.error(`获取 regionId: ${effectiveRegionId} 的医疗机构数据失败:`, error);
+                // 发生错误时，可以缓存一个空数组防止重复请求错误接口
+                this.inpatientavg[effectiveRegionId] = [];
+                return []; // 或者可以抛出错误 throw error;
+            }
+
+        },
+        async fetchoutpatientavgIfNeeded(regionId) {
+            // 如果没有传入 regionId 或者为 0，我们默认查北京(id=1)
+            const effectiveRegionId = regionId === undefined || regionId === 0 ? 0 : regionId;
+
+            // 1. 检查缓存中是否存在数据
+            if (this.outpatientavg[effectiveRegionId]) {
+                console.log(`从 Pinia 缓存中命中数据, regionId: ${effectiveRegionId}`);
+                // 2. 如果存在，直接返回缓存的数据
+                return this.outpatientavg[effectiveRegionId];
+            }
+
+            // 3. 如果不存在，发起网络请求
+            try {
+                const response = await request.get(`/api/provinces/${effectiveRegionId}/service/outpatient/per10k`)
+                const processedData = (response.data || response).map(item => ({
+                    year: String(item.year),
+                    count: Number(item.total)
+                }));
+
+                // 4. 请求成功后，将数据存入缓存
+                this.outpatientavg[effectiveRegionId] = processedData;
+                console.log(`数据已存入 Pinia 缓存, regionId: ${effectiveRegionId}`);
+
+                // 5. 返回新获取的数据
+                return processedData;
+
+            } catch (error) {
+                console.error(`获取 regionId: ${effectiveRegionId} 的医疗机构数据失败:`, error);
+                // 发生错误时，可以缓存一个空数组防止重复请求错误接口
+                this.outpatientavg[effectiveRegionId] = [];
+                return []; // 或者可以抛出错误 throw error;
+            }
+
+        },
+
     },
     getters: {
         // 获取当前选定区域的显示名称

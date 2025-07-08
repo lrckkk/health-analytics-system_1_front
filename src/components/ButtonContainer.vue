@@ -154,8 +154,8 @@ const handleButtonClick = (row, buttonId) => {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 1040px; /* 宽度增加 30% (800px * 1.3 = 1040px) */
-  padding: 0 16px; /* 侧边内边距，顶部和底部内边距由 button-wrapper 控制 */
+  max-width: 1340px; /* 宽度增加 30% (800px * 1.3 = 1040px) */
+  padding: 0 8px; /* 侧边内边距，顶部和底部内边距由 button-wrapper 控制 */
   z-index: 50;
   /* 鼠标感应区 */
 }
@@ -203,7 +203,7 @@ const handleButtonClick = (row, buttonId) => {
   display: flex;
   flex-wrap: wrap; /* 允许按钮换行 */
   justify-content: center;
-  gap: 12px; /* 按钮间距 */
+  gap: 30px; /* 按钮间距 */
 }
 
 /* 单个按钮样式 */
