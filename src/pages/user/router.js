@@ -63,11 +63,6 @@ const routes = [
         component: ManagementPage
     },
     {
-
-        component: Scroll,
-        meta: { requiresAuth: true } // 必须加这一行
-    },
-    {
         name:'Text',
         path: '/text',
         component: Text

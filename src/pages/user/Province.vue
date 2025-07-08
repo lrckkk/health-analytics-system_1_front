@@ -11,6 +11,11 @@
       <div class="top-right">
         <Settings />
         <Exit /> <!-- 新增：Settings后插入Exit组件 -->
+        <el-button
+            class="my-image-button futuristic-button"
+            @click="navigateToMyRoute"
+        >
+        </el-button>
       </div>
     </div>
 
@@ -121,7 +126,17 @@ import RankforPop from "@/pages/card/RankforPop.vue";
 import RankforCos from "@/pages/card/RankforCos.vue";
 import Rankforbed from "@/pages/card/Rankforbed.vue";
 import request from "@/utils/request.js";
+
 import TechEdgeButton from '../card/TechEdgeButton.vue';
+
+import router from "@/pages/user/router.js";
+import SLforbedavg from "@/pages/card/SLforbedavg.vue";
+import SLforcostavg from "@/pages/card/SLforcostavg.vue";
+import SLforinoavg from "@/pages/card/SLforinoavg.vue";
+import SLforInsavg from "@/pages/card/SLforInsavg.vue";
+import SLforoutavg from "@/pages/card/SLforoutavg.vue";
+import SLforperavg from "@/pages/card/SLforperavg.vue";
+
 
 
 export default {
@@ -142,12 +157,7 @@ export default {
   setup() {
     const myCustomComponents1 = ref([
       MyComponentA,
-      MyComponentB,
-      MyComponentC,
-      MyComponentD,
-      ServiceforML,
-      PopulationLine,
-      RankforPop,
+      SLforInsavg,
     ]);
 
     //news
@@ -174,6 +184,13 @@ export default {
         });
       }
     };
+    const navigateToMyRoute = () => {
+      router.push({
+        name: 'Text' // <-- 在这里设置你要跳转的路由名称
+        // 如果需要传递参数，可以这样添加：
+        // params: { id: 123, type: 'example' }
+      });
+    };
     const handleChildButtonClick = (event) => {
       console.log(`按钮点击事件：行 ID ${event.id}`);
 
@@ -199,14 +216,18 @@ export default {
 
     const myCustomComponents2 = ref([
       MyComponentB,
-      Rankforbed,
+
+        Rankforbed,
+        SLforbedavg,
     ]);
     const myCustomComponents3 = ref([
       MyComponentC,
       RankforCos,
+        SLforcostavg,
     ]);
     const myCustomComponents4 = ref([
       MyComponentD,
+        SLforperavg,
     ]);
     const myCustomComponents5 = ref([
       PopulationLine,
@@ -215,9 +236,12 @@ export default {
     ]);
     const myCustomComponents6 = ref([
       ServiceforML,
+        SLforinoavg,
+        SLforoutavg
     ]);
     onMounted(() => {
       mapDataStore.fetchcountryData()
+
       if (mapDataStore.provinceData.length === 0 && !mapDataStore.isLoading) {
         mapDataStore.fetchMapData();
       }
@@ -228,6 +252,7 @@ export default {
       handleRegionClick,
       handleChildButtonClick,
       mapDataStore,
+      navigateToMyRoute,
       myCustomButtonsRow1,
       myCustomButtonsRow2,
       myCustomComponents1: myCustomComponents1,
@@ -242,6 +267,28 @@ export default {
 </script>
 
 <style>
+my-image-button {
+  /* 移除 Element Plus 按钮默认的内边距和边框，让图片完全占据按钮区域 */
+  padding: 0;
+  border: none;
+  outline: none;
+  background-color: transparent; /* 背景透明 */
+
+  /* 设置按钮的固定宽度和高度，以匹配你的图片尺寸 */
+  width: 50px;   /* <--- 请根据你的图片实际宽度调整 */
+  height: 50px;  /* <--- 请根据你的图片实际高度调整 */
+
+  /* 设置背景图片 */
+  background-image: url('/public/pictures/button.png'); /* <--- ***请将这里替换为你的图片路径！*** */
+  background-size: contain;      /* 图片在按钮内完整显示，保持宽高比 */
+  background-repeat: no-repeat;  /* 图片不重复 */
+  background-position: center;   /* 图片在按钮中居中 */
+
+  /* 基础交互效果 */
+  cursor: pointer;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* 保持一些阴影效果 */
+}
 body {
   margin: 0;
   padding: 0;
