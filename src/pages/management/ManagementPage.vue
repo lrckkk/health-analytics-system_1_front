@@ -16,9 +16,8 @@ const activeKey = ref('import')
   <div class="management-container">
     <!-- 左侧导航栏 -->
     <Navigate @select="activeKey = $event" />
-
     <!-- 右侧内容区 -->
-    <main class="panel">
+    <main class="panel panel-fullwidth">
       <ImportPanel v-if="activeKey === 'import'" />
       <ExportPanel v-else-if="activeKey === 'export'" />
       <TagManager v-else-if="activeKey === 'tags'" />
@@ -45,10 +44,21 @@ const activeKey = ref('import')
 
 /* 右侧主面板 */
 .panel {
+  height: 100%;
   flex: 1;
-  padding: 40px;
+  padding: 5px;
   overflow-y: auto;
   color: #e7faff;
+  box-sizing: border-box;
+  min-height: 0;
+}
+
+.panel-fullwidth {
+  width: 100%;
+  min-width: 0;
+  padding-left: 1%;
+  padding-right: 1%;
+  margin: 0;
   box-sizing: border-box;
 }
 </style>
