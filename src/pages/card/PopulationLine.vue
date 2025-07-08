@@ -3,7 +3,7 @@
     <simpleline
         :chart-data="populationData"
         :title="`人口数量变化趋势 - ${regionStore.getDisplayRegion}`"
-        height=16vh
+        height=100%
         width=100%
         x-field="year"
         y-field="count"

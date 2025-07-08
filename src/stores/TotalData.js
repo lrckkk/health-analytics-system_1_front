@@ -126,6 +126,7 @@ export const useMapDataStore = defineStore('mapData', () => {
     const bedData = ref([]);
     const outpatientVisitsData = ref([]);
     const totalCostData = ref([]);
+    const inpatientAdmissions=ref([]);
     // 确保 fetchedScatterData 是一个常量，并且包含所有可能的省份坐标
     const fetchedScatterData = [
         { name: '北京', value: [116.4074, 39.9042, 90] },
@@ -172,6 +173,7 @@ export const useMapDataStore = defineStore('mapData', () => {
         institutionData.value = [];
         personnelData.value = [];
         bedData.value = [];
+        inpatientAdmissions.value = [];
         outpatientVisitsData.value = [];
         totalCostData.value = [];
         rawdata.forEach(item => {
@@ -200,6 +202,7 @@ export const useMapDataStore = defineStore('mapData', () => {
             // 5. 门诊就诊人次
             if (item.service && item.service.outpatientVisits !== undefined) {
                 outpatientVisitsData.value.push({ id: provinceId, value: item.service.outpatientVisits });
+                inpatientAdmissions.value.push({ id: provinceId, value: item.service.inpatientAdmissions });
             }
 
             // 6. 医疗总费用
@@ -414,6 +417,7 @@ export const useMapDataStore = defineStore('mapData', () => {
         fetchsatterdata,
         populationData,
         institutionData,
+        inpatientAdmissions,
         personnelData,
         bedData,
         outpatientVisitsData,

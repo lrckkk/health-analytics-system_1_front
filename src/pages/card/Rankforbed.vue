@@ -5,8 +5,8 @@
   <div class="rankings-grid">
 
     <RankingList
-        title="人口排位"
-        :data="mapDataStore.populationData"
+        title="床位排位"
+        :data="mapDataStore.bedData"
         :selected-region-id="regionStore.getRegionId"
     />
 

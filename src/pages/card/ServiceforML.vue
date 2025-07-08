@@ -4,7 +4,7 @@
         :width="multiChartWidth"
         :chart-data="medicalServiceData"
         title="医疗服务统计"
-        height=26vh
+        height=120%
     />
 
   </div>

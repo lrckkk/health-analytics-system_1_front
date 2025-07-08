@@ -15,7 +15,7 @@
     </div>
 
 
-
+    <!-- ChinaMap 容器 -->
     <div class="bottom-align" v-if="!mapDataStore.isLoading && !mapDataStore.error">
       <ChinaMap
           @region-clicked="handleRegionClick"
@@ -26,7 +26,7 @@
     </div>
 <!--    医疗机构卡片-->
 
-
+    <!-- 新增的 card 组件包裹 div，限定大小并定位在左上方 -->
     <div class="card-display-area">
       <card :componentsList="myCustomComponents1"></card>
     </div>
@@ -89,6 +89,9 @@ import MyComponentD from '../card/MyComponentD.vue';
 import ServiceforML from "@/pages/card/ServiceforML.vue";
 import PopulationLine from "@/pages/card/PopulationLine.vue";
 import RankforPop from "@/pages/card/RankforPop.vue";
+import RankforCos from "@/pages/card/RankforCos.vue";
+import Rankforbed from "@/pages/card/Rankforbed.vue";
+import request from "@/utils/request.js";
 
 
 export default {
@@ -117,6 +120,8 @@ export default {
       RankforPop,
     ]);
 
+    //news
+    const newsData = ref([])
 
     const mapDataStore = useMapDataStore();
     const regionStore = useRegionStore();
@@ -164,16 +169,19 @@ export default {
 
     const myCustomComponents2 = ref([
       MyComponentB,
+        Rankforbed,
     ]);
     const myCustomComponents3 = ref([
       MyComponentC,
+      RankforCos,
     ]);
     const myCustomComponents4 = ref([
       MyComponentD,
     ]);
     const myCustomComponents5 = ref([
       PopulationLine,
-      RankforPop,
+        RankforPop,
+
     ]);
     const myCustomComponents6 = ref([
       ServiceforML,
@@ -183,6 +191,7 @@ export default {
       if (mapDataStore.provinceData.length === 0 && !mapDataStore.isLoading) {
         mapDataStore.fetchMapData();
       }
+
     });
 
     return {
@@ -201,6 +210,7 @@ export default {
   },
 };
 </script>
+
 <style>
 body {
   margin: 0;

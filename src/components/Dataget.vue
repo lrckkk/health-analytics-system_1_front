@@ -9,7 +9,6 @@
           </span>
         </h3>
         <div class="controls">
-          <!-- 移除 el-select，替换为自定义年份选择按钮 -->
           <div class="year-selection-buttons" :class="{ 'is-disabled': availableYears.length === 0 || isLoading }">
             <button
                 v-for="year in availableYears"
@@ -29,6 +28,14 @@
               :disabled="!hasData || isLoading"
           >
             导出数据为TXT
+          </el-button>
+          <el-button
+              type="success"
+              class="futuristic-button export-excel-button"
+              @click="exportDataToExcel"
+              :disabled="!hasData || isLoading"
+          >
+            导出数据为Excel
           </el-button>
         </div>
       </div>
@@ -84,26 +91,26 @@
             max-height="600"
             class="futuristic-table"
         >
-          <el-table-column prop="year" label="年份" width="90" fixed sortable></el-table-column> <!-- 增加宽度 -->
-          <el-table-column label="医疗机构" width="130"> <!-- 增加宽度 -->
+          <el-table-column prop="year" label="年份" width="90" fixed sortable></el-table-column>
+          <el-table-column label="医疗机构" width="130">
             <template #default="{ row }">{{ formatValue(row.medicalData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="病床数量" width="130"> <!-- 增加宽度 -->
+          <el-table-column label="病床数量" width="130">
             <template #default="{ row }">{{ formatValue(row.medicalData2?.count) }}</template>
           </el-table-column>
-          <el-table-column label="医疗花费" width="130"> <!-- 增加宽度 -->
+          <el-table-column label="医疗花费" width="130">
             <template #default="{ row }">{{ formatValue(row.costData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="医疗人员" width="130"> <!-- 增加宽度 -->
+          <el-table-column label="医疗人员" width="130">
             <template #default="{ row }">{{ formatValue(row.personnelData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="门诊量" width="130"> <!-- 增加宽度 -->
+          <el-table-column label="门诊量" width="130">
             <template #default="{ row }">{{ formatValue(row.serviceData?.outpatientVisits) }}</template>
           </el-table-column>
-          <el-table-column label="住院量" width="130"> <!-- 增加宽度 -->
+          <el-table-column label="住院量" width="130">
             <template #default="{ row }">{{ formatValue(row.serviceData?.inpatientAdmissions) }}</template>
           </el-table-column>
-          <el-table-column label="人口数量" width="130"> <!-- 增加宽度 -->
+          <el-table-column label="人口数量" width="130">
             <template #default="{ row }">{{ formatValue(row.populationData?.count, true) }}</template>
           </el-table-column>
         </el-table>
@@ -114,9 +121,13 @@
 
 <script setup>
 import { ref, onMounted, watch, computed, nextTick } from 'vue';
-import { useRegionStore } from '@/stores/RegionData.js'; // 确保路径正确
-import { ElCard, ElButton, ElTable, ElTableColumn, ElIcon, ElLoading } from 'element-plus'; // 移除 ElSelect, ElOption
+import { useRegionStore } from '@/stores/RegionData.js';
+import { ElCard, ElButton, ElTable, ElTableColumn, ElIcon, ElLoading } from 'element-plus';
 import { Calendar, TrendCharts } from '@element-plus/icons-vue';
+
+// 引入 xlsx 和 file-saver 库，用于导出 Excel
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 // Pinia Store 实例
 const regionStore = useRegionStore();
@@ -134,13 +145,13 @@ const hasData = computed(() => {
 });
 
 /**
- * Formats a numerical value for display.
- * Displays '-' if the value is null, undefined, or NaN.
- * Returns an integer if the value is an integer, otherwise rounds to one decimal place.
- * Optionally adds '万' suffix.
- * @param {number} value - The numerical value to format.
- * @param {boolean} addWanSuffix - Whether to add '万' suffix.
- * @returns {string|number} The formatted string or the original number.
+ * 格式化数值以便显示。
+ * 如果值为 null, undefined 或 NaN，显示 '-'。
+ * 如果值为整数，返回整数；否则四舍五入到一位小数。
+ * 可选地添加 '万' 后缀。
+ * @param {number} value - 要格式化的数值。
+ * @param {boolean} addWanSuffix - 是否添加 '万' 后缀。
+ * @returns {string|number} 格式化后的字符串或原始数值。
  */
 const formatValue = (value, addWanSuffix = false) => {
   if (value === null || value === undefined || isNaN(value)) {
@@ -154,46 +165,44 @@ const formatValue = (value, addWanSuffix = false) => {
 };
 
 /**
- * Asynchronously fetches and processes all six data types.
- * Integrates the data into the historicalData object and updates available years.
+ * 异步获取并处理所有六种数据类型。
+ * 将数据整合到 historicalData 对象中，并更新可用年份。
  */
 const fetchAndProcessAllData = async () => {
   isLoading.value = true;
   const regionId = regionStore.getRegionId;
-  const currentRegionName = regionStore.getDisplayRegion; // Get current region name
+  const currentRegionName = regionStore.getDisplayRegion;
 
   console.log(`[ProvinceDataViewer] Starting data fetch for ${currentRegionName} (ID: ${regionId})...`);
 
-  // Clear existing data and years
+  // 清除现有数据和年份
   historicalData.value = {};
   availableYears.value = [];
   selectedYear.value = null;
   currentYearData.value = {};
 
   try {
-    // Concurrently request all data
+    // 并发请求所有数据
     const [
       medicalData,
       medicalData2,
       costData,
-      personnelData,
+      personnelData, // 在 store 中对应 fetchbarChartWidthIfNeeded
       serviceData,
       populationData
     ] = await Promise.all([
       regionStore.fetchMedicalDataIfNeeded(regionId),
       regionStore.fetchMedicalData2IfNeeded(regionId),
       regionStore.fetchCostDataIfNeeded(regionId),
-      regionStore.fetchbarChartWidthIfNeeded(regionId), // Note: This is personnel data in the store
+      regionStore.fetchbarChartWidthIfNeeded(regionId),
       regionStore.fetchserviceDataIfNeeded(regionId),
       regionStore.fetchPopulationDataIfNeeded(regionId),
     ]);
 
-    console.log(`[ProvinceDataViewer] Raw serviceData fetched from Pinia:`, serviceData); // DEBUG LOG 1
-
-    // Integrate data into the historicalData object
+    // 将数据整合到 historicalData 对象中
     const allYears = new Set();
 
-    // Helper function to merge data into historicalData
+    // 辅助函数，将数据合并到 historicalData
     const mergeData = (dataArray, type) => {
       if (!dataArray || !Array.isArray(dataArray)) {
         console.warn(`[ProvinceDataViewer] mergeData: ${type} received invalid or empty array.`, dataArray);
@@ -205,16 +214,14 @@ const fetchAndProcessAllData = async () => {
         if (!historicalData.value[year]) {
           historicalData.value[year] = { year: year };
         }
-        // Merge fields based on data type
+        // 根据数据类型合并字段
         if (type === 'serviceData') {
-          console.log(`[ProvinceDataViewer] mergeData: Merging serviceData for year ${year}, item:`, item); // DEBUG LOG 2
           historicalData.value[year].serviceData = {
             outpatientVisits: item.outpatientVisits,
             inpatientAdmissions: item.inpatientAdmissions
           };
-          console.log(`[ProvinceDataViewer] mergeData: Merged historicalData.value[${year}].serviceData:`, historicalData.value[year].serviceData); // DEBUG LOG 3
         } else {
-          // For other data types with only a 'count' field
+          // 对于其他只有 'count' 字段的数据类型
           historicalData.value[year][type] = { count: item.count };
         }
       });
@@ -224,30 +231,30 @@ const fetchAndProcessAllData = async () => {
     mergeData(medicalData2, 'medicalData2');
     mergeData(costData, 'costData');
     mergeData(personnelData, 'personnelData');
-    mergeData(serviceData, 'serviceData'); // The type parameter here is 'serviceData'
+    mergeData(serviceData, 'serviceData');
     mergeData(populationData, 'populationData');
 
-    // Update and sort available years
+    // 更新并排序可用年份
     availableYears.value = Array.from(allYears).sort((a, b) => parseInt(a) - parseInt(b));
 
-    // Default to selecting the latest year
+    // 默认选择最新年份
     if (availableYears.value.length > 0) {
       selectedYear.value = availableYears.value[availableYears.value.length - 1];
     }
 
     console.log(`[ProvinceDataViewer] Data fetch completed for ${currentRegionName} (ID: ${regionId}).`);
-    console.log(`[ProvinceDataViewer] Final historicalData structure:`, historicalData.value); // DEBUG LOG 4
+    console.log(`[ProvinceDataViewer] Final historicalData structure:`, historicalData.value);
 
   } catch (error) {
     console.error(`[ProvinceDataViewer] Failed to fetch data for ${currentRegionName} (ID: ${regionId}):`, error);
-    // You can set an error state here, e.g., display an error message
+    // 可以在这里设置错误状态，例如显示错误消息
   } finally {
     isLoading.value = false;
   }
 };
 
 /**
- * Updates the displayed data for the selected year.
+ * 更新当前选中年份的显示数据。
  */
 const updateCurrentYearDisplay = () => {
   if (selectedYear.value && historicalData.value[selectedYear.value]) {
@@ -255,11 +262,11 @@ const updateCurrentYearDisplay = () => {
   } else {
     currentYearData.value = {};
   }
-  console.log(`[ProvinceDataViewer] Current year data (${selectedYear.value}):`, currentYearData.value); // DEBUG LOG 5
+  console.log(`[ProvinceDataViewer] Current year data (${selectedYear.value}):`, currentYearData.value);
 };
 
 /**
- * Exports data to a TXT file.
+ * 将数据导出为 TXT 文件。
  */
 const exportDataToTxt = () => {
   if (!hasData.value) {
@@ -269,10 +276,10 @@ const exportDataToTxt = () => {
 
   const regionName = regionStore.getDisplayRegion;
   const regionId = regionStore.getRegionId;
-  let exportContent = `--- ${regionName} (ID: ${regionId}) Historical Medical Data Overview ---\n`;
-  exportContent += `Export Time: ${new Date().toLocaleString()}\n\n`;
+  let exportContent = `--- ${regionName} (ID: ${regionId}) 历年医疗数据概览 ---\n`;
+  exportContent += `导出时间: ${new Date().toLocaleString()}\n\n`;
 
-  // Define mapping from data type to Chinese label
+  // 定义数据类型到中文标签的映射
   const dataLabels = {
     medicalData: '医疗机构数量',
     medicalData2: '病床数量',
@@ -282,43 +289,43 @@ const exportDataToTxt = () => {
     populationData: '人口数量'
   };
 
-  // Iterate through data for all years
+  // 遍历所有年份的数据
   const sortedYears = Object.keys(historicalData.value).sort((a, b) => parseInt(a) - parseInt(b));
 
   sortedYears.forEach(year => {
     const yearData = historicalData.value[year];
-    exportContent += `=== Year: ${year} ===\n`;
+    exportContent += `=== 年份: ${year} ===\n`;
 
-    // Medical Institutions Data
+    // 医疗机构数据
     if (yearData.medicalData?.count !== undefined) {
       exportContent += `  ${dataLabels.medicalData}: ${formatValue(yearData.medicalData.count)}\n`;
     }
-    // Bed Count
+    // 病床数量
     if (yearData.medicalData2?.count !== undefined) {
       exportContent += `  ${dataLabels.medicalData2}: ${formatValue(yearData.medicalData2.count)}\n`;
     }
-    // Medical Cost
+    // 医疗花费
     if (yearData.costData?.count !== undefined) {
       exportContent += `  ${dataLabels.costData}: ${formatValue(yearData.costData.count)}\n`;
     }
-    // Medical Personnel
+    // 医疗人员
     if (yearData.personnelData?.count !== undefined) {
       exportContent += `  ${dataLabels.personnelData}: ${formatValue(yearData.personnelData.count)}\n`;
     }
-    // Medical Services (Outpatient Visits and Inpatient Admissions)
+    // 医疗服务 (门诊量和住院量)
     if (yearData.serviceData?.outpatientVisits !== undefined || yearData.serviceData?.inpatientAdmissions !== undefined) {
       exportContent += `  ${dataLabels.serviceData}:\n`;
       exportContent += `    门诊量: ${formatValue(yearData.serviceData?.outpatientVisits)}\n`;
       exportContent += `    住院量: ${formatValue(yearData.serviceData?.inpatientAdmissions)}\n`;
     }
-    // Population Count
+    // 人口数量
     if (yearData.populationData?.count !== undefined) {
       exportContent += `  ${dataLabels.populationData}: ${formatValue(yearData.populationData.count, true)}\n`;
     }
-    exportContent += '\n'; // Add a newline between data for each year
+    exportContent += '\n'; // 每年数据之间添加空行
   });
 
-  // Create Blob and download
+  // 创建 Blob 并下载
   const blob = new Blob([exportContent], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -332,51 +339,111 @@ const exportDataToTxt = () => {
   console.log(`Data exported to ${a.download}`);
 };
 
+/**
+ * 将数据导出为 Excel 文件。
+ */
+const exportDataToExcel = () => {
+  if (!hasData.value) {
+    console.warn('No data to export to Excel.');
+    return;
+  }
+
+  const regionName = regionStore.getDisplayRegion;
+  // const regionId = regionStore.getRegionId; // 暂时用不到，但可以用于文件名
+
+  // 定义 Excel 表格的列头
+  const headers = [
+    "年份",
+    "医疗机构数量",
+    "病床数量",
+    "医疗花费",
+    "医疗人员",
+    "门诊量",
+    "住院量",
+    "人口数量"
+  ];
+
+  // 为 Excel 准备数据
+  // 遍历 historicalData 对象，将其转换为符合 Excel 格式的二维数组
+  const excelData = Object.values(historicalData.value).map(yearData => {
+    return [
+      yearData.year,
+      formatValue(yearData.medicalData?.count),
+      formatValue(yearData.medicalData2?.count),
+      formatValue(yearData.costData?.count),
+      formatValue(yearData.personnelData?.count),
+      formatValue(yearData.serviceData?.outpatientVisits),
+      formatValue(yearData.serviceData?.inpatientAdmissions),
+      formatValue(yearData.populationData?.count, true)
+    ];
+  });
+
+  // 将列头添加到数据数组的开头
+  const dataForSheet = [headers, ...excelData];
+
+  // 创建一个新的工作簿和工作表
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(dataForSheet); // AoA (Array of Arrays) 转为 sheet
+
+  // 将工作表添加到工作簿
+  XLSX.utils.book_append_sheet(wb, ws, "历年医疗数据");
+
+  // 从工作簿生成二进制缓冲区
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+  // 使用 file-saver 保存文件
+  const fileName = `${regionName}_历年医疗数据.xlsx`;
+  saveAs(new Blob([wbout], { type: 'application/octet-stream' }), fileName);
+
+  console.log(`Data exported to ${fileName}`);
+};
+
 
 // --- Watchers ---
-// Watch for changes in selectedRegionId from Pinia store, re-fetch data when province changes
+// 监听 Pinia store 中 selectedRegionId 的变化，当省份改变时重新获取数据
 watch(() => regionStore.selectedRegionId, (newId, oldId) => {
   if (newId !== oldId) {
     fetchAndProcessAllData();
   }
-}, { immediate: true }); // immediate: true ensures it runs once on component mount
+}, { immediate: true }); // immediate: true 确保组件挂载时立即运行一次
 
-// Watch for changes in selectedYear, update current year's displayed data
+// 监听 selectedYear 的变化，更新当前年份的显示数据
 watch(selectedYear, (newYear) => {
   updateCurrentYearDisplay();
 });
 
-// --- Lifecycle Hooks ---
+// --- 生命周期钩子 ---
 onMounted(() => {
-  // Initial data fetch is triggered by the immediate watch on selectedRegionId
+  // 初始数据获取已由 selectedRegionId 的 immediate watch 触发
 });
 </script>
 
 <style scoped lang="scss">
-$tech-blue: #03045E;
-$tech-cyan: #7DF9FF;
-$tech-lightblue: #90E0EF;
-$tech-darkblue: #023E8A;
-$tech-text: #CAF0F8; // Original text color, might be light
+// 定义科技感主题颜色变量
+$tech-blue: #03045E;        // 深蓝色，作为基础背景
+$tech-cyan: #7DF9FF;        // 亮青色，用于标题和突出显示
+$tech-lightblue: #90E0EF;   // 浅蓝色，用于次要文本和边框
+$tech-darkblue: #023E8A;    // 较深的蓝色，用于卡片和表格背景
+$tech-text: #CAF0F8;        // 浅色文本，接近白色
 
 .province-data-viewer-card {
   width: 100%;
   max-width: 1200px; /* 保持最大宽度 */
   margin: 10px auto; /* 缩小外边距 */
   border: none;
-  background: linear-gradient(135deg, $tech-blue 0%, $tech-darkblue 100%);
-  box-shadow: 0 0 20px rgba(0, 180, 216, 0.5);
+  background: linear-gradient(135deg, $tech-blue 0%, $tech-darkblue 100%); /* 渐变背景 */
+  box-shadow: 0 0 20px rgba(0, 180, 216, 0.5); /* 科技感阴影 */
   border-radius: 8px;
-  color: $tech-text;
+  color: $tech-text; /* 整体文字颜色 */
 
   :deep(.el-card__header) {
     padding: 10px 15px; /* 缩小内边距 */
-    border-bottom: 1px solid rgba(72, 202, 228, 0.3);
-    background: rgba(0, 53, 102, 0.3);
+    border-bottom: 1px solid rgba(72, 202, 228, 0.3); /* 底部边框 */
+    background: rgba(0, 53, 102, 0.3); /* 头部背景 */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap; /* Allow wrapping */
+    flex-wrap: wrap; /* 允许换行 */
   }
 
   .card-header {
@@ -389,14 +456,14 @@ $tech-text: #CAF0F8; // Original text color, might be light
   }
 
   .futuristic-title {
-    color: $tech-cyan;
+    color: $tech-cyan; /* 标题颜色 */
     font-size: 16px; /* 缩小字体大小 */
     margin: 0;
     font-weight: 500;
-    text-shadow: 0 0 8px rgba($tech-cyan, 0.5);
+    text-shadow: 0 0 8px rgba($tech-cyan, 0.5); /* 标题阴影 */
     display: flex;
     align-items: center;
-    flex-shrink: 0; /* Prevent shrinking */
+    flex-shrink: 0; /* 防止标题缩小 */
   }
 
   .region-id-display {
@@ -408,9 +475,9 @@ $tech-text: #CAF0F8; // Original text color, might be light
   .controls {
     display: flex;
     gap: 10px; /* 缩小间距 */
-    flex-wrap: wrap; /* Allow controls to wrap */
+    flex-wrap: wrap; /* 允许控件换行 */
     align-items: center;
-    margin-left: auto; /* Push to the right */
+    margin-left: auto; /* 推到右侧 */
   }
 
   /* 新增：年份选择按钮容器样式 */
@@ -428,8 +495,8 @@ $tech-text: #CAF0F8; // Original text color, might be light
 
   /* 新增：单个年份按钮样式 */
   .futuristic-year-button {
-    background: rgba(0, 119, 182, 0.3);
-    border: 1px solid rgba(72, 202, 228, 0.5);
+    background: rgba(0, 119, 182, 0.3); /* 按钮背景 */
+    border: 1px solid rgba(72, 202, 228, 0.5); /* 按钮边框 */
     color: $tech-text;
     padding: 4px 8px; /* 缩小内边距 */
     border-radius: 5px;
@@ -444,7 +511,7 @@ $tech-text: #CAF0F8; // Original text color, might be light
     }
 
     &.is-active:not(:disabled) {
-      background: linear-gradient(90deg, #007bff, #00c0ff);
+      background: linear-gradient(90deg, #007bff, #00c0ff); /* 激活状态渐变背景 */
       border-color: #00aaff;
       color: white;
       font-weight: bold;
@@ -457,26 +524,28 @@ $tech-text: #CAF0F8; // Original text color, might be light
     }
   }
 
+  /* 导出TXT按钮样式 */
   .futuristic-button.export-button {
-    background: linear-gradient(90deg, #238636, #2ea043);
-    border: 1px solid #4CAF50;
+
+    background: linear-gradient(90deg, #007bff, #00c0ff); /* 蓝色渐变，与TXT按钮区分 */
+    border: 1px solid #00aaff;
     color: white;
-    padding: 6px 12px; /* 缩小内边距 */
-    border-radius: 5px; /* 缩小圆角 */
-    font-size: 12px; /* 缩小字体大小 */
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-size: 12px;
     font-weight: bold;
     transition: all 0.3s ease;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* 缩小阴影 */
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
 
     &:hover {
       background: linear-gradient(90deg, #2ea043, #3cb353);
-      transform: translateY(-1px); /* 缩小悬停位移 */
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* 缩小悬停阴影 */
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
     &:active {
       transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* 缩小点击阴影 */
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
     &.is-disabled {
       opacity: 0.6;
@@ -487,10 +556,42 @@ $tech-text: #CAF0F8; // Original text color, might be light
     }
   }
 
+  /* 新增：导出 Excel 按钮的样式 */
+  .futuristic-button.export-excel-button {
+    background: linear-gradient(90deg, #238636, #2ea043); /* 绿色渐变 */
+    border: 1px solid #4CAF50;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+
+    &:hover {
+      background: linear-gradient(90deg, #00c0ff, #00d4ff);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    &.is-disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background: #4a4a4a;
+      border-color: #666;
+      box-shadow: none;
+    }
+  }
+
+
   .data-content {
     padding: 15px; /* 缩小内边距 */
-    min-height: 200px; /* 修复：缩小最小高度 */
-    position: relative; /* For loading overlay positioning */
+    min-height: 200px; /* 缩小最小高度 */
+    position: relative; /* 用于加载动画叠加 */
   }
 
   .empty-placeholder {
@@ -508,8 +609,8 @@ $tech-text: #CAF0F8; // Original text color, might be light
   .section-title {
     color: $tech-cyan;
     font-size: 15px; /* 缩小字体大小 */
-    margin-top: 10px; /* 修复：缩小上边距 */
-    margin-bottom: 8px; /* 修复：缩小下边距 */
+    margin-top: 10px; /* 缩小上边距 */
+    margin-bottom: 8px; /* 缩小下边距 */
     display: flex;
     align-items: center;
     gap: 6px; /* 缩小间距 */
@@ -522,13 +623,13 @@ $tech-text: #CAF0F8; // Original text color, might be light
 
   .current-year-data-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* 恢复最小宽度 */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* 自动适应列宽，最小180px */
     gap: 8px; /* 缩小间距 */
-    margin-bottom: 10px; /* 修复：缩小下边距 */
+    margin-bottom: 10px; /* 缩小下边距 */
 
     .data-item {
-      background-color: rgba($tech-darkblue, 0.5);
-      border: 1px solid rgba($tech-lightblue, 0.3);
+      background-color: rgba($tech-darkblue, 0.5); /* 数据项背景 */
+      border: 1px solid rgba($tech-lightblue, 0.3); /* 数据项边框 */
       border-radius: 5px; /* 缩小圆角 */
       padding: 4px; /* 进一步减少内边距 */
       text-align: left;
@@ -552,10 +653,10 @@ $tech-text: #CAF0F8; // Original text color, might be light
     background-color: rgba($tech-darkblue, 0.3);
     border: 1px solid rgba($tech-lightblue, 0.2);
     border-radius: 8px;
-    overflow: hidden; /* Ensure rounded corners and border apply with scrolling */
+    overflow: hidden; /* 确保圆角和边框在滚动时也适用 */
 
     :deep(.el-table__inner-wrapper) {
-      border-radius: 8px; /* Keep inner rounded corners */
+      border-radius: 8px; /* 保持内部圆角 */
     }
 
     :deep(.el-table__header-wrapper) {
@@ -566,7 +667,7 @@ $tech-text: #CAF0F8; // Original text color, might be light
           color: $tech-cyan;
           font-weight: bold;
           border-bottom: 1px solid rgba($tech-lightblue, 0.3);
-          text-align: center; /* Header text alignment */
+          text-align: center; /* 表头文本居中 */
           padding: 8px 0; /* 缩小表头内边距 */
           font-size: 13px; /* 缩小表头字体 */
         }
@@ -579,7 +680,7 @@ $tech-text: #CAF0F8; // Original text color, might be light
           background-color: rgba($tech-darkblue, 0.9); /* 深蓝色背景 */
           color: white; /* 白色文字 */
           border-bottom: 1px solid rgba($tech-lightblue, 0.1); /* 调整边框颜色 */
-          text-align: center; /* Content alignment */
+          text-align: center; /* 内容居中 */
           padding: 6px 0; /* 缩小单元格内边距 */
           font-size: 12px; /* 缩小单元格字体 */
         }
