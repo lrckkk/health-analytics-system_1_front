@@ -55,17 +55,22 @@ const routes = [
         name:'Scroll',
         path: '/scroll',
 
-        component: Scroll
+        component: Scroll,
+        meta: { requiresAuth: true } // 必须加这一行
     },
     {
         path: '/manage',
         name: 'ManagementPage',
-        component: ManagementPage
+        component: ManagementPage,
+        meta: { requiresAuth: true } // 必须加这一行
     },
+
+
     {
         name:'Text',
         path: '/text',
-        component: Text
+        component: Text,
+        meta: { requiresAuth: true } // 必须加这一行
     },
     {
         name: 'Profile',
