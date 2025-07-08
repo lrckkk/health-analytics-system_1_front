@@ -9,6 +9,7 @@ import Scroll from "./scroll.vue"
 import ManagementPage from "@/pages/management/ManagementPage.vue";
 
 import Text from "../../components/test.vue"
+import Profile from './Profile.vue';
 
 
 
@@ -61,6 +62,7 @@ const routes = [
         name: 'ManagementPage',
         component: ManagementPage
     },
+    {
 
         component: Scroll,
         meta: { requiresAuth: true } // 必须加这一行
@@ -69,6 +71,12 @@ const routes = [
         name:'Text',
         path: '/text',
         component: Text
+    },
+    {
+        name: 'Profile',
+        path: '/profile',
+        component: Profile,
+        meta: { requiresAuth: true }
     }
 
 
@@ -82,35 +90,51 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-    console.log('[路由守卫] to:', to.name, 'from:', from.name)
+    console.log('[路由守卫] to:', to.name, 'from:', from.name);
 
-    // 严格判断token
-    const token = localStorage.getItem('jwt_token')
-    const hasValidToken = token && token !== 'null' && token !== 'undefined'
-    console.log('Token有效性:', hasValidToken)
-
-    // 调试路由匹配信息
-    console.log('路由匹配链:', to.matched.map(r => r.path))
-    console.log('requiresAuth状态:', to.matched.map(r => r.meta.requiresAuth))
+    // 更严格的token验证
+    const token = localStorage.getItem('jwt_token');
+    const hasValidToken = token && token !== 'null' && token !== 'undefined' && token.length > 30;
+    console.log('Token有效性:', hasValidToken, 'Token长度:', token?.length);
 
     // 1. 已登录时访问登录/注册页 → 跳首页
     if ((to.name === 'Login' || to.name === 'Register') && hasValidToken) {
-        console.log('已登录禁止访问认证页')
-        return next({ name: 'province' })
+        console.log('已登录禁止访问认证页，当前token:', token);
+        return next({ name: 'province' });
     }
 
     // 2. 未登录访问需要认证的页面 → 跳登录页
-    if (to.matched.some(record => record.meta.requiresAuth) && !hasValidToken) {
-        console.log('未登录禁止访问受保护路由')
-        return next({
-            name: 'Login',
-            query: { redirect: to.fullPath } // 保存目标路径用于登录后跳转
-        })
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+        if (!hasValidToken) {
+            console.log('未登录禁止访问受保护路由');
+            return next({
+                name: 'Login',
+                query: { redirect: to.fullPath }
+            });
+        }
+
+        // 额外检查令牌是否有效（可选）
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const isExpired = payload.exp * 1000 < Date.now();
+            if (isExpired) {
+                console.log('令牌已过期');
+                localStorage.removeItem('jwt_token');
+                return next({
+                    name: 'Login',
+                    query: { redirect: to.fullPath, expired: '1' }
+                });
+            }
+        } catch (e) {
+            console.log('令牌解析失败:', e);
+            localStorage.removeItem('jwt_token');
+            return next({ name: 'Login' });
+        }
     }
 
     // 3. 其他情况放行
-    next()
-})
+    next();
+});
 
 
 

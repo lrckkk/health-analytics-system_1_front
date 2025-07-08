@@ -3,7 +3,7 @@
   <div class="line-chart-container" :style="{ width: computedWidth }">
     <el-card class="chart-card futuristic-card">
 
-      <router-link :to="{ name: 'Home' }" class="chart-title">{{ title }}</router-link>
+      <div class="chart-title">{{ title }}</div>
       <div class="chart-wrapper">
         <div
             ref="chartRef"
@@ -527,6 +527,10 @@ onUnmounted(() => {
   padding: 1px;
 }
 .chart-title {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   position: absolute;
   top: 35px;
   left: 0;

@@ -1,7 +1,8 @@
 <template>
   <div class="bar-chart-container" :style="{ width: computedWidth }">
     <el-card class="chart-card futuristic-card">
-      <router-link :to="{ name: 'Home' }" class="chart-title">{{ title }}</router-link>
+
+      <div class="chart-title">{{ title }}</div>
       <div class="chart-wrapper">
         <div
             ref="chartRef"
@@ -574,6 +575,10 @@ $tech-highlight: #FF00FF;
   //padding-bottom: 20px;
 }
 .chart-title {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   position: absolute;
   top: 65px;
   left: 0;

@@ -80,17 +80,17 @@
         </el-form-item>
 
         <!-- 数字证书（可选）-->
-        <el-form-item label="数字证书" class="futuristic-form-item">
-          <el-input
-              v-model="form.cert"
-              placeholder="输入数字证书"
-              class="futuristic-input"
-          >
-            <template #prefix>
-              <el-icon><Key /></el-icon>
-            </template>
-          </el-input>
-        </el-form-item>
+<!--        <el-form-item label="数字证书" class="futuristic-form-item">-->
+<!--          <el-input-->
+<!--              v-model="form.cert"-->
+<!--              placeholder="输入数字证书"-->
+<!--              class="futuristic-input"-->
+<!--          >-->
+<!--            <template #prefix>-->
+<!--              <el-icon><Key /></el-icon>-->
+<!--            </template>-->
+<!--          </el-input>-->
+<!--        </el-form-item>-->
 
         <!-- 登录按钮 -->
         <el-form-item class="futuristic-form-item">
@@ -140,16 +140,14 @@ import { ElMessage } from 'element-plus';
 import { Refresh, User, Lock, Key, Avatar, UserFilled, Setting, View, Connection } from '@element-plus/icons-vue';
 import axios from 'axios';
 import request from '@/utils/request';
+import { useRoute } from 'vue-router';
 // 角色图标映射
 const roleIcons = {
   ADMIN: Setting,
-  RESEARCHER: UserFilled,
   ANALYST: View,
-  AUDITOR: Avatar,
   USER: User,
-  GUEST: Connection
 };
-
+const route = useRoute();
 // 响应式数据
 const form = ref({
   username: '',
@@ -161,11 +159,8 @@ const form = ref({
 
 const roleOptions = ref([
   { label: '管理员', value: 'ADMIN' },
-  { label: '研究员', value: 'RESEARCHER' },
   { label: '分析师', value: 'ANALYST' },
-  { label: '审核员', value: 'AUDITOR' },
   { label: '普通用户', value: 'USER' },
-  { label: '游客', value: 'GUEST' }
 ]);
 
 const loading = ref(false);
@@ -276,12 +271,14 @@ const handleLogin = async () => {
     const response = await request.post('/api/auth/login', {
       username: form.value.username,
       password: form.value.password,
-      captcha: form.value.role === 'ADMIN' ? form.value.code : null
+      // captcha: form.value.role === 'ADMIN' ? form.value.code : null
+      captcha:  form.value.code
     });
 
     if (response.code === 200) {
       // 存储token和用户信息
       localStorage.setItem('jwt_token', response.data.token);
+      console.log('存储的token:', localStorage.getItem('jwt_token')); // 确认存储成功
       localStorage.setItem('user_info', JSON.stringify(response.data.user));
       console.log('[路由守卫] token:', localStorage.getItem('jwt_token')) // 检查 token 是否正确
       ElMessage.success('登录成功');
@@ -298,7 +295,11 @@ const handleLogin = async () => {
     loading.value = false;
   }
 };
-
+onMounted(() => {
+  if (route.query.expired) {
+    ElMessage.error('会话已过期，请重新登录');
+  }
+});
 // 组件挂载时生成验证码
 onMounted(() => {
   generateCaptcha();
@@ -465,6 +466,36 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
     font-size: 18px;
     text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
   }
+
+  /* 添加自动填充样式修复 */
+  :deep(.el-input__inner:-webkit-autofill),
+  :deep(.el-input__inner:-webkit-autofill:hover),
+  :deep(.el-input__inner:-webkit-autofill:focus),
+  :deep(.el-input__inner:-webkit-autofill:active) {
+    -webkit-text-fill-color: $tech-light !important;
+    -webkit-box-shadow: 0 0 0px 1000px rgba(16, 26, 60, 0.7) inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: $tech-light;
+  }
+
+  /* 修复快速选择时的样式 */
+  :deep(.el-input__inner::selection) {
+    background: $tech-primary;
+    color: $tech-bg;
+  }
+
+  /* 修复快速选择时的文本颜色 */
+  :deep(.el-input__inner::-webkit-selection) {
+    background: $tech-primary;
+    color: $tech-bg;
+  }
+
+  /* 修复快速选择时的文本颜色 */
+  :deep(.el-input__inner::-moz-selection) {
+    background: $tech-primary;
+    color: $tech-bg;
+  }
+
 }
 
 /* 角色选择器 */

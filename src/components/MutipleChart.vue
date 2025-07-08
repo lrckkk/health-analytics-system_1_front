@@ -7,7 +7,7 @@
 <!--          <div class="chart-controls">-->
 <!--          </div>-->
 <!--        </div>-->
-      <router-link :to="{ name: 'Home' }" class="chart-title">{{ title }}</router-link>
+      <div class="chart-title">{{ title }}</div>
 
 
       <div class="chart-wrapper">
@@ -529,6 +529,10 @@ $tech-text: #CAF0F8;
 }
 
 .chart-title {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   position: absolute;
   top: 35px;
   left: 0;
