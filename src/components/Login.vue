@@ -143,12 +143,14 @@ import { Refresh, User, Lock, Key, Avatar, UserFilled, Setting, View, Connection
 import axios from 'axios';
 import request from '@/utils/request';
 import { useRoute } from 'vue-router';
+
 // 角色图标映射
 const roleIcons = {
   ADMIN: Setting,
   ANALYST: View,
   USER: User,
 };
+
 const route = useRoute();
 // 响应式数据
 const form = ref({
@@ -177,12 +179,20 @@ const handleRegister = () => {
 // 表单验证
 const validateForm = () => {
   if (!form.value.username) {
-    ElMessage.error('请输入用户名');
+    ElMessage.error({
+      message: '请输入用户名',
+      customClass: 'tech-message',
+      duration: 3000
+    });
     return false;
   }
 
   if (!form.value.password) {
-    ElMessage.error('请输入密码');
+    ElMessage.error({
+      message: '请输入密码',
+      customClass: 'tech-message',
+      duration: 3000
+    });
     return false;
   }
 
@@ -192,12 +202,20 @@ const validateForm = () => {
   // }
 
   if (form.value.role === 'ADMIN' && (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value)) {
-    ElMessage.error('验证码错误');
+    ElMessage.error({
+      message: '验证码错误',
+      customClass: 'tech-message',
+      duration: 3000
+    });
     refreshCaptcha();
     return false;
   }
   if (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value) {
-    ElMessage.error('验证码错误');
+    ElMessage.error({
+      message: '验证码错误',
+      customClass: 'tech-message',
+      duration: 3000
+    });
     refreshCaptcha();
     return false;
   }
@@ -254,7 +272,12 @@ const generateCaptcha = async () => {
 
   } catch (error) {
     console.error('生成验证码失败:', error);
-    ElMessage.error('验证码生成失败');
+    ElMessage.error({
+      message: '验证码生成失败',
+      customClass: 'tech-message',
+      duration: 3000
+    });
+
   }
 };
 
@@ -283,15 +306,27 @@ const handleLogin = async () => {
       console.log('存储的token:', localStorage.getItem('jwt_token')); // 确认存储成功
       localStorage.setItem('user_info', JSON.stringify(response.data.user));
       console.log('[路由守卫] token:', localStorage.getItem('jwt_token')) // 检查 token 是否正确
-      ElMessage.success('登录成功');
+      ElMessage.success({
+        message: '登录成功',
+        customClass: 'tech-message',
+        duration: 3000
+      });
       await router.push({ name: 'province' });
     } else {
-      ElMessage.error(response.message || '登录失败');
+      ElMessage.error({
+        message: '登录失败',
+        customClass: 'tech-message',
+        duration: 3000
+      });
       refreshCaptcha();
     }
   } catch (error) {
     console.error('登录失败:', error);
-    ElMessage.error(error.message || '登录失败，请重试');
+    ElMessage.error({
+      message: '登录失败，请重试',
+      customClass: 'tech-message',
+      duration: 3000
+    });
     refreshCaptcha();
   } finally {
     loading.value = false;
@@ -844,4 +879,5 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+
 </style>
