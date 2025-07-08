@@ -316,7 +316,7 @@ const updateChart = () => {
       left: '5%',
       right: '5%',
       bottom: '20%',
-      top: '20%',
+      top: '30%',
       containLabel: true
     },
     xAxis: {
@@ -363,7 +363,7 @@ const updateChart = () => {
         },
         interval: 'auto'  // 确保自动计算间隔
       },
-      splitNumber: 4  // 增加这个属性可以控制分割段数，使y轴刻度更稀疏
+      splitNumber: 3  // 增加这个属性可以控制分割段数，使y轴刻度更稀疏
     },
     series: [{
       name: selectedYField.value,
@@ -532,7 +532,7 @@ onUnmounted(() => {
   -ms-user-select: none;
   user-select: none;
   position: absolute;
-  top: 35px;
+  top: 45px;
   left: 0;
   right: 0;
   text-align: center;
