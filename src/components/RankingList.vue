@@ -21,29 +21,17 @@
 
 <script setup>
 import { computed, toRefs } from 'vue';
-// 子组件需要 id -> name 的映射关系
 import { provinceIdMap } from '@/utils/mapid.js';
 
-// --- Props Definition ---
 const props = defineProps({
-  /**
-   * 排行榜的标题
-   */
   title: {
     type: String,
     default: '排行榜'
   },
-  /**
-   * 排名数据，由父组件传入。
-   * 格式: [{ id: 3, value: 380000 }, { id: 28, value: 135000 }, ...]
-   */
   data: {
     type: Array,
     required: true,
   },
-  /**
-   * 当前需要高亮显示的省份 ID
-   */
   selectedRegionId: {
     type: Number,
     required: true,
@@ -52,53 +40,42 @@ const props = defineProps({
 
 const { data, selectedRegionId } = toRefs(props);
 
-// 创建一个从 ID 到名称的反向映射，方便查找
 const provinceIdToNameMap = Object.entries(provinceIdMap).reduce((acc, [id, name]) => {
-  // 确保这里的 ID 是字符串，以匹配 Object.keys(provinceIdMap) 的行为
   acc[id] = name;
   return acc;
 }, {});
 
-
-// --- Core Computed Property for Display ---
 const displayData = computed(() => {
   if (!data.value || data.value.length === 0) {
     return [];
   }
 
-  // 1. 核心步骤：将父组件传来的 {id, value} 转换为 {id, value, regionName, rank}
   const processedData = data.value
       .map(item => ({
         ...item,
-        // 在这里进行 ID 到 Name 的转换
-        // 确保 item.id 是数字，provinceIdToNameMap 的键是字符串
         regionName: provinceIdToNameMap[String(item.id)] || '未知地区',
       }))
-      .sort((a, b) => b.value - a.value) // 按 value 降序排序
+      .sort((a, b) => b.value - a.value)
       .map((item, index) => ({
         ...item,
-        rank: index + 1, // 添加排名
+        rank: index + 1,
       }));
 
   const totalItems = processedData.length;
   if (totalItems === 0) return [];
 
-  // 2. 找到选中省份的索引
   const selectedIndex = processedData.findIndex(item => item.id === selectedRegionId.value);
 
-  // 如果选中的是“全国”(ID为0)或未找到，则显示前7名
   if (selectedRegionId.value === 0 || selectedIndex === -1) {
     return processedData.slice(0, 7);
   }
 
-  // 3. 计算切片位置，确保选中项在中间
   const displayCount = 7;
-  const half = Math.floor(displayCount / 2); // 3
+  const half = Math.floor(displayCount / 2);
 
   let startIndex = selectedIndex - half;
   let endIndex = selectedIndex + half + 1;
 
-  // 4. 处理边界情况
   if (startIndex < 0) {
     startIndex = 0;
     endIndex = Math.min(displayCount, totalItems);
@@ -111,7 +88,6 @@ const displayData = computed(() => {
   return processedData.slice(startIndex, endIndex);
 });
 
-// --- Utility Functions ---
 const formatValue = (value) => {
   if (value === null || value === undefined) return 'N/A';
   return value.toLocaleString();
@@ -119,136 +95,160 @@ const formatValue = (value) => {
 </script>
 
 <style scoped>
-/* 容器样式：宽度和高度由父组件决定 */
 .ranking-list-container {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   width: 100%;
   height: 100%;
-  padding: 2px;
-  background-color: #e0f2f7; /* 浅蓝色背景 */
-  border-radius: 3px;
-  box-sizing: border-box; /* 确保 padding 不会增加总尺寸 */
+  padding: 0;
+  background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+  border-radius: 4px;
+  box-sizing: border-box;
   display: flex;
-  flex-direction: column; /* 内容垂直排列 */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 柔和的阴影 */
+  flex-direction: column;
+  box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.25),
+      0 2px 4px -1px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  overflow: hidden;
 }
 
-/* 标题样式 */
 .ranking-title {
   text-align: center;
-  margin: 0 0 15px 0;
-  color: #1976d2; /* 深蓝色标题 */
-  font-size: 13px;
+  margin: 0;
+  padding: 12px 10px 10px;
+  color: #7dd3fc;
+  font-size: 14px;
   font-weight: 500;
-  border-bottom: 1px solid rgba(25, 118, 210, 0.2); /* 标题下划线 */
-  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(125, 211, 252, 0.2);
+  text-shadow: 0 0 6px rgba(125, 211, 252, 0.3);
+  letter-spacing: 0.8px;
+  background: rgba(15, 23, 42, 0.3);
 }
 
-/* 列表容器 */
 .ranking-list {
   list-style: none;
-  padding: 0;
+  padding: 8px 4px 8px 10px;
   margin: 0;
-  flex-grow: 1; /* 列表内容占据剩余空间 */
-  overflow-y: auto; /* 如果内容超出容器，允许垂直滚动 */
-  scrollbar-width: thin; /* Firefox 滚动条样式 */
-  scrollbar-color: #bbdefb #f0f4f8; /* Firefox 滚动条颜色 */
+  flex-grow: 1;
+  overflow-y: overlay;
+  scrollbar-gutter: stable;
 }
 
-/* Chrome/Safari 滚动条样式 */
+/* 现代滚动条样式 */
 .ranking-list::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 .ranking-list::-webkit-scrollbar-track {
-  background: #f0f4f8; /* 滚动条轨道背景 */
-  border-radius: 10px;
+  background: transparent;
+  margin: 4px 0;
 }
 
 .ranking-list::-webkit-scrollbar-thumb {
-  background-color: #bbdefb; /* 滚动条滑块颜色 */
-  border-radius: 10px;
-  border: 2px solid #f0f4f8; /* 滑块边框 */
+  background-color: rgba(100, 150, 255, 0.3);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.3s;
 }
 
+.ranking-list::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 150, 255, 0.5);
+}
 
-/* 列表项 */
+.ranking-list::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .ranking-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 3px 0px;
-  margin-bottom: 0px; /* 增加列表项之间的间距 */
-  border-radius: 2px;
-  transition: all 0.3s ease;
-  background-color: #fcfdfe; /* 几乎白色的浅背景 */
-  font-size: 14px;
-  color: #333;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* 列表项柔和阴影 */
-  border: 1px solid #e3f2fd; /* 浅蓝色边框 */
+  padding: 8px 10px;
+  margin: 2px 0;
+  border-radius: 3px;
+  transition: all 0.25s ease;
+  background-color: rgba(15, 23, 42, 0.6);
+  font-size: 13px;
+  color: #e2e8f0;
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  font-weight: 400;
 }
 
-.ranking-item:last-child {
-  margin-bottom: 0; /* 最后一个列表项无下边距 */
+.ranking-item:hover {
+  background-color: rgba(30, 41, 59, 0.8);
+  transform: translateX(2px);
 }
 
-/* 排名文本 */
 .ranking-item .rank {
-  font-weight: bold;
-  color: #1e88e5; /* 中等蓝色 */
-  width: 20px;
-  text-align: left;
-  font-size: 15px; /* 稍微大一点的排名数字 */
+  font-weight: 600;
+  color: #38bdf8;
+  width: 24px;
+  text-align: center;
+  font-size: 13px;
+  font-family: 'Roboto Mono', 'Courier New', monospace;
+  opacity: 0.9;
 }
 
-/* 地区名称 */
 .ranking-item .name {
   flex-grow: 1;
-  text-align: left; /* 左对齐名称 */
-  color: #3f51b5; /* 靛蓝色 */
-  margin-left: 15px; /* 排名和名称之间的间距 */
-  white-space: nowrap; /* 防止名称换行 */
-  overflow: hidden; /* 溢出隐藏 */
-  text-overflow: ellipsis; /* 溢出显示省略号 */
+  text-align: left;
+  color: #b8d0ff;
+  margin-left: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
-/* 值文本 */
 .ranking-item .value {
   font-weight: 500;
-  color: #1565c0; /* 深蓝色 */
+  color: #7dd3fc;
   min-width: 80px;
   text-align: right;
-  font-family: 'Roboto Mono', monospace; /* 等宽字体 */
-  font-size: 14px;
+  font-family: 'Roboto Mono', 'Courier New', monospace;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  padding-left: 8px;
 }
 
-/* 选中项的样式 */
 .ranking-item.is-selected {
-  background-color: #fffde7; /* 极浅黄色作为选中背景 */
-  color: #d84315; /* 深橙色文本 */
-  box-shadow: 0 4px 10px rgba(255, 193, 7, 0.3); /* 更明显的黄色阴影 */
-  border: 1px solid #ffcc80; /* 橙色边框 */
-  font-weight: bold;
+  background-color: rgba(56, 189, 248, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+  font-weight: 500;
 }
 
 .ranking-item.is-selected .rank {
-  color: #ffc107; /* 亮黄色排名 */
+  color: #38bdf8;
+  font-weight: 700;
+  opacity: 1;
 }
 
 .ranking-item.is-selected .name,
 .ranking-item.is-selected .value {
-  color: #f57f17; /* 深黄色/橙色名称和值 */
+  color: #ffffff;
+  font-weight: 600;
 }
 
-/* 无数据占位符 */
 .no-data-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #78909c; /* 蓝灰色文本 */
+  color: rgba(100, 150, 255, 0.6);
   flex-grow: 1;
-  font-size: 16px;
-  background-color: #f0f4f8; /* 稍深一点的背景 */
-  border-radius: 6px;
+  font-size: 14px;
+  background-color: rgba(15, 23, 42, 0.3);
+  border-radius: 4px;
+  font-style: italic;
+  border: 1px dashed rgba(100, 150, 255, 0.2);
+  margin: 10px;
 }
 </style>

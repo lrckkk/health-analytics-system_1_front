@@ -28,6 +28,7 @@ import axios from "axios";
 const regionStore = useRegionStore();
 const medicalData = ref([])
 const medicalLoading = ref(true)
+
 //
 // const currentProvinceId = ref()//默认北京
 //

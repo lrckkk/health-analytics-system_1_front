@@ -3,7 +3,7 @@
     <el-card class="chart-card futuristic-card">
       <!-- 标题和控制区域 -->
       <div class="chart-header">
-        <router-link :to="{ name: 'Home' }" class="chart-title">{{ title }}</router-link>
+        <div class="chart-title">{{ title }}</div>
         <div class="chart-controls">
           <div class="control-group">
             <el-select
@@ -566,6 +566,10 @@ $tech-text: #CAF0F8;
 }
 
 .chart-title {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   color: $tech-cyan;
   font-size: 16px;
   margin: 0;

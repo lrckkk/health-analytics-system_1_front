@@ -16,6 +16,8 @@ const handleLogout = () => {
     }
   ).then(() => {
     // 清除本地登录信息
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('user_info');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userName');
     localStorage.removeItem('token');

@@ -162,11 +162,8 @@ import request from '@/utils/request';
 // 角色图标映射（包含所有角色）
 const roleIcons = {
   ADMIN: Setting,
-  RESEARCHER: UserFilled,
   ANALYST: View,
-  AUDITOR: Avatar,
   USER: User,
-  GUEST: Connection
 };
 
 // 响应式数据
@@ -181,13 +178,11 @@ const form = ref({
 });
 
 // 角色选项（包含所有角色）
+
 const roleOptions = ref([
   { label: '管理员', value: 'ADMIN' },
-  { label: '研究员', value: 'RESEARCHER' },
   { label: '分析师', value: 'ANALYST' },
-  { label: '审核员', value: 'AUDITOR' },
   { label: '普通用户', value: 'USER' },
-  { label: '游客', value: 'GUEST' }
 ]);
 
 const loading = ref(false);
@@ -504,6 +499,39 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
     font-size: 18px;
     text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
   }
+
+
+  /* 添加自动填充样式修复 */
+  :deep(.el-input__inner:-webkit-autofill),
+  :deep(.el-input__inner:-webkit-autofill:hover),
+  :deep(.el-input__inner:-webkit-autofill:focus),
+  :deep(.el-input__inner:-webkit-autofill:active) {
+    -webkit-text-fill-color: $tech-light !important;
+    -webkit-box-shadow: 0 0 0px 1000px rgba(16, 26, 60, 0.7) inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: $tech-light;
+  }
+
+  /* 修复快速选择时的样式 */
+  :deep(.el-input__inner::selection) {
+    background: $tech-primary;
+    color: $tech-bg;
+  }
+
+  /* 修复快速选择时的文本颜色 */
+  :deep(.el-input__inner::-webkit-selection) {
+    background: $tech-primary;
+    color: $tech-bg;
+  }
+
+  /* 修复快速选择时的文本颜色 */
+  :deep(.el-input__inner::-moz-selection) {
+    background: $tech-primary;
+    color: $tech-bg;
+  }
+
+
+
 }
 
 /* 角色选择器 */
@@ -633,6 +661,7 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
     object-fit: cover;
   }
 }
+
 
 .refresh-icon {
   position: absolute;
