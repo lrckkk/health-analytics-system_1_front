@@ -1,17 +1,6 @@
 <template>
   <div class="main-container">
     <div class="Line-row">
-<!--      <multi-line-chart-->
-<!--          width="100%"-->
-<!--          :chart-data="populationData"-->
-<!--          title="人口统计趋势"-->
-<!--          height="350px"-->
-<!--          :show-data-zoom="true"-->
-<!--          :show-legend="true"-->
-<!--          :smooth="true"-->
-<!--          :loading="populationLoading"-->
-<!--          @provinceChange="handleProvinceChange"-->
-<!--      />-->
       <simpleline
           :chart-data="medicalavgData"
           :title="`每万人医疗机构数 - ${regionStore.getDisplayRegion}`"
@@ -35,15 +24,6 @@
 
     </div>
     <div class="card-content-inner-a">
-<!--      <simpleline-->
-<!--          :chart-data="populationData"-->
-<!--          :title="`人口数量变化趋势 - ${regionStore.getDisplayRegion}`"-->
-<!--          height=440px-->
-<!--          width=50%-->
-<!--          x-field="year"-->
-<!--          y-field="count"-->
-<!--          :loading="medicalLoading"-->
-<!--      />-->
       <simpleline
           :chart-data="medicalData"
           :title="`医疗机构数量变化趋势 - ${regionStore.getDisplayRegion}`"
@@ -57,17 +37,17 @@
     <div class="right-column1">
       <h1>{{regionStore.selectedRegion}}</h1>
       <p>{{ resultByIdDisplay }}</p>
-      <div v-if="growthStore.historicalData.length > 0">
+      <div v-if="growthStore.historicalData['0']?.length > 0">
         <p>平均增长率:
-          <span v-if="growthStore.averageGrowthRate !== 0">
-          {{ (growthStore.averageGrowthRate * 100).toFixed(2) }}%
+          <span v-if="growthStore.getAverageGrowthRate('0') !== 0">
+          {{ (growthStore.getAverageGrowthRate('0') * 100).toFixed(2) }}%
         </span>
           <span v-else>
           数据不足或增长率为零
         </span>
         </p>
-        <p v-if="growthStore.estimatedNextYearValue !== null">
-          估算 2021 年的值: {{ growthStore.estimatedNextYearValue.toFixed(2) }}
+        <p v-if="growthStore.getEstimatedNextYearValue('0') !== null">
+          估算 {{ growthStore.getNextYear('0') }} 年的值: {{ growthStore.getEstimatedNextYearValue('0')?.toFixed(2) }}
         </p>
         <p v-else>
           无法估算下一年的值 (数据不足)
@@ -81,7 +61,6 @@
 </template>
 
 <script setup>
-// ... (script 部分保持完全不变，与您提供的代码一致)
 import {ref, onMounted, watch, computed} from 'vue';
 import { useRegionStore } from '@/stores/RegionData.js'; // 导入区域数据 Pinia Store
 import { useMapDataStore } from '@/stores/TotalData.js'; // 导入总数据 Pinia Store (虽然在此组件中未使用其状态，但如果你后续需要，保持导入)
@@ -90,7 +69,7 @@ import { getValueAndRankById, getRankOfGivenValue } from '@/utils/countround.js'
 import MultiLineChart from "@/components/MutipleLineCharts.vue";
 import request from "@/utils/request.js"; // 确保你的请求工具正确配置
 import { IdToNameMapper } from "@/utils/IdToNameMapper.js";
-import {useGrowthStore} from "@/utils/countgrow.js";
+import {useGrowthStore} from "@/utils/countgrow.js"; // 请确保路径正确，从 @/stores 导入
 import Simpleline from '/src/components/simpleline.vue'
 import PieChart from "@/components/PieChart.vue"; // 请确保路径正确，可能需要调整
 // --- Pinia Stores ---
@@ -105,7 +84,9 @@ const populationData = ref([]);
 const populationLoading = ref(true);
 const loadData = () => {
   const mockData = regionStore.medicalDataCache[regionStore.getRegionId];
-  growthStore.setHistoricalData(mockData);
+  // 保持这里不变，但请注意此处的 mockData 仍需要是一个数组才能被 setHistoricalData 处理
+  // 并且 setHistoricalData 需要一个 key，这里假定其内部逻辑处理了
+  growthStore.setHistoricalData('0', mockData); // 明确将数据存储到 '0' 键
 };
 const marketShareData = ref([
   { company: '3甲', share: 16 },
@@ -114,7 +95,7 @@ const marketShareData = ref([
   { company: '1甲以下', share: 15 },
 ]);
 const resultByIdDisplay = computed(() => {
-  const data = mapDataStore.institutionData; // 获取人口数据
+  const data = mapDataStore.institutionData; // 获取机构总数数据
   console.log(data)
   // 关键校验：确保数据是数组且不为空
   if (Array.isArray(data) && data.length > 0) {
@@ -161,9 +142,12 @@ watch(
         // 直接调用 store 的 action，它会处理缓存逻辑
         const data = await regionStore.fetchMedicalDataIfNeeded(newRegionId);
         medicalData.value = data;
+        // **关键：将 medicalData 存储到 growthStore 的 '0' 号键下**
+        growthStore.setHistoricalData('0', data);
       } catch (error) {
         console.error("在组件中处理数据获取失败:", error);
         medicalData.value = [];
+        growthStore.setHistoricalData('0', []); // 错误时清空 '0' 键的数据
       } finally {
         medicalLoading.value = false;
       }

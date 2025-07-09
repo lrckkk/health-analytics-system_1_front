@@ -29,17 +29,17 @@
       <h1>{{regionStore.selectedRegion}}</h1>
       <p>{{ resultByIdDisplay }}</p>
       <p>{{ resultByIdDisplay2}}</p>
-      <div v-if="growthStore.historicalData.length > 0">
+      <div v-if="growthStore.historicalData['5']?.length > 0">
         <p>平均增长率:
-          <span v-if="growthStore.averageGrowthRate !== 0">
-          {{ (growthStore.averageGrowthRate * 100).toFixed(2) }}%
+          <span v-if="growthStore.getAverageGrowthRate('5') !== 0">
+          {{ (growthStore.getAverageGrowthRate('5') * 100).toFixed(2) }}%
         </span>
           <span v-else>
           数据不足或增长率为零
         </span>
         </p>
-        <p v-if="growthStore.estimatedNextYearValue !== null">
-          估算每万人门诊量 2021 年的值: {{ growthStore.estimatedNextYearValue.toFixed(2) }}
+        <p v-if="growthStore.getEstimatedNextYearValue('5') !== null">
+          估算每万人门诊量 {{ growthStore.getNextYear('5') }} 年的值: {{ growthStore.getEstimatedNextYearValue('5')?.toFixed(2) }}
         </p>
         <p v-else>
           无法估算下一年的值 (数据不足)
@@ -53,7 +53,6 @@
 </template>
 
 <script setup>
-// ... (script 部分保持完全不变，与您提供的代码一致)
 import {ref, onMounted, watch, computed} from 'vue';
 import { useRegionStore } from '@/stores/RegionData.js'; // 导入区域数据 Pinia Store
 import { useMapDataStore } from '@/stores/TotalData.js'; // 导入总数据 Pinia Store (虽然在此组件中未使用其状态，但如果你后续需要，保持导入)
@@ -77,10 +76,11 @@ const populationData = ref([]);
 const populationLoading = ref(true);
 const loadData = () => {
   const mockData = regionStore.outpatientavg[regionStore.getRegionId];
-  growthStore.setHistoricalData(mockData);
+  // **关键修改：将 outpatientavg 数据存储到 growthStore 的 '5' 号键下**
+  growthStore.setHistoricalData('5', mockData);
 };
 const resultByIdDisplay = computed(() => {
-  const data = mapDataStore.inpatientAdmissions; // 获取人口数据
+  const data = mapDataStore.inpatientAdmissions; // 获取住院次数数据
 
 
   // 关键校验：确保数据是数组且不为空
@@ -95,7 +95,7 @@ const resultByIdDisplay = computed(() => {
 });
 // --- 生命周期钩子与监听器 ---
 const resultByIdDisplay2 = computed(() => {
-  const data = mapDataStore.outpatientVisitsData; // 获取人口数据
+  const data = mapDataStore.outpatientVisitsData; // 获取门诊次数数据
 
 
   // 关键校验：确保数据是数组且不为空
@@ -122,9 +122,12 @@ watch(
         // 直接调用 store 的 action，它会处理缓存逻辑
         const data = await regionStore.fetchoutpatientavgIfNeeded(newRegionId);
         outData.value = data;
+        // **关键修改：将从 fetchoutpatientavgIfNeeded 获取的数据存储到 growthStore 的 '5' 号键下**
+        growthStore.setHistoricalData('5', data);
       } catch (error) {
         console.error("在组件中处理数据获取失败:", error);
         outData.value = [];
+        growthStore.setHistoricalData('5', []); // 错误时清空 '5' 键的数据
       } finally {
         medicalLoading.value = false;
       }

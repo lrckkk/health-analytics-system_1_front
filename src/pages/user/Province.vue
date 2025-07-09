@@ -44,32 +44,32 @@
     <div class="card-display-area">
       <card :componentsList="myCustomComponents1"></card>
     </div>
-    <TechEdgeButton position="right1" target-route="/analyseforinp"/>
+    <TechEdgeButton position="right1" target-route="/analyseforins"/>
 
     <div class="card-display-area2">
-      <card :componentsList="myCustomComponents2"></card>
+      <card :componentsList="myCustomComponents2" ></card>
     </div>
-    <TechEdgeButton position="right2"  />
+    <TechEdgeButton position="right2"  target-route="/annalyseforbed"/>
 
     <div class="card-display-area3">
-      <card :componentsList="myCustomComponents3"></card>
+      <card :componentsList="myCustomComponents3" ></card>
     </div>
-    <TechEdgeButton position="right3"  />
+    <TechEdgeButton position="right3"  target-route="/analyseforcost"/>
 
     <div class="card-display-area4">
       <card :componentsList="myCustomComponents4"></card>
     </div>
-    <TechEdgeButton position="left1"  />
+    <TechEdgeButton position="left1"  target-route="/analyseforper"/>
 
     <div class="card-display-area5">
       <card :componentsList="myCustomComponents5"></card>
     </div>
-    <TechEdgeButton position="left2"  />
+    <TechEdgeButton position="left2"  target-route="/analyseforpop"/>
 
     <div class="card-display-area6">
       <card :componentsList="myCustomComponents6"></card>
     </div>
-    <TechEdgeButton position="left3"  />
+    <TechEdgeButton position="left3"  target-route="/analyseforser"/>
     <div class="scroll-display-area">
       <scroll></scroll>
     </div>

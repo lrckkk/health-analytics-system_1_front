@@ -39,17 +39,17 @@
     <div class="right-column1">
       <h1>{{regionStore.selectedRegion}}</h1>
       <p>{{ resultByIdDisplay }}</p>
-      <div v-if="growthStore.historicalData.length > 0">
+      <div v-if="growthStore.historicalData['2']?.length > 0">
         <p>平均增长率:
-          <span v-if="growthStore.averageGrowthRate !== 0">
-          {{ (growthStore.averageGrowthRate * 100).toFixed(2) }}%
+          <span v-if="growthStore.getAverageGrowthRate('2') !== 0">
+          {{ (growthStore.getAverageGrowthRate('2') * 100).toFixed(2) }}%
         </span>
           <span v-else>
           数据不足或增长率为零
         </span>
         </p>
-        <p v-if="growthStore.estimatedNextYearValue !== null">
-          估算 2021 年的值: {{ growthStore.estimatedNextYearValue.toFixed(2) }}
+        <p v-if="growthStore.getEstimatedNextYearValue('2') !== null">
+          估算 {{ growthStore.getNextYear('2') }} 年的值: {{ growthStore.getEstimatedNextYearValue('2')?.toFixed(2) }}
         </p>
         <p v-else>
           无法估算下一年的值 (数据不足)
@@ -63,7 +63,6 @@
 </template>
 
 <script setup>
-// ... (script 部分保持完全不变，与您提供的代码一致)
 import {ref, onMounted, watch, computed} from 'vue';
 import { useRegionStore } from '@/stores/RegionData.js'; // 导入区域数据 Pinia Store
 import { useMapDataStore } from '@/stores/TotalData.js'; // 导入总数据 Pinia Store (虽然在此组件中未使用其状态，但如果你后续需要，保持导入)
@@ -86,7 +85,8 @@ const populationData = ref([]);
 const populationLoading = ref(true);
 const loadData = () => {
   const mockData = regionStore.populationDataCache[regionStore.getRegionId];
-  growthStore.setHistoricalData(mockData);
+  // **关键修改：将人口数据缓存存储到 growthStore 的 '2' 号键下**
+  growthStore.setHistoricalData('2', mockData);
 };
 // 假设这些是静态的，或者你会在组件加载后动态更新它们
 const marketShareData = ref([
@@ -222,9 +222,12 @@ watch(
         // 直接调用 store 的 action，它会处理缓存逻辑
         const data = await regionStore.fetchPopulationDataIfNeeded(newRegionId);
         populationData.value = data;
+        // **关键修改：将从 fetchPopulationDataIfNeeded 获取的数据存储到 growthStore 的 '2' 号键下**
+        growthStore.setHistoricalData('2', data);
       } catch (error) {
         console.error("在组件中处理数据获取失败:", error);
         populationData.value = [];
+        growthStore.setHistoricalData('2', []); // 错误时清空 '2' 键的数据
       } finally {
         medicalLoading.value = false;
       }
