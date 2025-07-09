@@ -1,94 +1,110 @@
 <template>
-  <div class="main-container">
-    <div class="Line-row">
-      <multi-line-chart
-          width="100%"
-          :chart-data="populationData"
-          title="人口统计趋势"
-          height="350px"
-          :show-data-zoom="true"
-          :show-legend="true"
-          :smooth="true"
-          :loading="populationLoading"
-          @provinceChange="handleProvinceChange"
-      />
-    </div>
-    <div class="chart-row">
-      <pie-chart
-          width="50%"
-          :chart-data="marketShareData"
-          :title="`人口组成 - ${regionStore.getDisplayRegion}`"
-          name-field="company"
-          value-field="share"
-          height="450px"
-          rose-type="radius"
-      />
-    </div>
-    <div class="card-content-inner-a">
-      <simpleline
-          :chart-data="populationData"
-          :title="`人口数量变化趋势 - ${regionStore.getDisplayRegion}`"
-          height=440px
-          width=50%
-          x-field="year"
-          y-field="count"
-          :loading="medicalLoading"
-      />
+  <div class="dashboard-container">
+    <!-- 顶部标题和统计信息 -->
+    <div class="dashboard-header">
+      <div class="header-content">
+        <!-- 返回按钮 -->
+        <div class="back-button" @click="navigateBack">
+          <div class="back-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="back-text">返回地图</div>
+          <div class="button-effects">
+            <div class="effect-circle"></div>
+            <div class="effect-particles"></div>
+          </div>
+        </div>
 
+        <h1 class="dashboard-title">{{regionStore.selectedRegion}} - 人口分析</h1>
+        <div class="stats-container">
+          <div class="stat-card" v-for="(stat, index) in stats" :key="index" :style="`--delay: ${index * 0.1}s`">
+            <p class="stat-label">{{ stat.label }}</p>
+            <p class="stat-value">{{ stat.value }}</p>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="right-column1">
-      <h1>{{regionStore.selectedRegion}}</h1>
-      <p>{{ resultByIdDisplay }}</p>
-      <div v-if="growthStore.historicalData['2']?.length > 0">
-        <p>平均增长率:
-          <span v-if="growthStore.getAverageGrowthRate('2') !== 0">
-          {{ (growthStore.getAverageGrowthRate('2') * 100).toFixed(2) }}%
-        </span>
-          <span v-else>
-          数据不足或增长率为零
-        </span>
-        </p>
-        <p v-if="growthStore.getEstimatedNextYearValue('2') !== null">
-          估算 {{ growthStore.getNextYear('2') }} 年的值: {{ growthStore.getEstimatedNextYearValue('2')?.toFixed(2) }}
-        </p>
-        <p v-else>
-          无法估算下一年的值 (数据不足)
-        </p>
+
+    <!-- 主图表区域 - 三行布局 -->
+    <div class="chart-grid">
+      <!-- 第一行：多线折线图 -->
+      <div class="chart-card multi-line-chart">
+        <multi-line-chart
+            ref="multiLineChart"
+            width="100%"
+            :chart-data="populationData"
+            title="人口统计趋势"
+            height="400px"
+            :show-data-zoom="true"
+            :show-legend="true"
+            :smooth="true"
+            :loading="populationLoading"
+            @provinceChange="handleProvinceChange"
+        />
       </div>
-      <div v-else>
-        <p>没有加载历史数据。</p>
+
+      <!-- 第二行：单线折线图 -->
+      <div class="chart-card line-chart" v-if="singleLineData.length > 0">
+        <simpleline
+            ref="singleLineChart"
+            :chart-data="singleLineData"
+            :title="`人口数量变化趋势 - ${regionStore.getDisplayRegion}`"
+            height="400px"
+            width="100%"
+            x-field="year"
+            y-field="count"
+            :loading="medicalLoading"
+        />
       </div>
+
+      <!-- 第三行：饼图 -->
+      <div class="chart-card pie-chart" v-if="marketShareData.length > 0">
+        <pie-chart
+            ref="pieChart"
+            width="100%"
+            :chart-data="marketShareData"
+            :title="`人口组成 - ${regionStore.getDisplayRegion}`"
+            name-field="company"
+            value-field="share"
+            height="450px"
+            rose-type="radius"
+        />
+      </div>
+    </div>
+
+    <!-- 加载状态 -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p>数据加载中...</p>
     </div>
   </div>
 </template>
 
 <script setup>
 import {ref, onMounted, watch, computed} from 'vue';
-import { useRegionStore } from '@/stores/RegionData.js'; // 导入区域数据 Pinia Store
-import { useMapDataStore } from '@/stores/TotalData.js'; // 导入总数据 Pinia Store (虽然在此组件中未使用其状态，但如果你后续需要，保持导入)
-import { provinceIdMap } from '@/utils/mapid.js'; // 导入省份 ID 映射
-import { getValueAndRankById, getRankOfGivenValue } from '@/utils/countround.js'; // 如果这些函数在这个组件中不直接使用，可以不导入
-import PieChart from "@/components/PieChart.vue";
+import { useRegionStore } from '@/stores/RegionData.js';
+import { useMapDataStore } from '@/stores/TotalData.js';
+import { useGrowthStore } from '@/utils/countgrow.js';
 import MultiLineChart from "@/components/MutipleLineCharts.vue";
-import request from "@/utils/request.js"; // 确保你的请求工具正确配置
+import Simpleline from '/src/components/simpleline.vue'
+import PieChart from "@/components/PieChart.vue";
+import {getValueAndRankById} from "@/utils/countround.js";
 import { IdToNameMapper } from "@/utils/IdToNameMapper.js";
-import {useGrowthStore} from "@/utils/countgrow.js";
-import Simpleline from '/src/components/simpleline.vue' // 请确保路径正确，可能需要调整
-// --- Pinia Stores ---
-const regionStore = useRegionStore();
-const mapDataStore = useMapDataStore(); // 保持导入，以防将来需要
-const growthStore = useGrowthStore(); // 如果这个组件不直接使用，可以暂时移除
-const medicalLoading = ref(true)
+import request from "@/utils/request.js";
+import {provinceIdMap} from "@/utils/mapid.js";
+import { useRouter } from 'vue-router';
 
-// --- 响应式数据 ---
+const router = useRouter();
+const regionStore = useRegionStore();
+const mapDataStore = useMapDataStore();
+const growthStore = useGrowthStore();
+
+const medicalLoading = ref(false);
+const populationLoading = ref(false);
 const populationData = ref([]);
-const populationLoading = ref(true);
-const loadData = () => {
-  const mockData = regionStore.populationDataCache[regionStore.getRegionId];
-  // **关键修改：将人口数据缓存存储到 growthStore 的 '2' 号键下**
-  growthStore.setHistoricalData('2', mockData);
-};
-// 假设这些是静态的，或者你会在组件加载后动态更新它们
+const singleLineData = ref([]);
 const marketShareData = ref([
   { company: '儿童（0-14）', share: 16 },
   { company: '青年（14-44）', share: 20 },
@@ -97,217 +113,460 @@ const marketShareData = ref([
   { company: '老年（75岁及以上）', share: 9 }
 ]);
 
+// 图表引用
+const multiLineChart = ref(null);
+const singleLineChart = ref(null);
+const pieChart = ref(null);
+
+// 计算合并的加载状态
+const isLoading = computed(() => medicalLoading.value || populationLoading.value);
+
+const stats = computed(() => [
+  {
+    label: '人口总数',
+    value: resultByIdDisplay.value
+  },
+  {
+    label: '平均增长率',
+    value: growthStore.getAverageGrowthRate('2') !== 0
+        ? `${(growthStore.getAverageGrowthRate('2') * 100).toFixed(2)}%`
+        : '数据不足或增长率为零'
+  },
+  {
+    label: '下一年估算值',
+    value: growthStore.getEstimatedNextYearValue('2') !== null
+        ? `${growthStore.getEstimatedNextYearValue('2')?.toFixed(2)} (${growthStore.getNextYear('2')}年)`
+        : '无法估算(数据不足)'
+  }
+]);
+
+const resultByIdDisplay = computed(() => {
+  const data = mapDataStore.populationData;
+  if (Array.isArray(data) && data.length > 0) {
+    const result = getValueAndRankById(data, regionStore.getRegionId);
+    if (result) {
+      return `${result.value}万人 (排名: ${result.rank})`;
+    }
+  }
+  return '数据加载中或无效 ID';
+});
+
 const provinceMapper = new IdToNameMapper(provinceIdMap);
 
-// --- 数据获取函数 ---
+const navigateBack = () => {
+  router.push('/province');
+};
+
 const fetchPopulationData = async (provinceIds) => {
-  if (!Array.isArray(provinceIds) || provinceIds.length === 0 || provinceIds.some(id => id === undefined || id === null)) {
-    console.warn('fetchPopulationData: 无效的省份ID列表，跳过请求。', provinceIds);
-    populationData.value = []; // 清空数据或保持现有状态
+  if (!Array.isArray(provinceIds)) {
+    console.warn('无效的省份ID列表，跳过请求');
     populationLoading.value = false;
     return;
   }
 
   try {
     populationLoading.value = true;
-    const requests = provinceIds.map(provinceId =>
-        request.get(`/api/provinces/${provinceId}/population/years`)
+    const responses = await Promise.all(
+        provinceIds.map(id => request.get(`/api/provinces/${id}/population/years`))
     );
-    const responses = await Promise.all(requests);
 
-    const allData = {};
+    const processedData = {};
     responses.forEach((response, index) => {
-      const provinceId = provinceIds[index];
-      const provinceName = provinceMapper.getName(provinceId) || `省份${provinceId}`; // 提供一个回退名称
-      allData[provinceName] = response.map(item => ({
+      const provinceName = provinceMapper.getName(provinceIds[index]) || `省份${provinceIds[index]}`;
+      processedData[provinceName] = response.map(item => ({
         year: String(item.year),
         population: Number(item.total)
       }));
     });
 
-    populationData.value = mergeProvinceData(allData);
+    populationData.value = mergeProvinceData(processedData);
   } catch (error) {
     console.error('获取人口数据失败:', error);
-    populationData.value = []; // 错误时清空数据
+    populationLoading.value = false;
   } finally {
     populationLoading.value = false;
   }
 };
 
 const mergeProvinceData = (dataByProvince) => {
-  const result = [];
-  // 获取所有省份的所有年份，并去重排序
   const allYears = [...new Set(
       Object.values(dataByProvince).flatMap(data => data.map(item => item.year))
   )].sort();
 
-  allYears.forEach(year => {
+  return allYears.map(year => {
     const yearData = { year };
-    Object.entries(dataByProvince).forEach(([provinceName, data]) => {
+    Object.entries(dataByProvince).forEach(([name, data]) => {
       const item = data.find(d => d.year === year);
-      yearData[provinceName] = item ? item.population : null;
+      yearData[name] = item ? item.population : null;
     });
-    result.push(yearData);
+    return yearData;
   });
-
-  return result;
 };
 
-// --- 事件处理函数 ---
-const handleProvinceChange = async (selectedProvinceIds) => {
-  // 如果 MultiLineChart 传回的 selectedProvinceIds 为空，你可以决定默认行为
-  // 例如，继续显示当前区域的数据，或者显示一个预设的默认省份数据
-  let finalProvinceIds = selectedProvinceIds;
-  if (!selectedProvinceIds || selectedProvinceIds.length === 0) {
-    // 假设 regionStore.getRegionId 是一个有效的默认ID
-    // 并且它在 regionStore 中被可靠地初始化了
-    if (regionStore.getRegionId) {
-      finalProvinceIds = [regionStore.getRegionId];
-    } else {
-      // 没有任何有效ID，可能需要提供一个硬编码的默认值，或者显示空数据
-      console.warn("没有选择省份，且 regionStore.getRegionId 也无效。");
-      populationData.value = [];
-      populationLoading.value = false;
-      return;
-    }
-  }
-  await fetchPopulationData(finalProvinceIds);
+const handleProvinceChange = async (selectedIds) => {
+  await fetchPopulationData(selectedIds || [regionStore.getRegionId]);
 };
 
-const resultByIdDisplay = computed(() => {
-  const data = mapDataStore.populationData; // 获取人口数据
-  console.log(data)
-  // 关键校验：确保数据是数组且不为空
-  if (Array.isArray(data) && data.length > 0) {
-    // 只有数据有效时才调用排名函数
-    const result = getValueAndRankById(data, regionStore.getRegionId); // 查找 ID 为 5 的数据及其排名
-    if (result) {
-      return `人口总数: ${result.value}万人, 排名: ${result.rank}`;
-    }
+const loadSingleLineData = async () => {
+  try {
+    medicalLoading.value = true;
+    const data = await regionStore.fetchPopulationDataIfNeeded(regionStore.getRegionId);
+    singleLineData.value = data;
+    growthStore.setHistoricalData('2', data);
+  } catch (error) {
+    console.error("加载单线数据失败:", error);
+    medicalLoading.value = false;
+  } finally {
+    medicalLoading.value = false;
   }
-  return '数据加载中或无效 ID'; // 数据未加载或 ID 无效时的提示
-});
-// --- 生命周期钩子与监听器 ---
+};
 
-// 首次挂载时触发数据请求
 onMounted(() => {
-  // 确保 regionStore.getRegionId 此时已经有一个值
-  // 如果它是一个异步设置的，那么这里可能还是默认值。
-  // watch 钩子会处理后续的变化。
-  loadData();
+  loadSingleLineData();
   if (regionStore.getRegionId) {
     fetchPopulationData([regionStore.getRegionId]);
-  } else {
-    console.warn("onMounted: regionStore.getRegionId 初始为 undefined/null，等待 watch 监听变化。");
-    // 如果 regionStore.getRegionId 初始为空，此处不发送请求，等待 watch 触发
   }
 });
 
-// 监听 regionStore.getRegionId 的变化
-// immediate: true 会在组件挂载后立即执行一次回调，无论值是否变化。
-// 这可以捕获到 regionStore.getRegionId 首次变为有效值的情况。
 watch(() => regionStore.getRegionId, (newId) => {
-  // 只有当 newId 是一个有效值且与当前显示的数据不完全相同时才触发请求
-  // 这里简化处理，只要 newId 有效就触发
-  if (newId !== undefined && newId !== null) {
+  if (newId) {
     fetchPopulationData([newId]);
+    loadSingleLineData();
   }
-}, { immediate: true }); // 确保在组件加载时立即执行一次，检查 getRegionId
-watch(
-    () => regionStore.getRegionId, // 侦听 Pinia store 中的 ID
-    async (newRegionId) => {
-      console.log(`检测到区域变化: ${newRegionId}，准备从 Store 获取数据...`);
-      medicalLoading.value = true;
-      try {
-        // 直接调用 store 的 action，它会处理缓存逻辑
-        const data = await regionStore.fetchPopulationDataIfNeeded(newRegionId);
-        populationData.value = data;
-        // **关键修改：将从 fetchPopulationDataIfNeeded 获取的数据存储到 growthStore 的 '2' 号键下**
-        growthStore.setHistoricalData('2', data);
-      } catch (error) {
-        console.error("在组件中处理数据获取失败:", error);
-        populationData.value = [];
-        growthStore.setHistoricalData('2', []); // 错误时清空 '2' 键的数据
-      } finally {
-        medicalLoading.value = false;
-      }
-    },
-    {
-      immediate: true // 立即执行一次，确保组件挂载时就能加载初始数据
-    }
-);
+}, { immediate: true });
 </script>
 
 <style scoped>
-.main-container {
-  width: 100%; /* 组件整体占据父容器的 100% 宽度 */
-  box-sizing: border-box; /* 边框和内边距包含在宽度内 */
-  font-family: Arial, sans-serif;
-  color: #333;
-  background-color: #90E0EF;
 
-  /* **关键：设置为定位上下文，以便子元素可以相对于它进行绝对定位** */
+
+/* 保持原有样式不变，添加返回按钮样式 */
+.header-content {
   position: relative;
-  /* 增加最小高度，确保内容在绝对定位时不会导致容器高度坍塌 */
-  min-height: 1000px; /* 示例值，根据实际内容和定位需要调整 */
 }
 
-/* line-row 和 chart-row 默认是块级元素，会垂直堆叠 */
-.Line-row {
-  width: 50%; /* 折线图容器占据父容器 main-container 的 50% 宽度 */
-  /* height 已经由 MultiLineChart 组件的 prop 控制 */
-}
-
-.chart-row {
-
-}
-
-.right-column1 {
-  /* **关键：设置为绝对定位，这样 left 和 top 才能生效** */
+.back-button {
   position: absolute;
-
-  /* **使用百分比设置位置** */
-  left: 57%;   /* 距离父容器左侧 50% 的位置 */
-  top: 50%;    /* 距离父容器顶部 70% 的位置 */
-
-  /* **可选：如果希望元素根据自身中心点进行定位，可以使用 transform** */
-  /* 例如，left: 50%; transform: translateX(-50%); 会使其水平居中 */
-  /* top: 70%; transform: translateY(-50%); 会使其垂直居中于 70% 的位置 */
-
-  /* 示例：调整宽度以适应百分比布局 */
-  width: 45%; /* 占据父容器的 45% 宽度 */
-  /* 如果内容较少，可以设置最大宽度 */
-  max-width: 400px; /* 示例：最大宽度 400px */
+  top: -10px;
+  left: -10px;
+  display: flex;
+  align-items: center;
+  padding: 8px 15px 8px 10px;
+  background: rgba(3, 4, 94, 0.5);
+  border: 1px solid rgba(74, 207, 255, 0.3);
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  z-index: 10;
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.1);
 }
-.card-content-inner-a {
-  top:0%;
-  width: 100%; /* 确保填满父容器 */
-  height: 50%; /* 确保填满父容器的高度 */
+
+.back-button:hover {
+  background: rgba(3, 4, 94, 0.8);
+  border-color: rgba(74, 207, 255, 0.6);
+  box-shadow: 0 0 20px rgba(74, 207, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.back-button:hover .back-icon {
+  transform: translateX(-3px);
+}
+
+.back-button:hover .back-text {
+  text-shadow: 0 0 8px rgba(0, 224, 255, 0.7);
+}
+
+.back-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  color: #00e0ff;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.back-text {
+  color: #00e0ff;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.button-effects {
   position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 30px;
+}
+
+.effect-circle {
+  position: absolute;
+  top: 50%;
   left: 50%;
-
+  width: 10px;
+  height: 10px;
+  background: rgba(0, 224, 255, 0.4);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.6s ease-out;
 }
 
-/* 您可以通过媒体查询来调整在不同屏幕尺寸下的百分比或定位 */
+.back-button:hover .effect-circle {
+  transform: translate(-50%, -50%) scale(15);
+  opacity: 0;
+}
+
+.effect-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(circle, rgba(0, 224, 255, 0.8) 1px, transparent 1px);
+  background-size: 10px 10px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.back-button:hover .effect-particles {
+  opacity: 0.3;
+  animation: particlesMove 2s linear infinite;
+}
+
+@keyframes particlesMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 20px 20px; }
+}
+
+.dashboard-title {
+  padding-top: 10px;
+}
+
 @media (max-width: 768px) {
-  .Line-row {
-    width: 95%; /* 在小屏幕上占据更宽的百分比 */
-    margin: 0 auto 20px auto; /* 居中并增加间距 */
+  .back-button {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin-bottom: 15px;
+  }
+}
+
+.dashboard-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #0a192f 0%, #000a1a 100%);
+  color: #e0f2f7;
+  font-family: 'Inter', sans-serif, 'Microsoft YaHei', 'PingFang SC';
+}
+
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+  color: #00e0ff;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 224, 255, 0.2);
+  border-top: 4px solid #00e0ff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.dashboard-header {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba(16, 26, 60, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 15px rgba(74, 207, 255, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.dashboard-title {
+  margin: 0;
+  padding-bottom: 15px;
+  color: #00e0ff;
+  font-size: 28px;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(0, 224, 255, 0.5);
+  border-bottom: 1px solid rgba(74, 207, 255, 0.3);
+  position: relative;
+  text-align: center;
+}
+
+.dashboard-title::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, #00e0ff, transparent);
+  animation: titleUnderline 3s infinite alternate;
+}
+
+@keyframes titleUnderline {
+  0% { width: 100px; }
+  100% { width: 100%; }
+}
+
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.stat-card {
+  padding: 20px;
+  background: rgba(3, 4, 94, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.1);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: translateY(20px);
+  opacity: 0;
+  animation: statCardAppear 0.6s forwards;
+  animation-delay: var(--delay);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 224, 255, 0.1), transparent);
+  transition: 0.5s;
+}
+
+.stat-card:hover::before {
+  left: 100%;
+}
+
+@keyframes statCardAppear {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.stat-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(74, 207, 255, 0.3);
+  background: rgba(3, 4, 94, 0.7);
+}
+
+.stat-label {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: rgba(224, 242, 247, 0.8);
+}
+
+.stat-value {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #00e0ff;
+  text-shadow: 0 0 8px rgba(0, 224, 255, 0.5);
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 30px;
+  width: 100%;
+}
+
+.chart-card {
+  background: rgba(16, 26, 60, 0.7);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 15px rgba(74, 207, 255, 0.1);
+  transition: all 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(5px);
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00e0ff, #7d5fff);
+  opacity: 0.7;
+  transition: all 0.5s ease;
+}
+
+.chart-card:hover::after {
+  height: 5px;
+  opacity: 1;
+}
+
+.chart-card:hover {
+  box-shadow: 0 0 30px rgba(74, 207, 255, 0.3);
+  transform: translateY(-5px);
+}
+
+.multi-line-chart {
+  grid-row: 1;
+}
+
+.line-chart {
+  grid-row: 2;
+}
+
+.pie-chart {
+  grid-row: 3;
+}
+
+@media (max-width: 768px) {
+  .stats-container {
+    grid-template-columns: 1fr;
   }
 
-  .chart-row {
-    /* 饼图组件本身是 50%，可能需要一个外层容器来调整整体宽度 */
-    /* 或者直接在 PieChart 组件的 width prop 处调整 */
-    width: 95%; /* 示例：让饼图容器占据 95% 宽度 */
-    margin: 0 auto 20px auto; /* 居中并增加间距 */
+  .dashboard-title {
+    font-size: 24px;
   }
 
-  .right-column1 {
-    left: 50%;
-    top: auto; /* 移除固定的 top，让它在正常流中（如果需要）或设置底部距离 */
-    bottom: 20px; /* 示例：在小屏幕上，定位到底部 20px */
-    width: 90%; /* 在小屏幕上占据 90% 宽度 */
-    transform: translateX(-50%); /* 保持水平居中 */
+  .chart-card {
+    padding: 15px;
+  }
+
+  .stat-card {
+    padding: 15px;
   }
 }
 </style>
