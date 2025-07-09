@@ -201,15 +201,15 @@ const validateForm = () => {
   //   return false;
   // }
 
-  if (form.value.role === 'ADMIN' && (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value)) {
-    ElMessage.error({
-      message: '验证码错误',
-      customClass: 'tech-message',
-      duration: 3000
-    });
-    refreshCaptcha();
-    return false;
-  }
+  // if (form.value.role === 'ADMIN' && (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value)) {
+  //   ElMessage.error({
+  //     message: '验证码错误',
+  //     customClass: 'tech-message',
+  //     duration: 3000
+  //   });
+  //   refreshCaptcha();
+  //   return false;
+  // }
   if (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value) {
     ElMessage.error({
       message: '验证码错误',
@@ -312,18 +312,32 @@ const handleLogin = async () => {
         duration: 3000
       });
       await router.push({ name: 'province' });
-    } else {
+    }
+    else if (response.code === 401 && response.message.includes("Redis")) {
       ElMessage.error({
-        message: '登录失败',
+        message: '系统维护中，请稍后再试',
+        customClass: 'tech-message',
+        duration: 3000
+      });
+    }
+
+
+
+    else {
+      ElMessage.error({
+        message: '登录失败,请检查账号和密码1',
         customClass: 'tech-message',
         duration: 3000
       });
       refreshCaptcha();
     }
+
+
+
   } catch (error) {
     console.error('登录失败:', error);
     ElMessage.error({
-      message: '登录失败，请重试',
+      message: '登录失败,请检查账号和密码2',
       customClass: 'tech-message',
       duration: 3000
     });

@@ -1,5 +1,4 @@
 <template>
-
   <div class="register-container">
     <div class="tech-background">
       <div class="bg-grid"></div>
@@ -69,6 +68,32 @@
           >
             <template #prefix>
               <el-icon><Message /></el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+
+        <!-- 手机号 -->
+        <el-form-item label="手机号" class="futuristic-form-item">
+          <el-input
+              v-model="form.phone"
+              placeholder="请输入手机号"
+              class="futuristic-input"
+          >
+            <template #prefix>
+              <el-icon><Iphone /></el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+
+        <!-- 地址 -->
+        <el-form-item label="地址" class="futuristic-form-item">
+          <el-input
+              v-model="form.address"
+              placeholder="请输入地址"
+              class="futuristic-input"
+          >
+            <template #prefix>
+              <el-icon><Location /></el-icon>
             </template>
           </el-input>
         </el-form-item>
@@ -158,7 +183,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { Refresh, User, Lock, Message, Avatar, UserFilled, Setting, View, Connection } from '@element-plus/icons-vue';
+import { Refresh, User, Lock, Message, Avatar, UserFilled, Setting, View, Connection, Iphone, Location } from '@element-plus/icons-vue';
 import axios from 'axios';
 import request from '@/utils/request';
 
@@ -175,13 +200,14 @@ const form = ref({
   password: '',
   confirmPassword: '',
   email: '',
+  phone: '',
+  address: '',
   role: 'USER', // 默认角色
   code: '',
   agreed: false
 });
 
 // 角色选项（包含所有角色）
-
 const roleOptions = ref([
   { label: '管理员', value: 'ADMIN' },
   { label: '分析师', value: 'ANALYST' },
@@ -285,6 +311,11 @@ const validateForm = () => {
     return false;
   }
 
+  if (form.value.phone && !/^1[3-9]\d{9}$/.test(form.value.phone)) {
+    ElMessage.error('手机号格式不正确');
+    return false;
+  }
+
   if (!form.value.role) {
     ElMessage.error('请选择角色');
     return false;
@@ -304,7 +335,6 @@ const validateForm = () => {
   return true;
 };
 
-
 // 注册处理逻辑
 const handleRegister = async () => {
   if (!validateForm()) return;
@@ -317,8 +347,8 @@ const handleRegister = async () => {
       password: form.value.password,
       role: form.value.role,
       email: form.value.email || null,
-      phone: null, // 根据需求可以添加
-      address: null // 根据需求可以添加
+      phone: form.value.phone || null,
+      address: form.value.address || null
     });
 
     if (response.code === 200) {
@@ -408,8 +438,12 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
 }
 
 .futuristic-card {
+  margin-top: 10px;
+  margin-bottom: 50px;
   width: 540px;
-  padding: 40px;
+  padding: 50px;
+  padding-bottom: 0px;
+  padding-top: 10px;
   background: $tech-card-bg;
   border-radius: 16px;
   box-shadow:
@@ -503,7 +537,6 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
     text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
   }
 
-
   /* 添加自动填充样式修复 */
   :deep(.el-input__inner:-webkit-autofill),
   :deep(.el-input__inner:-webkit-autofill:hover),
@@ -532,9 +565,6 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
     background: $tech-primary;
     color: $tech-bg;
   }
-
-
-
 }
 
 /* 角色选择器 */

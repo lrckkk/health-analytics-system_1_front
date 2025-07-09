@@ -34,7 +34,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   user-select: none;
-  color: white;
+  color: #4acfff ;
   font-size: 14px;
 }
 

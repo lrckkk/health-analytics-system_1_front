@@ -3,22 +3,33 @@
     <div class="top-bar">
       <div class="top-left">
         <Timer />
-        <Role /> <!-- 新增：Timer后插入Role组件 -->
+        <Role />
+        <div class="profile-icon" @click="navigateToProfile">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="none" stroke="#00e0ff" stroke-width="2"/>
+            <path d="M20.5901 22C20.5901 18.13 16.7402 15 12.0002 15C7.26015 15 3.41016 18.13 3.41016 22" fill="none" stroke="#00e0ff" stroke-width="2"/>
+          </svg>
+        </div>
       </div>
       <div class="top-center">
         <Title />
       </div>
       <div class="top-right">
         <Settings />
-        <Exit /> <!-- 新增：Settings后插入Exit组件 -->
+        <Exit />
         <el-button
             class="my-image-button futuristic-button"
             @click="navigateToMyRoute"
         >
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button-icon">
+            <path d="M12 3L12 21" stroke="#00f0ff" stroke-width="2" stroke-linecap="round"/>
+            <path d="M21 12L3 12" stroke="#00f0ff" stroke-width="2" stroke-linecap="round"/>
+            <path d="M18 6L6 18" stroke="#7d5fff" stroke-width="2" stroke-linecap="round"/>
+            <path d="M18 18L6 6" stroke="#7d5fff" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </el-button>
       </div>
     </div>
-
 
     <!-- ChinaMap 容器 -->
     <div class="bottom-align" v-if="!mapDataStore.isLoading && !mapDataStore.error">
@@ -29,56 +40,36 @@
           :pieSeriesData="mapDataStore.pieSeriesData"
       />
     </div>
-    <!--    医疗机构卡片-->
 
-    <!-- 新增的 card 组件包裹 div，限定大小并定位在左上方 -->
-<!--    <div class="card-display-area">-->
-<!--      <card :componentsList="myCustomComponents1"></card>-->
-<!--    </div>-->
-<!--    <div class="card-display-area2">-->
-<!--      <card :componentsList="myCustomComponents2"></card>-->
-<!--    </div>-->
-<!--    <div class="card-display-area3">-->
-<!--      <card :componentsList="myCustomComponents3"></card>-->
-<!--    </div>-->
-<!--    <div class="card-display-area4">-->
-<!--      <card :componentsList="myCustomComponents4"></card>-->
-<!--    </div>-->
-<!--    <div class="card-display-area5">-->
-<!--      <card :componentsList="myCustomComponents5"></card>-->
-<!--    </div>-->
-<!--    <div class="card-display-area6">-->
-<!--      <card :componentsList="myCustomComponents6"></card>-->
-<!--    </div>-->
     <div class="card-display-area">
       <card :componentsList="myCustomComponents1"></card>
     </div>
-    <TechEdgeButton position="right1" target-route="/analyseforins"/>
+    <TechEdgeButton position="right1" target-route="/analyseforinp"/>
 
     <div class="card-display-area2">
       <card :componentsList="myCustomComponents2"></card>
     </div>
-    <TechEdgeButton position="right2" target-route="/annalyseforbed" />
+    <TechEdgeButton position="right2"  />
 
     <div class="card-display-area3">
       <card :componentsList="myCustomComponents3"></card>
     </div>
-    <TechEdgeButton position="right3"  target-route="/analyseforcost" />
+    <TechEdgeButton position="right3"  />
 
     <div class="card-display-area4">
       <card :componentsList="myCustomComponents4"></card>
     </div>
-    <TechEdgeButton position="left1" target-route="/analyseforper" />
+    <TechEdgeButton position="left1"  />
 
     <div class="card-display-area5">
-      <card :componentsList="myCustomComponents5" ></card>
+      <card :componentsList="myCustomComponents5"></card>
     </div>
-    <TechEdgeButton position="left2"  target-route="/analyseforpop"/>
+    <TechEdgeButton position="left2"  />
 
     <div class="card-display-area6">
       <card :componentsList="myCustomComponents6"></card>
     </div>
-    <TechEdgeButton position="left3"  target-route="/analyseforser"/>
+    <TechEdgeButton position="left3"  />
     <div class="scroll-display-area">
       <scroll></scroll>
     </div>
@@ -100,22 +91,18 @@
 
 <script>
 import ChinaMap from '../../components/Map.vue';
-
-import Timer from '../../components/Timer.vue';// 导入 Timer 组件
+import Timer from '../../components/Timer.vue';
 import Title from '../../components/Title.vue';
 import { ref, onMounted } from 'vue';
 import { useMapDataStore } from '@/stores/TotalData.js';
 import {useRegionStore} from '@/stores/RegionData.js';
 import {ElMessage} from "element-plus";
-import card from '../card/CardContainer.vue'; // 导入 CardContainer.vue 组件
+import card from '../card/CardContainer.vue';
 import InteractiveButtonContainer from '@/components/ButtonContainer.vue';
 import scroll from './scroll.vue';
-
 import Settings from "@/components/Settings.vue";
-import Role from '../../components/Role.vue'; // 新增
-import Exit from '../../components/Exit.vue'; // 新增
-
-
+import Role from '../../components/Role.vue';
+import Exit from '../../components/Exit.vue';
 import MyComponentA from '../card/MyComponentA.vue';
 import MyComponentB from '../card/MyComponentB.vue';
 import MyComponentC from '../card/MyComponentC.vue';
@@ -126,9 +113,7 @@ import RankforPop from "@/pages/card/RankforPop.vue";
 import RankforCos from "@/pages/card/RankforCos.vue";
 import Rankforbed from "@/pages/card/Rankforbed.vue";
 import request from "@/utils/request.js";
-
 import TechEdgeButton from '../card/TechEdgeButton.vue';
-
 import router from "@/pages/user/router.js";
 import SLforbedavg from "@/pages/card/SLforbedavg.vue";
 import SLforcostavg from "@/pages/card/SLforcostavg.vue";
@@ -136,8 +121,6 @@ import SLforinoavg from "@/pages/card/SLforinoavg.vue";
 import SLforInsavg from "@/pages/card/SLforInsavg.vue";
 import SLforoutavg from "@/pages/card/SLforoutavg.vue";
 import SLforperavg from "@/pages/card/SLforperavg.vue";
-
-
 
 export default {
   components: {
@@ -148,11 +131,9 @@ export default {
     card,
     scroll,
     TechEdgeButton,
-    Role, // 新增
-    Exit,  // 新增
-
+    Role,
+    Exit,
     InteractiveButtonContainer,
-
   },
   setup() {
     const myCustomComponents1 = ref([
@@ -160,9 +141,7 @@ export default {
       SLforInsavg,
     ]);
 
-    //news
     const newsData = ref([])
-
     const mapDataStore = useMapDataStore();
     const regionStore = useRegionStore();
 
@@ -184,20 +163,24 @@ export default {
         });
       }
     };
+
     const navigateToMyRoute = () => {
       router.push({
-        name: 'Text' // <-- 在这里设置你要跳转的路由名称
-        // 如果需要传递参数，可以这样添加：
-        // params: { id: 123, type: 'example' }
+        name: 'Text'
       });
     };
+
+    const navigateToProfile = () => {
+      router.push({
+        name: 'Profile'
+      });
+    };
+
     const handleChildButtonClick = (event) => {
       console.log(`按钮点击事件：行 ID ${event.id}`);
-
       mapDataStore.fetchsatterdata(event.id);
-
-
     };
+
     const myCustomButtonsRow1 = ref([
       { id: 'populationData', label: '人口' },
       { id: 'institutionData', label: '医疗机构' },
@@ -216,36 +199,33 @@ export default {
 
     const myCustomComponents2 = ref([
       MyComponentB,
-
-        Rankforbed,
-        SLforbedavg,
+      Rankforbed,
+      SLforbedavg,
     ]);
     const myCustomComponents3 = ref([
       MyComponentC,
       RankforCos,
-        SLforcostavg,
+      SLforcostavg,
     ]);
     const myCustomComponents4 = ref([
       MyComponentD,
-        SLforperavg,
+      SLforperavg,
     ]);
     const myCustomComponents5 = ref([
       PopulationLine,
       RankforPop,
-
     ]);
     const myCustomComponents6 = ref([
       ServiceforML,
-        SLforinoavg,
-        SLforoutavg
+      SLforinoavg,
+      SLforoutavg
     ]);
+
     onMounted(() => {
       mapDataStore.fetchcountryData()
-
       if (mapDataStore.provinceData.length === 0 && !mapDataStore.isLoading) {
         mapDataStore.fetchMapData();
       }
-
     });
 
     return {
@@ -253,6 +233,7 @@ export default {
       handleChildButtonClick,
       mapDataStore,
       navigateToMyRoute,
+      navigateToProfile,
       myCustomButtonsRow1,
       myCustomButtonsRow2,
       myCustomComponents1: myCustomComponents1,
@@ -267,30 +248,88 @@ export default {
 </script>
 
 <style>
-my-image-button {
-  /* 移除 Element Plus 按钮默认的内边距和边框，让图片完全占据按钮区域 */
+.my-image-button.futuristic-button {
   padding: 0;
-  border: none;
-  outline: none;
-  background-color: transparent; /* 背景透明 */
-
-  /* 设置按钮的固定宽度和高度，以匹配你的图片尺寸 */
-  width: 50px;   /* <--- 请根据你的图片实际宽度调整 */
-  height: 50px;  /* <--- 请根据你的图片实际高度调整 */
-
-  /* 设置背景图片 */
-  background-image: url('/public/pictures/button.png'); /* <--- ***请将这里替换为你的图片路径！*** */
-  background-size: contain;      /* 图片在按钮内完整显示，保持宽高比 */
-  background-repeat: no-repeat;  /* 图片不重复 */
-  background-position: center;   /* 图片在按钮中居中 */
-
-  /* 基础交互效果 */
+  border: none !important;
+  background: transparent !important;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* 保持一些阴影效果 */
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  overflow: visible;
+  box-shadow: none !important;
+}
+.my-image-button.futuristic-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  transition: all 0.4s ease;
+  z-index: 1;
+}
+
+.my-image-button.futuristic-button:hover::before {
+  border-color: rgba(0, 240, 255, 0.8);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.my-image-button.futuristic-button::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: rgba(125, 95, 255, 0.5);
+  border-bottom-color: rgba(125, 95, 255, 0.5);
+  animation: rotateBorder 3s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 0;
+}
+
+.my-image-button.futuristic-button:hover::after {
+  opacity: 1;
+}
+
+.button-icon {
+  width: 22px;
+  height: 22px;
+  transition: all 0.4s ease;
+  filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.5));
+  position: relative;
+  z-index: 2;
+}
+
+.my-image-button.futuristic-button:hover .button-icon {
+  transform: rotate(90deg);
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.8));
+  animation: pulseGlow 1.5s infinite alternate;
+}
+
+@keyframes rotateBorder {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulseGlow {
+  0% {
+    filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.5));
+  }
+  100% {
+    filter: drop-shadow(0 0 12px rgba(125, 95, 255, 0.8));
+  }
 }
 body {
-  margin: 0;
+  margin: 0 !important;
   padding: 0;
   font-family: 'Inter', sans-serif, 'Microsoft YaHei', 'PingFang SC';
   background: linear-gradient(135deg, #0a192f 0%, #000a1a 100%);
@@ -298,198 +337,78 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
 }
+
 .page-container {
-
-
   width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
-
   position: relative;
 }
 
-/* 顶部区域固定高度 */
 .top-bar {
   position: relative;
   width: 100%;
-  height: 80px; /* 根据 Timer 和 Title 高度调整 */
+  height: 80px;
 }
 
-
-/* 左上角 */
 .top-left {
   position: absolute;
   top: 10px;
   left: 20px;
   z-index: 10;
-
-  /* card 组件的包裹 div 样式，定位在左上方 */
-
-  .card-display-area {
-    position: fixed;
-    top: 7%; /* 与地图顶部对齐 */
-    left: 1%; /* 距离左侧边缘 */
-    width: 20%; /* 限定宽度 */
-    height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-    box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-    overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
-    background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-    /* 边框效果：通过多层box-shadow模拟发光边框 */
-    border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-    box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */ 0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */ inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-    /* 圆角：如果图片中有圆角，可以添加 */
-    border-radius: 8px; /* 适当的圆角 */
-  }
-
-  .card-display-area2 {
-    position: fixed;
-    top: 30%; /* 与地图顶部对齐 */
-    left: 1%; /* 距离左侧边缘 */
-    width: 20%; /* 限定宽度 */
-    height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-    box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-    overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
-    background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-    /* 边框效果：通过多层box-shadow模拟发光边框 */
-    border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-    box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */ 0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */ inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-    /* 圆角：如果图片中有圆角，可以添加 */
-    border-radius: 8px; /* 适当的圆角 */
-  }
-
-  .card-display-area3 {
-    position: fixed;
-    top: 53%; /* 与地图顶部对齐 */
-    left: 1%; /* 距离左侧边缘 */
-    width: 20%; /* 限定宽度 */
-    height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-    box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-    overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
-    background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-    /* 边框效果：通过多层box-shadow模拟发光边框 */
-    border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-    box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */ 0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */ inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-    /* 圆角：如果图片中有圆角，可以添加 */
-    border-radius: 8px; /* 适当的圆角 */
-  }
-
-  .Dataget-display-area {
-    position: fixed;
-    top: 70%; /* 与地图顶部对齐 */
-    left: 1%; /* 距离左侧边缘 */
-    width: 30%; /* 限定宽度 */
-    height: 30%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-
-  }
-
-  .card-display-area4 {
-    position: fixed;
-    top: 7%; /* 与地图顶部对齐 */
-    left: 77%; /* 距离左侧边缘 */
-    width: 20%; /* 限定宽度 */
-    height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-    box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-    overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
-    background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-    /* 边框效果：通过多层box-shadow模拟发光边框 */
-    border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-    box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */ 0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */ inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-    /* 圆角：如果图片中有圆角，可以添加 */
-    border-radius: 8px; /* 适当的圆角 */
-  }
-
-  .card-display-area5 {
-    position: fixed;
-    top: 30%; /* 与地图顶部对齐 */
-    left: 77%; /* 距离左侧边缘 */
-    width: 20%; /* 限定宽度 */
-    height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-    box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-    overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
-    background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-    /* 边框效果：通过多层box-shadow模拟发光边框 */
-    border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-    box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */ 0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */ inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-    /* 圆角：如果图片中有圆角，可以添加 */
-    border-radius: 8px; /* 适当的圆角 */
-  }
-
-  .card-display-area6 {
-    position: fixed;
-    top: 53%; /* 与地图顶部对齐 */
-    left: 77%; /* 距离左侧边缘 */
-    width: 20%; /* 限定宽度 */
-    height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-    box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-    overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
-    background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-    /* 边框效果：通过多层box-shadow模拟发光边框 */
-    border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-    box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */ 0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */ inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-    /* 圆角：如果图片中有圆角，可以添加 */
-    border-radius: 8px; /* 适当的圆角 */
-  }
-
-  .scroll-display-area {
-    position: absolute;
-    left: 31%;
-    top: 70%;
-    width: 40%;
-
-  }
-
-  /* 中间 */
-
-  .top-center {
-    position: absolute;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-  }
-
-  /* 右上角 */
-
-  .top-right {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    z-index: 10;
-  }
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
-
-
-</style>
-
-<style>
-/* 全局科技风主题 - 保持不变，它影响 body */
-/* 全局科技风主题 - 保持不变，它影响 body */
-body {
-  margin: 0!important;
-  padding: 0;
-  font-family: 'Inter', sans-serif, 'Microsoft YaHei', 'PingFang SC';
-  background: linear-gradient(135deg, #0a192f 0%, #000a1a 100%);
-  color: #e0f2f7;
-  min-height: 100vh;
-  overflow-x: hidden;
+.profile-icon {
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 150, 255, 0.1);
+  border-radius: 50%;
+  border: 1px solid rgba(74, 207, 255, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.2);
+  animation: pulse 3s infinite;
 }
 
+.profile-icon:hover {
+  background: rgba(0, 150, 255, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(74, 207, 255, 0.4);
+}
 
-/* ChinaMap 容器 - 严格保持原有位置和大小 */
+.profile-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 5px rgba(74, 207, 255, 0.4); }
+  50% { box-shadow: 0 0 15px rgba(74, 207, 255, 0.8); }
+  100% { box-shadow: 0 0 5px rgba(74, 207, 255, 0.4); }
+}
+
+.top-center {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.top-right {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  z-index: 10;
+}
+
 .bottom-align {
   position: fixed;
   top: 7%;
@@ -507,135 +426,98 @@ body {
   overflow: hidden;
 }
 
-/* card 组件的包裹 div 样式，定位在左上方 */
 .card-display-area {
   position: fixed;
-  top: 7%; /* 与地图顶部对齐 */
-  left: 1%; /* 距离左侧边缘 */
-  width: 20%; /* 限定宽度 */
-  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  top: 7%;
+  left: 1%;
+  width: 20%;
+  height: 20%;
+  box-sizing: border-box;
+  overflow: hidden;
   background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-  /* 边框效果：通过多层box-shadow模拟发光边框 */
-  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-  box-shadow:
-      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
-      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
-      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-  /* 圆角：如果图片中有圆角，可以添加 */
-  border-radius: 8px; /* 适当的圆角 */
+  border: 3px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), 0 0 20px rgba(74, 207, 255, 0.2), inset 0 0 10px rgba(74, 207, 255, 0.3);
+  border-radius: 8px;
 }
+
 .card-display-area2 {
   position: fixed;
-  top: 30%; /* 与地图顶部对齐 */
-  left: 1%; /* 距离左侧边缘 */
-  width: 20%; /* 限定宽度 */
-  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  top: 30%;
+  left: 1%;
+  width: 20%;
+  height: 20%;
+  box-sizing: border-box;
+  overflow: hidden;
   background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-  /* 边框效果：通过多层box-shadow模拟发光边框 */
-  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-  box-shadow:
-      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
-      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
-      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-  /* 圆角：如果图片中有圆角，可以添加 */
-  border-radius: 8px; /* 适当的圆角 */
+  border: 3px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), 0 0 20px rgba(74, 207, 255, 0.2), inset 0 0 10px rgba(74, 207, 255, 0.3);
+  border-radius: 8px;
 }
+
 .card-display-area3 {
   position: fixed;
-  top: 53%; /* 与地图顶部对齐 */
-  left: 1%; /* 距离左侧边缘 */
-  width: 20%; /* 限定宽度 */
-  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  top: 53%;
+  left: 1%;
+  width: 20%;
+  height: 20%;
+  box-sizing: border-box;
+  overflow: hidden;
   background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-  /* 边框效果：通过多层box-shadow模拟发光边框 */
-  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-  box-shadow:
-      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
-      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
-      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-  /* 圆角：如果图片中有圆角，可以添加 */
-  border-radius: 8px; /* 适当的圆角 */
+  border: 3px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), 0 0 20px rgba(74, 207, 255, 0.2), inset 0 0 10px rgba(74, 207, 255, 0.3);
+  border-radius: 8px;
 }
-.Dataget-display-area{
+
+.Dataget-display-area {
   position: fixed;
-  top: 70%; /* 与地图顶部对齐 */
-  left: 1%; /* 距离左侧边缘 */
-  width: 30%; /* 限定宽度 */
-  height: 30%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-
+  top: 70%;
+  left: 1%;
+  width: 30%;
+  height: 30%;
 }
+
 .card-display-area4 {
   position: fixed;
-  top: 7%; /* 与地图顶部对齐 */
-  left: 77%; /* 距离左侧边缘 */
-  width: 20%; /* 限定宽度 */
-  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  top: 7%;
+  left: 77%;
+  width: 20%;
+  height: 20%;
+  box-sizing: border-box;
+  overflow: hidden;
   background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-  /* 边框效果：通过多层box-shadow模拟发光边框 */
-  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-  box-shadow:
-      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
-      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
-      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-  /* 圆角：如果图片中有圆角，可以添加 */
-  border-radius: 8px; /* 适当的圆角 */
+  border: 3px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), 0 0 20px rgba(74, 207, 255, 0.2), inset 0 0 10px rgba(74, 207, 255, 0.3);
+  border-radius: 8px;
 }
+
 .card-display-area5 {
   position: fixed;
-  top: 30%; /* 与地图顶部对齐 */
-  left: 77%; /* 距离左侧边缘 */
-  width: 20%; /* 限定宽度 */
-  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  top: 30%;
+  left: 77%;
+  width: 20%;
+  height: 20%;
+  box-sizing: border-box;
+  overflow: hidden;
   background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-  /* 边框效果：通过多层box-shadow模拟发光边框 */
-  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-  box-shadow:
-      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
-      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
-      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-  /* 圆角：如果图片中有圆角，可以添加 */
-  border-radius: 8px; /* 适当的圆角 */
+  border: 3px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), 0 0 20px rgba(74, 207, 255, 0.2), inset 0 0 10px rgba(74, 207, 255, 0.3);
+  border-radius: 8px;
 }
+
 .card-display-area6 {
   position: fixed;
-  top: 53%; /* 与地图顶部对齐 */
-  left: 77%; /* 距离左侧边缘 */
-  width: 20%; /* 限定宽度 */
-  height: 20%; /* 限定高度，与地图高度相同，保持视觉平衡 */
-  box-sizing: border-box; /* 确保 padding 不增加元素总尺寸 */
-  overflow: hidden; /* 确保内部内容不会超出带有圆角的边框 */
+  top: 53%;
+  left: 77%;
+  width: 20%;
+  height: 20%;
+  box-sizing: border-box;
+  overflow: hidden;
   background: linear-gradient(135deg, rgba(3, 4, 94, 0.9) 0%, rgba(0, 0, 0, 0.95) 100%);
-
-  /* 边框效果：通过多层box-shadow模拟发光边框 */
-  border: 3px solid rgba(74, 207, 255, 0.2); /* 内部更细的弱透明边框 */
-  box-shadow:
-      0 0 10px rgba(74, 207, 255, 0.4), /* 内部蓝色微光 */
-      0 0 20px rgba(74, 207, 255, 0.2), /* 外部蓝色光晕 */
-      inset 0 0 10px rgba(74, 207, 255, 0.3); /* 内部向内发光，增加立体感 */
-
-  /* 圆角：如果图片中有圆角，可以添加 */
-  border-radius: 8px; /* 适当的圆角 */
+  border: 3px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.4), 0 0 20px rgba(74, 207, 255, 0.2), inset 0 0 10px rgba(74, 207, 255, 0.3);
+  border-radius: 8px;
 }
+
 .scroll-display-area {
   position: absolute;
   left: 31%;
@@ -643,8 +525,6 @@ body {
   width: 40%;
 }
 
-
-/* 加载和错误状态显示 - 保持原有定位和尺寸，仅优化视觉效果 */
 .loading-overlay, .error-message {
   position: absolute;
   top: 50%;
@@ -663,7 +543,6 @@ body {
   background-color: rgba(255, 0, 0, 0.7);
 }
 
-/* selected-region-display 样式 */
 .selected-region-display {
   margin-top: 550px;
   padding: 10px 20px;
@@ -677,11 +556,11 @@ body {
   align-self: center;
   z-index: 5;
 }
+
 .page-header{
   height: 7%;
 }
 
-/* 加载和错误覆盖层 - 科技风视觉优化 */
 .loading-overlay.tech-loading, .error-message.tech-error {
   position: absolute;
   top: 50%;
@@ -736,46 +615,24 @@ body {
   border-color: #0056b3;
 }
 
-/* Element Plus Message Box 科技风样式 - 如果 main.vue 中也会用到 ElMessage，则这些样式也需要 */
-/* 这里我把它们保留在 main.vue 的 style 中，因为 handleRegionClick 还在使用 ElMessage */
 .el-message.tech-message {
   background-color: rgba(26, 42, 58, 0.9);
   border: 1px solid rgba(0, 150, 255, 0.5);
   box-shadow: 0 0 10px rgba(0, 150, 255, 0.3);
   color: #e0f2f7;
 }
+
 .el-message.tech-message .el-message__content {
   color: inherit;
 }
+
 .el-message.tech-message.el-message--info {
   background-color: rgba(26, 42, 58, 0.9);
 }
+
 .el-message.tech-message.el-message--success {
   background-color: rgba(26, 42, 58, 0.9);
 }
 
 
-.top-left {
-  position: absolute;
-  top: 10px;
-  left: 20px;
-  z-index: 10;
-}
-
-/* 中间 */
-.top-center {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-}
-
-/* 右上角 */
-.top-right {
-  position: absolute;
-  top: 10px;
-  right: 20px;
-  z-index: 10;
-}
 </style>
