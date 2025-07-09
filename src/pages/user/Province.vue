@@ -53,7 +53,7 @@
     <div class="card-display-area">
       <card :componentsList="myCustomComponents1"></card>
     </div>
-    <TechEdgeButton position="right1" />
+    <TechEdgeButton position="right1" target-route="/analyseforinp"/>
 
     <div class="card-display-area2">
       <card :componentsList="myCustomComponents2"></card>

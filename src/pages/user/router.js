@@ -8,8 +8,9 @@ import Scroll from "./scroll.vue"
 
 import ManagementPage from "@/pages/management/ManagementPage.vue";
 
-import Text from "../../components/test.vue"
+import Text from "../../components/test4.vue"
 import Profile from './Profile.vue';
+import AnalyseforPop from "@/components/Analyseforinp.vue";
 
 
 
@@ -77,6 +78,11 @@ const routes = [
         path: '/profile',
         component: Profile,
         meta: { requiresAuth: true }
+    },
+    {
+        name: 'Analyseforinp',
+        path: '/analyseforinp',
+        component: AnalyseforPop
     }
 
 

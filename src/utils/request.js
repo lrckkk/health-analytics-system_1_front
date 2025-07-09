@@ -3,7 +3,7 @@ import qs from "qs"
 
 const request = axios.create({
     baseURL: '/dpi', // 与代理标识一致，触发代理转发
-    timeout: 10000
+    timeout: 200000
 })
 
 // 请求拦截器
