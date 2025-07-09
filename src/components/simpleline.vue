@@ -294,11 +294,11 @@ const updateChart = () => {
         const yValue = params[0].data
         return `
           <div style="margin-bottom:3px;">
-            <span style="color:#90E0EF;">${selectedXField.value}: </span>
+            <span style="color:#90E0EF;">年份: </span>
             <span style="color:#7DF9FF;">${xValue}</span>
           </div>
           <div>
-            <span style="color:#90E0EF;">${selectedYField.value}: </span>
+            <span style="color:#90E0EF;">总数: </span>
             <span style="color:#7DF9FF;font-weight:bold;">${formatNumber(yValue)}</span>
           </div>
         `

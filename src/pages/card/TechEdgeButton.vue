@@ -120,7 +120,7 @@ const stopHoverAnimation = () => {
   /* 圆角：如果图片中有圆角，可以添加 */
 }
 .tech-edge-button.position-right3 {
-  top: 58%; /* 与地图顶部对齐 */
+  top: 57.4%; /* 与地图顶部对齐 */
   left: 21.2%; /* 距离左侧边缘 */
   width: 30px; /* 限定宽度 */
   height: 10%; /* 限定高度，与地图高度相同，保持视觉平衡 */
