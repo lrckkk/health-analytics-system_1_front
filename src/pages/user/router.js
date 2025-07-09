@@ -113,7 +113,7 @@ const routes = [
         name: 'Annalyseforbed',
         path: '/annalyseforbed',
         component: Annalyseforbed
-    }
+    },
 
 
 ]

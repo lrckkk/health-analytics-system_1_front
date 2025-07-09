@@ -1,16 +1,28 @@
 <template>
   <div class="container">
     <!-- 使用 Collapse 子组件 -->
-    <Collapse title="组件标题 1：用户基本信息" :initialOpen="true">
-     <test2></test2>
+    <Collapse title="人口分析"  :initial-open="false">
+      <Analyseforpop></Analyseforpop>
     </Collapse>
 
-    <Collapse title="组件标题 2：订单列表" :initialOpen="true">
-     <test3></test3>
+    <Collapse title="病床分析" :initial-open="false" >
+      <Annalyseforbed></Annalyseforbed>
     </Collapse>
 
-    <Collapse title="组件标题 3：联系方式">
+    <Collapse title="医疗机构分析"  :initial-open="false">
       <Analyseforins></Analyseforins>
+    </Collapse>
+    <Collapse title="医疗花费分析" :initial-open="false">
+      <Analyseforcost></Analyseforcost>
+    </Collapse>
+    <Collapse title="医疗人员分析" :initial-open="false">
+      <Analyseforper></Analyseforper>
+    </Collapse>
+    <Collapse title="健康服务分析" :initial-open="false">
+      <Annalyseforser></Annalyseforser>
+    </Collapse>
+    <Collapse title="综合医疗分析" :initialOpen="true">
+      <test></test>
     </Collapse>
 
     <!-- 可以继续添加更多 Collapse -->
@@ -20,10 +32,13 @@
 
 <script setup>
 import Collapse from './Collapse.vue'; // 导入子组件
-import test2 from './text2.vue';
-import test3 from './test3.vue';
-import test from './test.vue';
+import Analyseforcost from "@/components/Analyseforcost.vue";
 import Analyseforins from "@/components/Analyseforins.vue";
+import Analyseforper from "@/components/Analyseforper.vue";
+import Analyseforpop from "@/components/Analyseforpop.vue";
+import Annalyseforbed from "@/components/Annalyseforbed.vue";
+import Annalyseforser from "@/components/Annalyseforser.vue";
+import test from "@/components/test.vue";
 </script>
 
 <style>
