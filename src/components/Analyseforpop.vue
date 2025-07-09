@@ -1,10 +1,28 @@
 <template>
   <div class="main-container">
     <div class="Line-row">
-
+      <multi-line-chart
+          width="100%"
+          :chart-data="populationData"
+          title="人口统计趋势"
+          height="350px"
+          :show-data-zoom="true"
+          :show-legend="true"
+          :smooth="true"
+          :loading="populationLoading"
+          @provinceChange="handleProvinceChange"
+      />
     </div>
     <div class="chart-row">
-
+      <pie-chart
+          width="50%"
+          :chart-data="marketShareData"
+          :title="`人口组成 - ${regionStore.getDisplayRegion}`"
+          name-field="company"
+          value-field="share"
+          height="450px"
+          rose-type="radius"
+      />
     </div>
     <div class="card-content-inner-a">
       <simpleline

@@ -10,7 +10,7 @@
     </Collapse>
 
     <Collapse title="组件标题 3：联系方式">
-      <Analyseforinp></Analyseforinp>>
+      <Analyseforins></Analyseforins>
     </Collapse>
 
     <!-- 可以继续添加更多 Collapse -->
@@ -23,7 +23,7 @@ import Collapse from './Collapse.vue'; // 导入子组件
 import test2 from './text2.vue';
 import test3 from './test3.vue';
 import test from './test.vue';
-import Analyseforinp from "@/components/Analyseforinp.vue";
+import Analyseforins from "@/components/Analyseforins.vue";
 </script>
 
 <style>

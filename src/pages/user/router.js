@@ -10,7 +10,12 @@ import ManagementPage from "@/pages/management/ManagementPage.vue";
 
 import Text from "../../components/test4.vue"
 import Profile from './Profile.vue';
-import AnalyseforPop from "@/components/Analyseforinp.vue";
+import Analyseforins from "@/components/Analyseforins.vue";
+import Analyseforcost from "@/components/Analyseforcost.vue";
+import Analyseforper from "@/components/Analyseforper.vue";
+import Annalyseforbed from "@/components/Annalyseforbed.vue";
+import Annalyseforser from "@/components/Annalyseforser.vue";
+import Analyseforpop from "@/components/Analyseforpop.vue";
 
 
 
@@ -80,9 +85,34 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
-        name: 'Analyseforinp',
-        path: '/analyseforinp',
-        component: AnalyseforPop
+        name: 'Analyseforins',
+        path: '/analyseforins',
+        component: Analyseforins
+    },
+    {
+        name: 'Analyseforcost',
+        path: '/analyseforcost',
+        component: Analyseforcost,
+    },
+    {
+        name: 'Analyseforser',
+        path: '/analyseforser',
+        component: Annalyseforser
+    },
+    {
+        name: 'Analyseforper',
+        path: '/analyseforper',
+        component: Analyseforper
+    },
+    {
+        name: 'AnalyseforPop',
+        path: '/analyseforpop',
+        component: Analyseforpop
+    },
+    {
+        name: 'Annalyseforbed',
+        path: '/annalyseforbed',
+        component: Annalyseforbed
     }
 
 

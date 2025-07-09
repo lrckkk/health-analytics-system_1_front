@@ -53,32 +53,32 @@
     <div class="card-display-area">
       <card :componentsList="myCustomComponents1"></card>
     </div>
-    <TechEdgeButton position="right1" target-route="/analyseforinp"/>
+    <TechEdgeButton position="right1" target-route="/analyseforins"/>
 
     <div class="card-display-area2">
       <card :componentsList="myCustomComponents2"></card>
     </div>
-    <TechEdgeButton position="right2"  />
+    <TechEdgeButton position="right2" target-route="/annalyseforbed" />
 
     <div class="card-display-area3">
       <card :componentsList="myCustomComponents3"></card>
     </div>
-    <TechEdgeButton position="right3"  />
+    <TechEdgeButton position="right3"  target-route="/analyseforcost" />
 
     <div class="card-display-area4">
       <card :componentsList="myCustomComponents4"></card>
     </div>
-    <TechEdgeButton position="left1"  />
+    <TechEdgeButton position="left1" target-route="/analyseforper" />
 
     <div class="card-display-area5">
-      <card :componentsList="myCustomComponents5"></card>
+      <card :componentsList="myCustomComponents5" ></card>
     </div>
-    <TechEdgeButton position="left2"  />
+    <TechEdgeButton position="left2"  target-route="/analyseforpop"/>
 
     <div class="card-display-area6">
       <card :componentsList="myCustomComponents6"></card>
     </div>
-    <TechEdgeButton position="left3"  />
+    <TechEdgeButton position="left3"  target-route="/analyseforser"/>
     <div class="scroll-display-area">
       <scroll></scroll>
     </div>
@@ -479,7 +479,7 @@ body {
 /* 全局科技风主题 - 保持不变，它影响 body */
 /* 全局科技风主题 - 保持不变，它影响 body */
 body {
-  margin: 0;
+  margin: 0!important;
   padding: 0;
   font-family: 'Inter', sans-serif, 'Microsoft YaHei', 'PingFang SC';
   background: linear-gradient(135deg, #0a192f 0%, #000a1a 100%);
@@ -488,14 +488,6 @@ body {
   overflow-x: hidden;
 }
 
-/* 页面容器基础样式 - 保持不变 */
-.page-container {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
 
 /* ChinaMap 容器 - 严格保持原有位置和大小 */
 .bottom-align {
