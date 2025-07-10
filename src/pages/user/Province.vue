@@ -17,17 +17,20 @@
       <div class="top-right">
         <Settings />
         <Exit />
-        <el-button
-            class="my-image-button futuristic-button"
-            @click="navigateToMyRoute"
-        >
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button-icon">
-            <path d="M12 3L12 21" stroke="#00f0ff" stroke-width="2" stroke-linecap="round"/>
-            <path d="M21 12L3 12" stroke="#00f0ff" stroke-width="2" stroke-linecap="round"/>
-            <path d="M18 6L6 18" stroke="#7d5fff" stroke-width="2" stroke-linecap="round"/>
-            <path d="M18 18L6 6" stroke="#7d5fff" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </el-button>
+
+      </div>
+      <div class="center-button">
+      <el-button
+          class="my-image-button futuristic-button"
+          @click="navigateToMyRoute"
+      >
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="button-icon">
+          <path d="M12 3L12 21" stroke="#00f0ff" stroke-width="2" stroke-linecap="round"/>
+          <path d="M21 12L3 12" stroke="#00f0ff" stroke-width="2" stroke-linecap="round"/>
+          <path d="M18 6L6 18" stroke="#7d5fff" stroke-width="2" stroke-linecap="round"/>
+          <path d="M18 18L6 6" stroke="#7d5fff" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </el-button>
       </div>
     </div>
 
@@ -252,8 +255,8 @@ export default {
   padding: 0;
   border: none !important;
   background: transparent !important;
-  width: 40px;
-  height: 40px;
+  width: 62px;
+  height: 62px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   position: relative;
@@ -301,8 +304,8 @@ export default {
 }
 
 .button-icon {
-  width: 22px;
-  height: 22px;
+  width: 33px;
+  height: 33px;
   transition: all 0.4s ease;
   filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.5));
   position: relative;
@@ -408,7 +411,12 @@ body {
   right: 20px;
   z-index: 10;
 }
-
+.center-button{
+  z-index: 10;
+  position: absolute;
+  top:83vh;
+  left:48.5%;
+}
 .bottom-align {
   position: fixed;
   top: 7%;
@@ -520,9 +528,9 @@ body {
 
 .scroll-display-area {
   position: absolute;
-  left: 31%;
-  top: 70%;
-  width: 40%;
+  left: 30%;
+  top: 60vh;
+  width: 44%;
 }
 
 .loading-overlay, .error-message {
