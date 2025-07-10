@@ -3,7 +3,7 @@ import qs from "qs"
 
 const request = axios.create({
     baseURL: '/dpi', // 与代理标识一致，触发代理转发
-    timeout: 200000
+    timeout: 80000000000
 })
 
 // 请求拦截器
@@ -47,12 +47,14 @@ request.interceptors.response.use(
         return response.data;
     },
     (error) => {
+        // 打印详细错误信息，便于调试
+        console.error('Axios error:', error);
         if (error.response?.status === 401) {
             localStorage.removeItem('jwt_token');
-            // 可以在这里跳转到登录页
             window.location.href = '/login?expired=1';
         }
-        const message = error.response?.data?.message || '请求失败';
+        // 返回更详细的错误信息
+        const message = error.response?.data?.message || error.message || JSON.stringify(error) || '请求失败';
         return Promise.reject(message);
     }
 )
