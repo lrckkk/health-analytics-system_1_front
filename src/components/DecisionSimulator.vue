@@ -49,8 +49,25 @@
         <p>当前增长率: <strong :style="{ color: (decisionStore.currentGrowthRates[metricIndex] && decisionStore.currentGrowthRates[metricIndex] < 0) ? 'red' : 'green' }">{{ decisionStore.currentGrowthRates[metricIndex]?.toFixed(2) || 'N/A' }}%</strong></p>
         <p>
           预测 {{ decisionStore.selectedYearForProjection }} 年数据:<br>
+
           原始预测: <strong>{{ decisionStore.projectedDataComparison.original[metricIndex] ? decisionStore.projectedDataComparison.original[metricIndex].toFixed(2) : 'N/A' }}</strong><br>
+          <div>
+          <span v-if="metricIndex===0">排名：{{getRankOfGivenValue(mapDataStore.institutionData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+            <span v-if="metricIndex===1">排名：{{getRankOfGivenValue(mapDataStore.bedData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+            <span v-if="metricIndex===2">排名：{{getRankOfGivenValue(mapDataStore.populationData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+            <span v-if="metricIndex===3">排名：{{getRankOfGivenValue(mapDataStore.totalCostData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+            <span v-if="metricIndex===4">排名：{{getRankOfGivenValue(mapDataStore.personnelData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+            <span v-if="metricIndex===5">排名：{{getRankOfGivenValue(mapDataStore.inpatientAdmissions, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+          </div>
           当前预测: <strong>{{ decisionStore.projectedDataComparison.current[metricIndex] ? decisionStore.projectedDataComparison.current[metricIndex].toFixed(2) : 'N/A' }}</strong>
+          <div>
+          <span v-if="metricIndex===0">排名：{{getRankOfGivenValue(mapDataStore.institutionData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+            <span v-if="metricIndex===1">排名：{{getRankOfGivenValue(mapDataStore.bedData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+            <span v-if="metricIndex===2">排名：{{getRankOfGivenValue(mapDataStore.populationData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+            <span v-if="metricIndex===3">排名：{{getRankOfGivenValue(mapDataStore.totalCostData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+            <span v-if="metricIndex===4">排名：{{getRankOfGivenValue(mapDataStore.personnelData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+            <span v-if="metricIndex===5">排名：{{getRankOfGivenValue(mapDataStore.inpatientAdmissions, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+          </div>
           <span v-if="decisionStore.projectedDataComparison.current[metricIndex] > decisionStore.projectedDataComparison.original[metricIndex]" style="color: green; font-weight: bold;"> (↑ {{ (decisionStore.projectedDataComparison.current[metricIndex] - decisionStore.projectedDataComparison.original[metricIndex]).toFixed(2) }})</span>
           <span v-else-if="decisionStore.projectedDataComparison.current[metricIndex] < decisionStore.projectedDataComparison.original[metricIndex]" style="color: red; font-weight: bold;"> (↓ {{ (decisionStore.projectedDataComparison.original[metricIndex] - decisionStore.projectedDataComparison.current[metricIndex]).toFixed(2) }})</span>
         </p>
@@ -115,8 +132,11 @@
 import { ref, watch, computed } from 'vue';
 import { useDecisionStore } from '@/stores/useDecisionStore';
 import { metricDescriptions } from '@/utils/metricDescriptions'; // 确保路径正确
+import {getRankOfGivenValue} from "@/utils/countround.js";
+import { useMapDataStore } from '@/stores/TotalData.js';
 
 const decisionStore = useDecisionStore();
+const mapDataStore = useMapDataStore();
 
 const upperLimitInput = ref(0);
 const currentlyAppliedPolicy = ref(null);
