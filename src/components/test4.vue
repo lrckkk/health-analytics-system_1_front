@@ -3,29 +3,29 @@
     <!-- 使用 Collapse 子组件 -->
     <Collapse title="人口分析"  :initial-open="false">
       <Analyseforpop></Analyseforpop>
-      <decide :metricIndex="2"></decide>
+<!--      <decide :metricIndex="2"></decide>-->
     </Collapse>
 
     <Collapse title="病床分析" :initial-open="false" >
       <Annalyseforbed></Annalyseforbed>
-      <decide :metricIndex="1"></decide>
+<!--      <decide :metricIndex="1"></decide>-->
     </Collapse>
 
     <Collapse title="医疗机构分析"  :initial-open="false">
       <Analyseforins></Analyseforins>
-      <decide :metricIndex="0"></decide>
+<!--      <decide :metricIndex="0"></decide>-->
     </Collapse>
     <Collapse title="医疗花费分析" :initial-open="false">
       <Analyseforcost></Analyseforcost>
-      <decide :metricIndex="3"></decide>
+<!--      <decide :metricIndex="3"></decide>-->
     </Collapse>
     <Collapse title="医疗人员分析" :initial-open="false">
       <Analyseforper></Analyseforper>
-      <decide :metricIndex="4"></decide>
+<!--      <decide :metricIndex="4"></decide>-->
     </Collapse>
     <Collapse title="健康服务分析" :initial-open="false">
       <Annalyseforser></Annalyseforser>
-      <decide :metricIndex="5"></decide>
+<!--      <decide :metricIndex="5"></decide>-->
     </Collapse>
     <Collapse title="综合医疗分析" :initialOpen="true">
       <test></test>

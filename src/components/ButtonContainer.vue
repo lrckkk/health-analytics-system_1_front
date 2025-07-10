@@ -139,7 +139,7 @@ const handleButtonClick = (row, buttonId) => {
   } else if (row === 2) {
     // 如果点击的不是当前行已选中的按钮，则更新选中状态并发出事件
     if (activeButtonRow2.value !== buttonId) {
-      activeButton2.value = buttonId;
+      activeButtonRow2.value = buttonId;
       emit('button-clicked', { id: buttonId });
     }
   }

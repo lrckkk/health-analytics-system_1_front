@@ -1,6 +1,6 @@
 <template>
   <div class="analysis-section">
-    <h4>分析结果：</h4>
+    <h4 class="analysis-title">分析结果：</h4>
     <div v-if="currentDescriptions.length > 0" class="description-tags-container">
       <span v-for="(desc, index) in currentDescriptions" :key="index" class="description-tag">
         {{ desc }}
@@ -15,48 +15,37 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { useAnalysisDataStore } from '@/stores/AnalysisData.js';
-import { generateAnalysisMatrix } from '@/utils/analyseMetrics.js'; // 导入通用分析函数
-import { metricDescriptions } from '@/utils/metricDescriptions.js'; // 导入描述矩阵
+import { generateAnalysisMatrix } from '@/utils/analyseMetrics.js';
+import { metricDescriptions } from '@/utils/metricDescriptions.js';
 
-// --- 核心：通过 defineProps 接收 metricIndex ---
-// 这个组件现在会从外部接收它需要分析的指标索引
 const props = defineProps({
   metricIndex: {
     type: Number,
-    required: true // 强烈建议设置为 required，确保父组件总是传递这个关键数据
+    required: true
   }
 });
 
 const analysisStore = useAnalysisDataStore();
-const currentDescriptions = ref([]); // 存储当前指标的描述
+const currentDescriptions = ref([]);
 
-// 从 Pinia Store 获取当前组件负责的指标的增长率和排名数据
-// 注意这里使用了 props.metricIndex 来动态获取数据
 const currentGrowthRate = computed(() => analysisStore.growthRates[props.metricIndex]);
 const currentRankInfo = computed(() => analysisStore.rankInfos[props.metricIndex]);
 
-// 监听组件所负责的指标数据变化，然后进行分析
 watch(
     [currentGrowthRate, currentRankInfo],
     ([newGrowth, newRank]) => {
-      // 只有当两个数据都有效时才进行分析
       if (newGrowth !== null && newRank !== null) {
-        // 调用 generateAnalysisMatrix 函数，传入完整的 Pinia Store 数据数组
-        // 因为 generateAnalysisMatrix 需要所有数据来构建完整的分析矩阵
         const fullMatrix = generateAnalysisMatrix(
             analysisStore.growthRates,
             analysisStore.rankInfos
         );
 
-        // 从完整的分析矩阵中，提取本组件（由 props.metricIndex 指定）对应的那一行结果
         const metricRow = fullMatrix[props.metricIndex];
 
         const extractedDescriptions = [];
         if (metricRow) {
           metricRow.forEach((isMatched, standardIndex) => {
             if (isMatched === 1) {
-              // 根据匹配到的标准，从描述矩阵中提取对应的描述文本
-              // 这里也使用 props.metricIndex 来选择正确的描述行
               if (metricDescriptions[props.metricIndex] && metricDescriptions[props.metricIndex][standardIndex]) {
                 extractedDescriptions.push(metricDescriptions[props.metricIndex][standardIndex]);
               }
@@ -64,55 +53,61 @@ watch(
           });
         }
         currentDescriptions.value = extractedDescriptions;
-        console.log(`指标 ${props.metricIndex} 的描述:`, extractedDescriptions);
       } else {
-        currentDescriptions.value = []; // 数据不完整时清空描述
+        currentDescriptions.value = [];
       }
     },
-    { immediate: true } // 组件加载时立即执行一次分析
+    { immediate: true }
 );
 </script>
 
 <style scoped>
-/* 组件的样式，确保其美观 */
 .analysis-section {
-  padding: 15px;
-  background-color: #f0f8ff;
-  border-left: 5px solid #007bff;
-  border-radius: 4px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  padding: 20px;
+  background: rgba(16, 26, 60, 0.9);
+  border-radius: 8px;
+  border: 1px solid rgba(74, 207, 255, 0.3);
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.2);
+  color: #e0f2f7;
 }
 
-h4 {
-  color: #34495e;
+.analysis-title {
+  color: #00e0ff;
   margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1.1em;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+  text-shadow: 0 0 8px rgba(0, 224, 255, 0.3);
+  border-bottom: 1px solid rgba(74, 207, 255, 0.2);
+  padding-bottom: 8px;
 }
 
 .description-tags-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .description-tag {
-  background-color: #e0f7fa;
-  color: #00796b;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 0.85em;
-  font-weight: 500;
-  border: 1px solid #b2ebf2;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-  white-space: normal;
-  line-height: 1.4;
+  background: rgba(0, 224, 255, 0.1);
+  color: #00e0ff;
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.9em;
+  border: 1px solid rgba(0, 224, 255, 0.3);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.description-tag:hover {
+  background: rgba(0, 224, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 224, 255, 0.2);
 }
 
 .no-descriptions {
-  color: #777;
+  color: rgba(224, 242, 247, 0.7);
   font-style: italic;
-  font-size: 0.9em;
+  font-size: 0.95em;
 }
 </style>
+

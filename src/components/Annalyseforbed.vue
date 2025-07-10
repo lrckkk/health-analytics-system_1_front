@@ -1,223 +1,518 @@
 <template>
-  <div class="main-container">
-    <div class="Line-row">
+  <div class="dashboard-container">
+    <!-- 顶部标题和统计信息 -->
+    <div class="dashboard-header">
+      <div class="header-content">
+        <!-- 返回按钮 -->
+        <div class="back-button" @click="navigateBack">
+          <div class="back-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="back-text">返回地图</div>
+          <div class="button-effects">
+            <div class="effect-circle"></div>
+            <div class="effect-particles"></div>
+          </div>
+        </div>
 
-      <simpleline
-          :chart-data="medicaldata2"
-          title="病床机构数量变化趋势"
-          height=440px
-          width=100%
-          x-field="year"
-          y-field="count"
-      />
-    </div>
-    <div class="chart-row">
-
-    </div>
-    <div class="card-content-inner-a">
-      <simpleline
-          :chart-data="medicalbedData"
-          :title="`每万人床位数 - ${regionStore.getDisplayRegion}`"
-          height=440px
-          width=100%
-          x-field="year"
-          y-field="count"
-          :loading="medicalLoading"
-      />
-
-    </div>
-    <div class="right-column1">
-      <h1>{{regionStore.selectedRegion}}</h1>
-      <p>{{ resultByIdDisplay }}</p>
-      <div v-if="growthStore.historicalData['1']?.length > 0">
-        <p>平均增长率:
-          <span v-if="growthStore.getAverageGrowthRate('1') !== 0">
-          {{ (growthStore.getAverageGrowthRate('1') * 100).toFixed(2) }}%
-        </span>
-          <span v-else>
-          数据不足或增长率为零
-        </span>
-        </p>
-        <p v-if="growthStore.getEstimatedNextYearValue('1') !== null">
-          估算 {{ growthStore.getNextYear('1') }} 年的值: {{ growthStore.getEstimatedNextYearValue('1')?.toFixed(2) }}
-        </p>
-        <p v-else>
-          无法估算下一年的值 (数据不足)
-        </p>
+        <h1 class="dashboard-title">{{regionStore.selectedRegion}} - 病床资源分析</h1>
+        <div class="stats-container">
+          <div class="stat-card" v-for="(stat, index) in stats" :key="index" :style="`--delay: ${index * 0.1}s`">
+            <p class="stat-label">{{ stat.label }}</p>
+            <p class="stat-value">{{ stat.value }}</p>
+          </div>
+        </div>
       </div>
-      <div v-else>
-        <p>没有加载历史数据。</p>
+    </div>
+
+    <!-- 主图表区域 - 三行布局 -->
+    <div class="chart-grid">
+      <!-- 第一行：病床数量变化趋势折线图 -->
+      <div class="chart-card line-chart" v-if="medicaldata2.length > 0">
+        <simpleline
+            ref="trendChart"
+            :chart-data="medicaldata2"
+            :title="`病床数量变化趋势 - ${regionStore.getDisplayRegion}`"
+            height="400px"
+            width="100%"
+            x-field="year"
+            y-field="count"
+            :key="'trendChart' + chartKey"
+        />
       </div>
+
+      <!-- 第二行：每万人床位数折线图 -->
+      <div class="chart-card line-chart" v-if="medicalbedData.length > 0">
+        <simpleline
+            ref="avgChart"
+            :chart-data="medicalbedData"
+            :title="`每万人床位数 - ${regionStore.getDisplayRegion}`"
+            height="400px"
+            width="100%"
+            x-field="year"
+            y-field="count"
+            :key="'avgChart' + chartKey"
+        />
+      </div>
+
+      <!-- 第三行：决策分析组件 -->
+      <div class="chart-card analysis-card">
+        <decide :metric-index="1" />
+      </div>
+    </div>
+
+    <!-- 加载状态 -->
+    <div v-if="medicalLoading" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p>数据加载中...</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted, watch, computed} from 'vue';
-import { useRegionStore } from '@/stores/RegionData.js'; // 导入区域数据 Pinia Store
-import { useMapDataStore } from '@/stores/TotalData.js'; // 导入总数据 Pinia Store (虽然在此组件中未使用其状态，但如果你后续需要，保持导入)
-import { provinceIdMap } from '@/utils/mapid.js'; // 导入省份 ID 映射
-import { getValueAndRankById, getRankOfGivenValue } from '@/utils/countround.js'; // 如果这些函数在这个组件中不直接使用，可以不导入
-import MultiLineChart from "@/components/MutipleLineCharts.vue";
-import request from "@/utils/request.js"; // 确保你的请求工具正确配置
-import { IdToNameMapper } from "@/utils/IdToNameMapper.js";
-import {useGrowthStore} from "@/utils/countgrow.js"; // 保持这个导入路径不变
-import Simpleline from '/src/components/simpleline.vue'
-import {useAnalysisDataStore} from "@/stores/AnalysisData.js"; // 请确保路径正确，可能需要调整
-// --- Pinia Stores ---
-const analyseStore = useAnalysisDataStore();
-const regionStore = useRegionStore();
-const mapDataStore = useMapDataStore(); // 保持导入，以防将来需要
-const growthStore = useGrowthStore(); // 如果这个组件不直接使用，可以暂时移除
-const medicalLoading = ref(true)
-const medicalbedData=ref([])
-const medicaldata2=ref([])
+import {ref, onMounted, watch, computed, nextTick} from 'vue';
+import { useRegionStore } from '@/stores/RegionData.js';
+import { useMapDataStore } from '@/stores/TotalData.js';
+import { useGrowthStore } from '@/utils/countgrow.js';
+import Simpleline from '/src/components/simpleline.vue';
+import { useRouter } from 'vue-router';
+import {getValueAndRankById} from "@/utils/countround.js";
+import decide from './decide.vue';
+import {useAnalysisDataStore} from "@/stores/AnalysisData.js";
 
-// --- 响应式数据 ---
-const populationData = ref([]);
-const populationLoading = ref(true);
-const loadData = () => {
-  const mockData = regionStore.medicalData2Cache[regionStore.getRegionId];
-  // **关键：将 medicaldata2Cache 数据存储到 growthStore 的 '1' 号键下**
-  growthStore.setHistoricalData('1', mockData);
-  analyseStore.growthRates[1]=(growthStore.getAverageGrowthRate('1') * 100).toFixed(2);
-};
+const router = useRouter();
+const regionStore = useRegionStore();
+const mapDataStore = useMapDataStore();
+const growthStore = useGrowthStore();
+const analyseStore = useAnalysisDataStore();
+
+const medicalLoading = ref(true);
+const medicalbedData = ref([]);
+const medicaldata2 = ref([]);
+const chartKey = ref(0); // 用于强制重新渲染图表
+
+// 图表引用
+const avgChart = ref(null);
+const trendChart = ref(null);
+
+const stats = computed(() => [
+  {
+    label: '病床总数',
+    value: resultByIdDisplay.value
+  },
+  {
+    label: '平均增长率',
+    value: growthStore.getAverageGrowthRate('1') !== 0
+        ? `${(growthStore.getAverageGrowthRate('1') * 100).toFixed(2)}%`
+        : '数据不足或增长率为零'
+  },
+  {
+    label: '下一年估算值',
+    value: growthStore.getEstimatedNextYearValue('1') !== null
+        ? growthStore.getEstimatedNextYearValue('1')?.toFixed(2)
+        : '无法估算(数据不足)'
+  }
+]);
+
 const resultByIdDisplay = computed(() => {
-  const data = mapDataStore.bedData; // 获取病床总数数据
-  console.log(data)
-  // 关键校验：确保数据是数组且不为空
+  const data = mapDataStore.bedData;
   if (Array.isArray(data) && data.length > 0) {
-    // 只有数据有效时才调用排名函数
-    const result = getValueAndRankById(data, regionStore.getRegionId); // 查找 ID 为 5 的数据及其排名
+    const result = getValueAndRankById(data, regionStore.getRegionId);
     if (result) {
-      analyseStore.rankInfos[1]=result.rank;
-      return `病床数: ${result.value}, 排名: ${result.rank}`;
+      analyseStore.rankInfos[1] = result.rank;
+      return `${result.value} (排名: ${result.rank})`;
     }
   }
-  return '数据加载中或无效 ID'; // 数据未加载或 ID 无效时的提示
+  return '数据加载中或无效 ID';
 });
-// --- 生命周期钩子与监听器 ---
 
-// 首次挂载时触发数据请求
+const navigateBack = () => {
+  router.push('/province');
+};
+
+const loadCharts = async () => {
+  try {
+    medicalLoading.value = true;
+
+    // 重置数据以确保重新加载
+    medicalbedData.value = [];
+    medicaldata2.value = [];
+    chartKey.value++; // 强制图表重新渲染
+
+    // 并行加载数据
+    const [bedData, trendData] = await Promise.all([
+      regionStore.fetchbedavgIfNeeded(regionStore.getRegionId),
+      regionStore.fetchMedicalData2IfNeeded(regionStore.getRegionId)
+    ]);
+
+    medicalbedData.value = bedData;
+    medicaldata2.value = trendData;
+    growthStore.setHistoricalData('1', trendData);
+    analyseStore.growthRates[1] = (growthStore.getAverageGrowthRate('1') * 100).toFixed(2);
+
+    // 确保DOM更新
+    await nextTick();
+
+    // 手动触发图表重新渲染
+    if (avgChart.value) avgChart.value.initChart();
+    if (trendChart.value) trendChart.value.initChart();
+
+  } catch (error) {
+    console.error("图表加载失败:", error);
+  } finally {
+    medicalLoading.value = false;
+  }
+};
+
+// 监听路由变化
+watch(
+    () => router.currentRoute.value,
+    (toRoute, fromRoute) => {
+      if (toRoute.path === '/annalyseforbed') {
+        loadCharts();
+      }
+    },
+    { immediate: true }
+);
+
+// 监听区域ID变化
+watch(
+    () => regionStore.getRegionId,
+    (newId) => {
+      if (newId) {
+        loadCharts();
+      }
+    },
+    { immediate: true }
+);
+
 onMounted(() => {
-  loadData();
+  loadCharts();
 });
-
-watch(
-    () => regionStore.getRegionId, // 侦听 Pinia store 中的 ID
-    async (newRegionId) => {
-      console.log(`检测到区域变化: ${newRegionId}，准备从 Store 获取数据...`);
-      medicalLoading.value = true;
-      try {
-        // 直接调用 store 的 action，它会处理缓存逻辑
-        const data = await regionStore.fetchMedicalData2IfNeeded(newRegionId);
-        medicaldata2.value = data;
-        // **关键：将 medicaldata2 存储到 growthStore 的 '1' 号键下**
-        growthStore.setHistoricalData('1', data);
-      } catch (error) {
-        console.error("在组件中处理数据获取失败:", error);
-        medicaldata2.value = [];
-        growthStore.setHistoricalData('1', []); // 错误时清空 '1' 键的数据
-      } finally {
-        medicalLoading.value = false;
-      }
-    },
-    {
-      immediate: true // 立即执行一次，确保组件挂载时就能加载初始数据
-    }
-);
-watch(
-    () => regionStore.getRegionId, // 侦听 Pinia store 中的 ID
-    async (newRegionId) => {
-      console.log(`检测到区域变化: ${newRegionId}，准备从 Store 获取数据...`);
-      medicalLoading.value = true;
-      try {
-        // 直接调用 store 的 action，它会处理缓存逻辑
-        const data = await regionStore.fetchbedavgIfNeeded(newRegionId);
-        medicalbedData.value = data;
-      } catch (error) {
-        console.error("在组件中处理数据获取失败:", error);
-        medicalbedData.value = [];
-      } finally {
-        medicalLoading.value = false;
-      }
-    },
-    {
-      immediate: true // 立即执行一次，确保组件挂载时就能加载初始数据
-    }
-);
 </script>
 
 <style scoped>
-.main-container {
-  width: 100%; /* 组件整体占据父容器的 100% 宽度 */
-  box-sizing: border-box; /* 边框和内边距包含在宽度内 */
-  font-family: Arial, sans-serif;
-  color: #333;
-  background-color: #90E0EF;
+.dashboard-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #0a192f 0%, #000a1a 100%);
+  color: #e0f2f7;
+  font-family: 'Inter', sans-serif, 'Microsoft YaHei', 'PingFang SC';
+}
 
-  /* **关键：设置为定位上下文，以便子元素可以相对于它进行绝对定位** */
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+  color: #00e0ff;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(0, 224, 255, 0.2);
+  border-top: 4px solid #00e0ff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.dashboard-header {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba(16, 26, 60, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 15px rgba(74, 207, 255, 0.2);
+  backdrop-filter: blur(5px);
+}
+
+.header-content {
   position: relative;
-  /* 增加最小高度，确保内容在绝对定位时不会导致容器高度坍塌 */
-  min-height: 1000px; /* 示例值，根据实际内容和定位需要调整 */
 }
 
-/* line-row 和 chart-row 默认是块级元素，会垂直堆叠 */
-.Line-row {
-  width: 50%; /* 折线图容器占据父容器 main-container 的 50% 宽度 */
-  /* height 已经由 MultiLineChart 组件的 prop 控制 */
-}
-
-.chart-row {
-
-}
-
-.right-column1 {
-  /* **关键：设置为绝对定位，这样 left 和 top 才能生效** */
+.back-button {
   position: absolute;
-
-  /* **使用百分比设置位置** */
-  left: 57%;   /* 距离父容器左侧 50% 的位置 */
-  top: 50%;    /* 距离父容器顶部 70% 的位置 */
-
-  /* **可选：如果希望元素根据自身中心点进行定位，可以使用 transform** */
-  /* 例如，left: 50%; transform: translateX(-50%); 会使其水平居中 */
-  /* top: 70%; transform: translateY(-50%); 会使其垂直居中于 70% 的位置 */
-
-  /* 示例：调整宽度以适应百分比布局 */
-  width: 45%; /* 占据父容器的 45% 宽度 */
-  /* 如果内容较少，可以设置最大宽度 */
-  max-width: 400px; /* 示例：最大宽度 400px */
+  top: -10px;
+  left: -10px;
+  display: flex;
+  align-items: center;
+  padding: 8px 15px 8px 10px;
+  background: rgba(3, 4, 94, 0.5);
+  border: 1px solid rgba(74, 207, 255, 0.3);
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  z-index: 10;
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.1);
 }
-.card-content-inner-a {
-  top:0%;
-  width: 50%;
-  height: 50%;
+
+.back-button:hover {
+  background: rgba(3, 4, 94, 0.8);
+  border-color: rgba(74, 207, 255, 0.6);
+  box-shadow: 0 0 20px rgba(74, 207, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.back-button:hover .back-icon {
+  transform: translateX(-3px);
+}
+
+.back-button:hover .back-text {
+  text-shadow: 0 0 8px rgba(0, 224, 255, 0.7);
+}
+
+.back-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  color: #00e0ff;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.back-text {
+  color: #00e0ff;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.button-effects {
   position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 30px;
+}
+
+.effect-circle {
+  position: absolute;
+  top: 50%;
   left: 50%;
-
+  width: 10px;
+  height: 10px;
+  background: rgba(0, 224, 255, 0.4);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.6s ease-out;
 }
 
-/* 您可以通过媒体查询来调整在不同屏幕尺寸下的百分比或定位 */
+.back-button:hover .effect-circle {
+  transform: translate(-50%, -50%) scale(15);
+  opacity: 0;
+}
+
+.effect-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(circle, rgba(0, 224, 255, 0.8) 1px, transparent 1px);
+  background-size: 10px 10px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.back-button:hover .effect-particles {
+  opacity: 0.3;
+  animation: particlesMove 2s linear infinite;
+}
+
+@keyframes particlesMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 20px 20px; }
+}
+
+.dashboard-title {
+  margin: 0;
+  padding-bottom: 15px;
+  color: #00e0ff;
+  font-size: 28px;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(0, 224, 255, 0.5);
+  border-bottom: 1px solid rgba(74, 207, 255, 0.3);
+  position: relative;
+  text-align: center;
+  padding-top: 10px;
+}
+
+.dashboard-title::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, #00e0ff, transparent);
+  animation: titleUnderline 3s infinite alternate;
+}
+
+@keyframes titleUnderline {
+  0% { width: 100px; }
+  100% { width: 100%; }
+}
+
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.stat-card {
+  padding: 20px;
+  background: rgba(3, 4, 94, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.1);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: translateY(20px);
+  opacity: 0;
+  animation: statCardAppear 0.6s forwards;
+  animation-delay: var(--delay);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 224, 255, 0.1), transparent);
+  transition: 0.5s;
+}
+
+.stat-card:hover::before {
+  left: 100%;
+}
+
+@keyframes statCardAppear {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.stat-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 20px rgba(74, 207, 255, 0.3);
+  background: rgba(3, 4, 94, 0.7);
+}
+
+.stat-label {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: rgba(224, 242, 247, 0.8);
+}
+
+.stat-value {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #00e0ff;
+  text-shadow: 0 0 8px rgba(0, 224, 255, 0.5);
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 30px;
+  width: 100%;
+}
+
+.chart-card {
+  background: rgba(16, 26, 60, 0.7);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid rgba(74, 207, 255, 0.2);
+  box-shadow: 0 0 15px rgba(74, 207, 255, 0.1);
+  transition: all 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(5px);
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00e0ff, #7d5fff);
+  opacity: 0.7;
+  transition: all 0.5s ease;
+}
+
+.chart-card:hover::after {
+  height: 5px;
+  opacity: 1;
+}
+
+.chart-card:hover {
+  box-shadow: 0 0 30px rgba(74, 207, 255, 0.3);
+  transform: translateY(-5px);
+}
+
+.line-chart {
+  grid-row: span 1;
+}
+
+.analysis-card {
+  grid-row: 3;
+  background: rgba(16, 26, 60, 0.9);
+}
+
 @media (max-width: 768px) {
-  .Line-row {
-    width: 95%; /* 在小屏幕上占据更宽的百分比 */
-    margin: 0 auto 20px auto; /* 居中并增加间距 */
+  .stats-container {
+    grid-template-columns: 1fr;
   }
 
-  .chart-row {
-    /* 饼图组件本身是 50%，可能需要一个外层容器来调整整体宽度 */
-    /* 或者直接在 PieChart 组件的 width prop 处调整 */
-    width: 95%; /* 示例：让饼图容器占据 95% 宽度 */
-    margin: 0 auto 20px auto; /* 居中并增加间距 */
+  .dashboard-title {
+    font-size: 24px;
   }
 
-  .right-column1 {
-    left: 50%;
-    top: auto; /* 移除固定的 top，让它在正常流中（如果需要）或设置底部距离 */
-    bottom: 20px; /* 示例：在小屏幕上，定位到底部 20px */
-    width: 90%; /* 在小屏幕上占据 90% 宽度 */
-    transform: translateX(-50%); /* 保持水平居中 */
+  .chart-card {
+    padding: 15px;
+  }
+
+  .stat-card {
+    padding: 15px;
+  }
+
+  .back-button {
+    position: relative;
+    top: 0;
+    left: 0;
+    margin-bottom: 15px;
   }
 }
 </style>

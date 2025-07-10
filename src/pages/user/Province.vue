@@ -191,10 +191,10 @@ export default {
     ]);
 
     const myCustomButtonsRow2 = ref([
-      { id: 'view_map', label: '查看地图' },
-      { id: 'chart_display', label: '图表展示' },
-      { id: 'table_data', label: '表格数据' },
-      { id: 'export_data', label: '导出数据' },
+      { id: 'wea', label: '天气' },
+      { id: 'male', label: '性别' },
+      { id: 'pop', label: '人口组成' },
+      { id: 'per', label: '医疗人员' },
     ]);
 
     const myCustomComponents2 = ref([

@@ -105,11 +105,18 @@ export class IdToNameMapper {
 
 
 const sectorColors = {
-    '工业': '#FF6B6B',
-    '农业': '#4ECDC4',
-    '服务业': '#FFD166',
-    '旅游': '#70A1FF',
-    '其他': '#B8B8B8',
+    '晴天': '#FF6B6B',
+    '雨天': '#4ECDC4',
+    '雾天': '#FFD166',
+    '医生': '#70A1FF',
+    '其他医疗人员': '#B8B8B8',
+    '男性':'#777',
+    '女性': '#FF6B6B',
+    '护士': '#4ECDC4',
+    '0-14岁': '#FFD166',
+    '15-64岁': '#87ea15',
+    '65岁及以上': '#1363b3',
+
     // 根据需要添加更多类别和颜色
 };
 
@@ -128,6 +135,1204 @@ export const useMapDataStore = defineStore('mapData', () => {
     const totalCostData = ref([]);
     const inpatientAdmissions=ref([]);
     // 确保 fetchedScatterData 是一个常量，并且包含所有可能的省份坐标
+    const rawFetchedPieDataFromBackend = [
+        {
+            id: 3, // 河南
+            name: '河南',
+            data: [
+                { name: '男性', value: 5127.3 },
+                { name: '女性', value: 4908.7 }
+            ]
+        },
+        {
+            id: 28, // 海南
+            name: '海南',
+            data: [
+                { name: '男性', value: 531.8 },
+                { name: '女性', value: 508.2 }
+            ]
+        },
+        {
+            id: 5, // 四川
+            name: '四川',
+            data: [
+                { name: '男性', value: 4217.4 },
+                { name: '女性', value: 4036.6 }
+            ]
+        },
+        {
+            id: 1, // 广东
+            name: '广东',
+            data: [
+                { name: '男性', value: 6511.4 },
+                { name: '女性', value: 6228.6 }
+            ]
+        },
+        {
+            id: 34, // 台湾
+            name: '台湾',
+            data: [
+                { name: '男性', value: 1167.0 },
+                { name: '女性', value: 1189.0 }
+            ]
+        },
+        {
+            id: 13, // 江西
+            name: '江西',
+            data: [
+                { name: '男性', value: 2289.4 },
+                { name: '女性', value: 2189.6 }
+            ]
+        },
+        {
+            id: 26, // 北京
+            name: '北京',
+            data: [
+                { name: '男性', value: 1085.6 },
+                { name: '女性', value: 1039.4 }
+            ]
+        },
+        {
+            id: 2, // 山东
+            name: '山东',
+            data: [
+                { name: '男性', value: 5045.2 },
+                { name: '女性', value: 4829.8 }
+            ]
+        },
+        {
+            id: 8, // 湖南
+            name: '湖南',
+            data: [
+                { name: '男性', value: 3144.9 },
+                { name: '女性', value: 3009.1 }
+            ]
+        },
+        {
+            id: 17, // 贵州
+            name: '贵州',
+            data: [
+                { name: '男性', value: 1978.7 },
+                { name: '女性', value: 1893.3 }
+            ]
+        },
+        {
+            id: 20, // 黑龙江
+            name: '黑龙江',
+            data: [
+                { name: '男性', value: 1572.5 },
+                { name: '女性', value: 1504.5 }
+            ]
+        },
+        {
+            id: 11, // 广西
+            name: '广西',
+            data: [
+                { name: '男性', value: 2548.8 },
+                { name: '女性', value: 2437.2 }
+            ]
+        },
+        {
+            id: 24, // 内蒙古
+            name: '内蒙古',
+            data: [
+                { name: '男性', value: 1256.7 },
+                { name: '女性', value: 1202.3 }
+            ]
+        },
+        {
+            id: 6, // 河北
+            name: '河北',
+            data: [
+                { name: '男性', value: 3719.6 },
+                { name: '女性', value: 3557.4 }
+            ]
+        },
+        {
+            id: 9, // 安徽
+            name: '安徽',
+            data: [
+                { name: '男性', value: 3226.7 },
+                { name: '女性', value: 3086.3 }
+            ]
+        },
+        {
+            id: 15, // 辽宁
+            name: '辽宁',
+            data: [
+                { name: '男性', value: 2062.5 },
+                { name: '女性', value: 1971.5 }
+            ]
+        },
+        {
+            id: 19, // 重庆
+            name: '重庆',
+            data: [
+                { name: '男性', value: 1614.9 },
+                { name: '女性', value: 1545.1 }
+            ]
+        },
+        {
+            id: 10, // 湖北
+            name: '湖北',
+            data: [
+                { name: '男性', value: 2947.2 },
+                { name: '女性', value: 2820.8 }
+            ]
+        },
+        {
+            id: 21, // 新疆
+            name: '新疆',
+            data: [
+                { name: '男性', value: 1279.4 },
+                { name: '女性', value: 1223.6 }
+            ]
+        },
+        {
+            id: 16, // 陕西
+            name: '陕西',
+            data: [
+                { name: '男性', value: 1957.3 },
+                { name: '女性', value: 1871.7 }
+            ]
+        },
+        {
+            id: 25, // 吉林
+            name: '吉林',
+            data: [
+                { name: '男性', value: 1228.6 },
+                { name: '女性', value: 1174.4 }
+            ]
+        },
+        {
+            id: 22, // 上海
+            name: '上海',
+            data: [
+                { name: '男性', value: 1285.8 },
+                { name: '女性', value: 1229.2 }
+            ]
+        },
+        {
+            id: 23, // 甘肃
+            name: '甘肃',
+            data: [
+                { name: '男性', value: 1300.9 },
+                { name: '女性', value: 1243.1 }
+            ]
+        },
+        {
+            id: 33, // 澳门
+            name: '澳门',
+            data: [
+                { name: '男性', value: 33.0 },
+                { name: '女性', value: 35.0 }
+            ]
+        },
+        {
+            id: 30, // 青海
+            name: '青海',
+            data: [
+                { name: '男性', value: 297.8 },
+                { name: '女性', value: 285.2 }
+            ]
+        },
+        {
+            id: 18, // 山西
+            name: '山西',
+            data: [
+                { name: '男性', value: 1807.5 },
+                { name: '女性', value: 1729.5 }
+            ]
+        },
+        {
+            id: 7, // 浙江
+            name: '浙江',
+            data: [
+                { name: '男性', value: 3371.3 },
+                { name: '女性', value: 3225.7 }
+            ]
+        },
+        {
+            id: 27, // 天津
+            name: '天津',
+            data: [
+                { name: '男性', value: 712.5 },
+                { name: '女性', value: 681.5 }
+            ]
+        },
+        {
+            id: 12, // 云南
+            name: '云南',
+            data: [
+                { name: '男性', value: 2420.7 },
+                { name: '女性', value: 2314.3 }
+            ]
+        },
+        {
+            id: 4, // 江苏
+            name: '江苏',
+            data: [
+                { name: '男性', value: 4268.1 },
+                { name: '女性', value: 4084.9 }
+            ]
+        },
+        {
+            id: 29, // 宁夏
+            name: '宁夏',
+            data: [
+                { name: '男性', value: 350.2 },
+                { name: '女性', value: 335.8 }
+            ]
+        },
+        {
+            id: 31, // 西藏
+            name: '西藏',
+            data: [
+                { name: '男性', value: 191.1 },
+                { name: '女性', value: 182.9 }
+            ]
+        },
+        {
+            id: 32, // 香港
+            name: '香港',
+            data: [
+                { name: '男性', value: 346.0 },
+                { name: '女性', value: 402.0 }
+            ]
+        },
+        {
+            id: 14, // 福建
+            name: '福建',
+            data: [
+                { name: '男性', value: 2085.3 },
+                { name: '女性', value: 1993.7 }
+            ]
+        }
+    ];
+    const chinaProvincesWeatherData = [
+        {
+            id: 3, // 河南
+            name: '河南',
+            data: [
+                { name: '晴天', value: 70 },
+                { name: '雨天', value: 20 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 28, // 海南
+            name: '海南',
+            data: [
+                { name: '晴天', value: 60 },
+                { name: '雨天', value: 35 },
+                { name: '雾天', value: 5 }
+            ]
+        },
+        {
+            id: 5, // 四川
+            name: '四川',
+            data: [
+                { name: '晴天', value: 45 },
+                { name: '雨天', value: 40 },
+                { name: '雾天', value: 15 }
+            ]
+        },
+        {
+            id: 1, // 广东
+            name: '广东',
+            data: [
+                { name: '晴天', value: 65 },
+                { name: '雨天', value: 30 },
+                { name: '雾天', value: 5 }
+            ]
+        },
+        {
+            id: 34, // 台湾
+            name: '台湾',
+            data: [
+                { name: '晴天', value: 55 },
+                { name: '雨天', value: 40 },
+                { name: '雾天', value: 5 }
+            ]
+        },
+        {
+            id: 13, // 江西
+            name: '江西',
+            data: [
+                { name: '晴天', value: 50 },
+                { name: '雨天', value: 40 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 26, // 北京
+            name: '北京',
+            data: [
+                { name: '晴天', value: 75 },
+                { name: '雨天', value: 15 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 2, // 山东
+            name: '山东',
+            data: [
+                { name: '晴天', value: 70 },
+                { name: '雨天', value: 20 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 8, // 湖南
+            name: '湖南',
+            data: [
+                { name: '晴天', value: 48 },
+                { name: '雨天', value: 42 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 17, // 贵州
+            name: '贵州',
+            data: [
+                { name: '晴天', value: 40 },
+                { name: '雨天', value: 45 },
+                { name: '雾天', value: 15 }
+            ]
+        },
+        {
+            id: 20, // 黑龙江
+            name: '黑龙江',
+            data: [
+                { name: '晴天', value: 60 },
+                { name: '雨天', value: 25 },
+                { name: '雾天', value: 15 }
+            ]
+        },
+        {
+            id: 11, // 广西
+            name: '广西',
+            data: [
+                { name: '晴天', value: 58 },
+                { name: '雨天', value: 37 },
+                { name: '雾天', value: 5 }
+            ]
+        },
+        {
+            id: 24, // 内蒙古
+            name: '内蒙古',
+            data: [
+                { name: '晴天', value: 80 },
+                { name: '雨天', value: 10 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 6, // 河北
+            name: '河北',
+            data: [
+                { name: '晴天', value: 70 },
+                { name: '雨天', value: 18 },
+                { name: '雾天', value: 12 }
+            ]
+        },
+        {
+            id: 9, // 安徽
+            name: '安徽',
+            data: [
+                { name: '晴天', value: 55 },
+                { name: '雨天', value: 35 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 15, // 辽宁
+            name: '辽宁',
+            data: [
+                { name: '晴天', value: 68 },
+                { name: '雨天', value: 20 },
+                { name: '雾天', value: 12 }
+            ]
+        },
+        {
+            id: 19, // 重庆
+            name: '重庆',
+            data: [
+                { name: '晴天', value: 35 },
+                { name: '雨天', value: 50 },
+                { name: '雾天', value: 15 }
+            ]
+        },
+        {
+            id: 10, // 湖北
+            name: '湖北',
+            data: [
+                { name: '晴天', value: 55 },
+                { name: '雨天', value: 35 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 21, // 新疆
+            name: '新疆',
+            data: [
+                { name: '晴天', value: 85 },
+                { name: '雨天', value: 10 },
+                { name: '雾天', value: 5 }
+            ]
+        },
+        {
+            id: 16, // 陕西
+            name: '陕西',
+            data: [
+                { name: '晴天', value: 60 },
+                { name: '雨天', value: 25 },
+                { name: '雾天', value: 15 }
+            ]
+        },
+        {
+            id: 25, // 吉林
+            name: '吉林',
+            data: [
+                { name: '晴天', value: 62 },
+                { name: '雨天', value: 23 },
+                { name: '雾天', value: 15 }
+            ]
+        },
+        {
+            id: 22, // 上海
+            name: '上海',
+            data: [
+                { name: '晴天', value: 60 },
+                { name: '雨天', value: 30 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 23, // 甘肃
+            name: '甘肃',
+            data: [
+                { name: '晴天', value: 75 },
+                { name: '雨天', value: 15 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 33, // 澳门
+            name: '澳门',
+            data: [
+                { name: '晴天', value: 60 },
+                { name: '雨天', value: 35 },
+                { name: '雾天', value: 5 }
+            ]
+        },
+        {
+            id: 30, // 青海
+            name: '青海',
+            data: [
+                { name: '晴天', value: 80 },
+                { name: '雨天', value: 10 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 18, // 山西
+            name: '山西',
+            data: [
+                { name: '晴天', value: 72 },
+                { name: '雨天', value: 18 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 7, // 浙江
+            name: '浙江',
+            data: [
+                { name: '晴天', value: 58 },
+                { name: '雨天', value: 32 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 27, // 天津
+            name: '天津',
+            data: [
+                { name: '晴天', value: 70 },
+                { name: '雨天', value: 20 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 12, // 云南
+            name: '云南',
+            data: [
+                { name: '晴天', value: 50 },
+                { name: '雨天', value: 35 },
+                { name: '雾天', value: 15 }
+            ]
+        },
+        {
+            id: 4, // 江苏
+            name: '江苏',
+            data: [
+                { name: '晴天', value: 65 },
+                { name: '雨天', value: 25 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 29, // 宁夏
+            name: '宁夏',
+            data: [
+                { name: '晴天', value: 78 },
+                { name: '雨天', value: 12 },
+                { name: '雾天', value: 10 }
+            ]
+        },
+        {
+            id: 31, // 西藏
+            name: '西藏',
+            data: [
+                { name: '晴天', value: 85 },
+                { name: '雨天', value: 10 },
+                { name: '雾天', value: 5 }
+            ]
+        },
+        {
+            id: 32, // 香港
+            name: '香港',
+            data: [
+                { name: '晴天', value: 55 },
+                { name: '雨天', value: 40 },
+                { name: '雾天', value: 5 }
+            ]
+        },
+        {
+            id: 14, // 福建
+            name: '福建',
+            data: [
+                { name: '晴天', value: 62 },
+                { name: '雨天', value: 33 },
+                { name: '雾天', value: 5 }
+            ]
+        }
+    ];
+    const chinaProvincesAgeCompositionData = [
+        {
+            id: 3, // 河南
+            name: '河南',
+            data: [
+                { name: '0-14岁', value: 1600 },
+                { name: '15-64岁', value: 7200 },
+                { name: '65岁及以上', value: 1200 }
+            ]
+        },
+        {
+            id: 28, // 海南
+            name: '海南',
+            data: [
+                { name: '0-14岁', value: 160 },
+                { name: '15-64岁', value: 750 },
+                { name: '65岁及以上', value: 90 }
+            ]
+        },
+        {
+            id: 5, // 四川
+            name: '四川',
+            data: [
+                { name: '0-14岁', value: 900 },
+                { name: '15-64岁', value: 6200 },
+                { name: '65岁及以上', value: 1200 }
+            ]
+        },
+        {
+            id: 1, // 广东
+            name: '广东',
+            data: [
+                { name: '0-14岁', value: 1900 },
+                { name: '15-64岁', value: 9800 },
+                { name: '65岁及以上', value: 1300 }
+            ]
+        },
+        {
+            id: 34, // 台湾
+            name: '台湾',
+            data: [
+                { name: '0-14岁', value: 250 },
+                { name: '15-64岁', value: 1650 },
+                { name: '65岁及以上', value: 450 }
+            ]
+        },
+        {
+            id: 13, // 江西
+            name: '江西',
+            data: [
+                { name: '0-14岁', value: 600 },
+                { name: '15-64岁', value: 3900 },
+                { name: '65岁及以上', value: 600 }
+            ]
+        },
+        {
+            id: 26, // 北京
+            name: '北京',
+            data: [
+                { name: '0-14岁', value: 250 },
+                { name: '15-64岁', value: 1650 },
+                { name: '65岁及以上', value: 300 }
+            ]
+        },
+        {
+            id: 2, // 山东
+            name: '山东',
+            data: [
+                { name: '0-14岁', value: 1300 },
+                { name: '15-64岁', value: 6500 },
+                { name: '65岁及以上', value: 1000 }
+            ]
+        },
+        {
+            id: 8, // 湖南
+            name: '湖南',
+            data: [
+                { name: '0-14岁', value: 800 },
+                { name: '15-64岁', value: 5000 },
+                { name: '65岁及以上', value: 900 }
+            ]
+        },
+        {
+            id: 17, // 贵州
+            name: '贵州',
+            data: [
+                { name: '0-14岁', value: 500 },
+                { name: '15-64岁', value: 3000 },
+                { name: '65岁及以上', value: 450 }
+            ]
+        },
+        {
+            id: 20, // 黑龙江
+            name: '黑龙江',
+            data: [
+                { name: '0-14岁', value: 300 },
+                { name: '15-64岁', value: 2500 },
+                { name: '65岁及以上', value: 600 }
+            ]
+        },
+        {
+            id: 11, // 广西
+            name: '广西',
+            data: [
+                { name: '0-14岁', value: 700 },
+                { name: '15-64岁', value: 4200 },
+                { name: '65岁及以上', value: 600 }
+            ]
+        },
+        {
+            id: 24, // 内蒙古
+            name: '内蒙古',
+            data: [
+                { name: '0-14岁', value: 250 },
+                { name: '15-64岁', value: 1800 },
+                { name: '65岁及以上', value: 350 }
+            ]
+        },
+        {
+            id: 6, // 河北
+            name: '河北',
+            data: [
+                { name: '0-14岁', value: 1000 },
+                { name: '15-64岁', value: 5800 },
+                { name: '65岁及以上', value: 900 }
+            ]
+        },
+        {
+            id: 9, // 安徽
+            name: '安徽',
+            data: [
+                { name: '0-14岁', value: 850 },
+                { name: '15-64岁', value: 5100 },
+                { name: '65岁及以上', value: 800 }
+            ]
+        },
+        {
+            id: 15, // 辽宁
+            name: '辽宁',
+            data: [
+                { name: '0-14岁', value: 450 },
+                { name: '15-64岁', value: 3300 },
+                { name: '65岁及以上', value: 700 }
+            ]
+        },
+        {
+            id: 19, // 重庆
+            name: '重庆',
+            data: [
+                { name: '0-14岁', value: 400 },
+                { name: '15-64岁', value: 2600 },
+                { name: '65岁及以上', value: 500 }
+            ]
+        },
+        {
+            id: 10, // 湖北
+            name: '湖北',
+            data: [
+                { name: '0-14岁', value: 750 },
+                { name: '15-64岁', value: 4800 },
+                { name: '65岁及以上', value: 700 }
+            ]
+        },
+        {
+            id: 21, // 新疆
+            name: '新疆',
+            data: [
+                { name: '0-14岁', value: 350 },
+                { name: '15-64岁', value: 1900 },
+                { name: '65岁及以上', value: 250 }
+            ]
+        },
+        {
+            id: 16, // 陕西
+            name: '陕西',
+            data: [
+                { name: '0-14岁', value: 500 },
+                { name: '15-64岁', value: 3300 },
+                { name: '65岁及以上', value: 500 }
+            ]
+        },
+        {
+            id: 25, // 吉林
+            name: '吉林',
+            data: [
+                { name: '0-14岁', value: 280 },
+                { name: '15-64岁', value: 2100 },
+                { name: '65岁及以上', value: 400 }
+            ]
+        },
+        {
+            id: 22, // 上海
+            name: '上海',
+            data: [
+                { name: '0-14岁', value: 200 },
+                { name: '15-64岁', value: 1700 },
+                { name: '65岁及以上', value: 600 }
+            ]
+        },
+        {
+            id: 23, // 甘肃
+            name: '甘肃',
+            data: [
+                { name: '0-14岁', value: 350 },
+                { name: '15-64岁', value: 2200 },
+                { name: '65岁及以上', value: 350 }
+            ]
+        },
+        {
+            id: 33, // 澳门
+            name: '澳门',
+            data: [
+                { name: '0-14岁', value: 8 },
+                { name: '15-64岁', value: 48 },
+                { name: '65岁及以上', value: 12 }
+            ]
+        },
+        {
+            id: 30, // 青海
+            name: '青海',
+            data: [
+                { name: '0-14岁', value: 60 },
+                { name: '15-64岁', value: 200 },
+                { name: '65岁及以上', value: 40 }
+            ]
+        },
+        {
+            id: 18, // 山西
+            name: '山西',
+            data: [
+                { name: '0-14岁', value: 500 },
+                { name: '15-64岁', value: 3000 },
+                { name: '65岁及以上', value: 500 }
+            ]
+        },
+        {
+            id: 7, // 浙江
+            name: '浙江',
+            data: [
+                { name: '0-14岁', value: 900 },
+                { name: '15-64岁', value: 5000 },
+                { name: '65岁及以上', value: 800 }
+            ]
+        },
+        {
+            id: 27, // 天津
+            name: '天津',
+            data: [
+                { name: '0-14岁', value: 120 },
+                { name: '15-64岁', value: 1000 },
+                { name: '65岁及以上', value: 180 }
+            ]
+        },
+        {
+            id: 12, // 云南
+            name: '云南',
+            data: [
+                { name: '0-14岁', value: 700 },
+                { name: '15-64岁', value: 3800 },
+                { name: '65岁及以上', value: 500 }
+            ]
+        },
+        {
+            id: 4, // 江苏
+            name: '江苏',
+            data: [
+                { name: '0-14岁', value: 1000 },
+                { name: '15-64岁', value: 6500 },
+                { name: '65岁及以上', value: 1200 }
+            ]
+        },
+        {
+            id: 29, // 宁夏
+            name: '宁夏',
+            data: [
+                { name: '0-14岁', value: 90 },
+                { name: '15-64岁', value: 500 },
+                { name: '65岁及以上', value: 60 }
+            ]
+        },
+        {
+            id: 31, // 西藏
+            name: '西藏',
+            data: [
+                { name: '0-14岁', value: 40 },
+                { name: '15-64岁', value: 280 },
+                { name: '65岁及以上', value: 30 }
+            ]
+        },
+        {
+            id: 32, // 香港
+            name: '香港',
+            data: [
+                { name: '0-14岁', value: 80 },
+                { name: '15-64岁', value: 520 },
+                { name: '65岁及以上', value: 150 }
+            ]
+        },
+        {
+            id: 14, // 福建
+            name: '福建',
+            data: [
+                { name: '0-14岁', value: 550 },
+                { name: '15-64岁', value: 3600 },
+                { name: '65岁及以上', value: 500 }
+            ]
+        }
+    ];
+    const chinaProvincesMedicalStaffData = [
+        {
+            id: 3, // 河南
+            name: '河南',
+            data: [
+                { name: '医生', value: 35.0 },
+                { name: '护士', value: 45.0 },
+                { name: '其他医疗人员', value: 20.0 }
+            ]
+        },
+        {
+            id: 28, // 海南
+            name: '海南',
+            data: [
+                { name: '医生', value: 3.5 },
+                { name: '护士', value: 4.5 },
+                { name: '其他医疗人员', value: 2.0 }
+            ]
+        },
+        {
+            id: 5, // 四川
+            name: '四川',
+            data: [
+                { name: '医生', value: 30.0 },
+                { name: '护士', value: 40.0 },
+                { name: '其他医疗人员', value: 18.0 }
+            ]
+        },
+        {
+            id: 1, // 广东
+            name: '广东',
+            data: [
+                { name: '医生', value: 55.0 },
+                { name: '护士', value: 70.0 },
+                { name: '其他医疗人员', value: 30.0 }
+            ]
+        },
+        {
+            id: 34, // 台湾
+            name: '台湾',
+            data: [
+                { name: '医生', value: 6.0 },
+                { name: '护士', value: 9.0 },
+                { name: '其他医疗人员', value: 4.0 }
+            ]
+        },
+        {
+            id: 13, // 江西
+            name: '江西',
+            data: [
+                { name: '医生', value: 12.0 },
+                { name: '护士', value: 16.0 },
+                { name: '其他医疗人员', value: 8.0 }
+            ]
+        },
+        {
+            id: 26, // 北京
+            name: '北京',
+            data: [
+                { name: '医生', value: 12.0 },
+                { name: '护士', value: 15.0 },
+                { name: '其他医疗人员', value: 7.0 }
+            ]
+        },
+        {
+            id: 2, // 山东
+            name: '山东',
+            data: [
+                { name: '医生', value: 40.0 },
+                { name: '护士', value: 52.0 },
+                { name: '其他医疗人员', value: 25.0 }
+            ]
+        },
+        {
+            id: 8, // 湖南
+            name: '湖南',
+            data: [
+                { name: '医生', value: 25.0 },
+                { name: '护士', value: 33.0 },
+                { name: '其他医疗人员', value: 15.0 }
+            ]
+        },
+        {
+            id: 17, // 贵州
+            name: '贵州',
+            data: [
+                { name: '医生', value: 10.0 },
+                { name: '护士', value: 14.0 },
+                { name: '其他医疗人员', value: 6.0 }
+            ]
+        },
+        {
+            id: 20, // 黑龙江
+            name: '黑龙江',
+            data: [
+                { name: '医生', value: 10.0 },
+                { name: '护士', value: 13.0 },
+                { name: '其他医疗人员', value: 6.0 }
+            ]
+        },
+        {
+            id: 11, // 广西
+            name: '广西',
+            data: [
+                { name: '医生', value: 20.0 },
+                { name: '护士', value: 26.0 },
+                { name: '其他医疗人员', value: 12.0 }
+            ]
+        },
+        {
+            id: 24, // 内蒙古
+            name: '内蒙古',
+            data: [
+                { name: '医生', value: 7.0 },
+                { name: '护士', value: 9.0 },
+                { name: '其他医疗人员', value: 4.0 }
+            ]
+        },
+        {
+            id: 6, // 河北
+            name: '河北',
+            data: [
+                { name: '医生', value: 28.0 },
+                { name: '护士', value: 36.0 },
+                { name: '其他医疗人员', value: 17.0 }
+            ]
+        },
+        {
+            id: 9, // 安徽
+            name: '安徽',
+            data: [
+                { name: '医生', value: 26.0 },
+                { name: '护士', value: 34.0 },
+                { name: '其他医疗人员', value: 16.0 }
+            ]
+        },
+        {
+            id: 15, // 辽宁
+            name: '辽宁',
+            data: [
+                { name: '医生', value: 18.0 },
+                { name: '护士', value: 23.0 },
+                { name: '其他医疗人员', value: 11.0 }
+            ]
+        },
+        {
+            id: 19, // 重庆
+            name: '重庆',
+            data: [
+                { name: '医生', value: 11.0 },
+                { name: '护士', value: 14.0 },
+                { name: '其他医疗人员', value: 7.0 }
+            ]
+        },
+        {
+            id: 10, // 湖北
+            name: '湖北',
+            data: [
+                { name: '医生', value: 24.0 },
+                { name: '护士', value: 31.0 },
+                { name: '其他医疗人员', value: 14.0 }
+            ]
+        },
+        {
+            id: 21, // 新疆
+            name: '新疆',
+            data: [
+                { name: '医生', value: 9.0 },
+                { name: '护士', value: 12.0 },
+                { name: '其他医疗人员', value: 5.0 }
+            ]
+        },
+        {
+            id: 16, // 陕西
+            name: '陕西',
+            data: [
+                { name: '医生', value: 15.0 },
+                { name: '护士', value: 20.0 },
+                { name: '其他医疗人员', value: 9.0 }
+            ]
+        },
+        {
+            id: 25, // 吉林
+            name: '吉林',
+            data: [
+                { name: '医生', value: 9.0 },
+                { name: '护士', value: 11.0 },
+                { name: '其他医疗人员', value: 5.0 }
+            ]
+        },
+        {
+            id: 22, // 上海
+            name: '上海',
+            data: [
+                { name: '医生', value: 11.0 },
+                { name: '护士', value: 14.0 },
+                { name: '其他医疗人员', value: 7.0 }
+            ]
+        },
+        {
+            id: 23, // 甘肃
+            name: '甘肃',
+            data: [
+                { name: '医生', value: 8.0 },
+                { name: '护士', value: 10.0 },
+                { name: '其他医疗人员', value: 5.0 }
+            ]
+        },
+        {
+            id: 33, // 澳门
+            name: '澳门',
+            data: [
+                { name: '医生', value: 0.3 },
+                { name: '护士', value: 0.4 },
+                { name: '其他医疗人员', value: 0.2 }
+            ]
+        },
+        {
+            id: 30, // 青海
+            name: '青海',
+            data: [
+                { name: '医生', value: 1.5 },
+                { name: '护士', value: 2.0 },
+                { name: '其他医疗人员', value: 1.0 }
+            ]
+        },
+        {
+            id: 18, // 山西
+            name: '山西',
+            data: [
+                { name: '医生', value: 13.0 },
+                { name: '护士', value: 17.0 },
+                { name: '其他医疗人员', value: 8.0 }
+            ]
+        },
+        {
+            id: 7, // 浙江
+            name: '浙江',
+            data: [
+                { name: '医生', value: 25.0 },
+                { name: '护士', value: 32.0 },
+                { name: '其他医疗人员', value: 15.0 }
+            ]
+        },
+        {
+            id: 27, // 天津
+            name: '天津',
+            data: [
+                { name: '医生', value: 5.0 },
+                { name: '护士', value: 7.0 },
+                { name: '其他医疗人员', value: 3.0 }
+            ]
+        },
+        {
+            id: 12, // 云南
+            name: '云南',
+            data: [
+                { name: '医生', value: 15.0 },
+                { name: '护士', value: 20.0 },
+                { name: '其他医疗人员', value: 9.0 }
+            ]
+        },
+        {
+            id: 4, // 江苏
+            name: '江苏',
+            data: [
+                { name: '医生', value: 32.0 },
+                { name: '护士', value: 41.0 },
+                { name: '其他医疗人员', value: 19.0 }
+            ]
+        },
+        {
+            id: 29, // 宁夏
+            name: '宁夏',
+            data: [
+                { name: '医生', value: 2.0 },
+                { name: '护士', value: 2.5 },
+                { name: '其他医疗人员', value: 1.0 }
+            ]
+        },
+        {
+            id: 31, // 西藏
+            name: '西藏',
+            data: [
+                { name: '医生', value: 0.8 },
+                { name: '护士', value: 1.0 },
+                { name: '其他医疗人员', value: 0.5 }
+            ]
+        },
+        {
+            id: 32, // 香港
+            name: '香港',
+            data: [
+                { name: '医生', value: 2.0 },
+                { name: '护士', value: 3.0 },
+                { name: '其他医疗人员', value: 1.5 }
+            ]
+        },
+        {
+            id: 14, // 福建
+            name: '福建',
+            data: [
+                { name: '医生', value: 16.0 },
+                { name: '护士', value: 21.0 },
+                { name: '其他医疗人员', value: 10.0 }
+            ]
+        }
+    ];
     const fetchedScatterData = [
         { name: '北京', value: [116.4074, 39.9042, 90] },
         { name: '上海', value: [121.4737, 31.2304, 85] },
@@ -161,6 +1366,20 @@ export const useMapDataStore = defineStore('mapData', () => {
         { name: '海南', value: [110.3312, 20.0319, 45] }, // 海口所在省
         { name: '内蒙古', value: [111.7383, 40.8183, 38] }, // 呼和浩特所在省
     ];
+    const piePositions = {
+        '广东': [113.2644, 23.1291], '北京': [116.4074, 39.9042], '上海': [121.4737, 31.2304],
+        '江苏': [118.7969, 32.0603], '浙江': [120.1551, 30.2741], '四川': [104.0665, 30.5728],
+        '山东': [117.0009, 36.6758], '河南': [113.6654, 34.7579], '河北': [114.5025, 38.0455],
+        '湖南': [112.9823, 28.1941], '湖北': [114.3055, 30.5931], '安徽': [117.2830, 31.8612],
+        '辽宁': [123.4290, 41.7922], '陕西': [108.9398, 34.3416], '广西': [108.3200, 22.8168],
+        '江西': [115.8921, 28.6765], '云南': [102.7122, 25.0406], '黑龙江': [126.6424, 45.7569],
+        '吉林': [125.3245, 43.8868], '山西': [112.5492, 37.8703], '甘肃': [103.7342, 36.0827],
+        '内蒙古': [111.7383, 40.8183], '新疆': [87.6177, 43.7928], '宁夏': [106.2781, 38.4664],
+        '青海': [101.7789, 36.6232], '西藏': [91.1322, 29.6603], // 这里增加了拉萨的 value 以匹配 scatterData
+        '海南': [110.3312, 20.0319],
+        '天津': [117.1902, 39.1255], '重庆': [106.5045, 29.5332], '香港': [114.1694, 22.3193],
+        '澳门': [113.5439, 22.1987], '台湾': [120.9605, 23.6938] // Assuming a dummy position if no real data
+    };
 
 
     // --- 新增：创建 IdToNameMapper 实例 ---
@@ -252,62 +1471,9 @@ export const useMapDataStore = defineStore('mapData', () => {
 
 
 
-            const piePositions = {
-                '广东': [113.2644, 23.1291], '北京': [116.4074, 39.9042], '上海': [121.4737, 31.2304],
-                '江苏': [118.7969, 32.0603], '浙江': [120.1551, 30.2741], '四川': [104.0665, 30.5728],
-                '山东': [117.0009, 36.6758], '河南': [113.6654, 34.7579], '河北': [114.5025, 38.0455],
-                '湖南': [112.9823, 28.1941], '湖北': [114.3055, 30.5931], '安徽': [117.2830, 31.8612],
-                '辽宁': [123.4290, 41.7922], '陕西': [108.9398, 34.3416], '广西': [108.3200, 22.8168],
-                '江西': [115.8921, 28.6765], '云南': [102.7122, 25.0406], '黑龙江': [126.6424, 45.7569],
-                '吉林': [125.3245, 43.8868], '山西': [112.5492, 37.8703], '甘肃': [103.7342, 36.0827],
-                '内蒙古': [111.7383, 40.8183], '新疆': [87.6177, 43.7928], '宁夏': [106.2781, 38.4664],
-                '青海': [101.7789, 36.6232], '西藏': [91.1322, 29.6603], // 这里增加了拉萨的 value 以匹配 scatterData
-                '海南': [110.3312, 20.0319],
-                '天津': [117.1902, 39.1255], '重庆': [106.5045, 29.5332], '香港': [114.1694, 22.3193],
-                '澳门': [113.5439, 22.1987], '台湾': [120.9605, 23.6938] // Assuming a dummy position if no real data
-            };
 
-            const rawFetchedPieDataFromBackend = [
-                {
-                    id: 24, // 广东
-                    data: [
-                        { name: '工业', value: 70 },
-                        { name: '农业', value: 20 },
-                        { name: '服务业', value: 40 }
-                    ]
-                },
-                {
-                    id: 1, // 北京
-                    data: [
-                        { name: '服务业', value: 80 },
-                        { name: '工业', value: 15 }
-                    ]
-                },
-                {
-                    id: 3, // 上海
-                    data: [
-                        { name: '工业', value: 50 },
-                        { name: '服务业', value: 45 },
-                        { name: '农业', value: 10 },
-                        { name: '其他', value: 5 }
-                    ]
-                },
-                {
-                    id: 28, // 云南
-                    data: [
-                        { name: '农业', value: 60 },
-                        { name: '旅游', value: 30 }
-                    ]
-                },
-                {
-                    id: 15, // 江苏
-                    data: [
-                        { name: '工业', value: 65 },
-                        { name: '服务业', value: 30 }
-                    ]
-                },
 
-            ];
+
 
             const processedPieSeriesData = [];
 
@@ -356,7 +1522,7 @@ export const useMapDataStore = defineStore('mapData', () => {
     };
     const fetchsatterdata = (param1) => {
         console.log(`fetchsatterdata called with: ${param1}`);
-
+        const processedPieSeriesData = [];
         let rawDataToMap = []; // 用于存储即将被映射的原始数据
         if (param1 === 'populationData') {
             rawDataToMap = populationData.value;
@@ -370,6 +1536,101 @@ export const useMapDataStore = defineStore('mapData', () => {
             rawDataToMap = outpatientVisitsData.value;
         } else if (param1 === 'totalCostData') {
             rawDataToMap = totalCostData.value;
+        }else if(param1==='wea'){
+
+            chinaProvincesWeatherData.forEach(backendPieItem => {
+                const provinceName = provinceMapper.getName(backendPieItem.id);
+
+                if (provinceName && provinceName !== '未知') {
+                    const position = piePositions[provinceName];
+                    if (position) {
+                        // 转换后端 data 数组，添加颜色信息
+                        const formattedPieData = backendPieItem.data.map(d => ({
+                            name: d.name,
+                            value: d.value,
+                            color: sectorColors[d.name] || '#CCCCCC' // 如果没有预定义颜色，使用灰色
+                        }));
+
+                        processedPieSeriesData.push({
+                            name: provinceName,
+                            value: position, // 饼图中心点位置
+                            pieData: formattedPieData // 包含 name, value, color 的数组
+                        });
+                    }
+                }
+            })
+            pieSeriesData.value = processedPieSeriesData;
+        }else if(param1 === 'pop') {
+            chinaProvincesAgeCompositionData.forEach(backendPieItem => {
+                const provinceName = provinceMapper.getName(backendPieItem.id);
+
+                if (provinceName && provinceName !== '未知') {
+                    const position = piePositions[provinceName];
+                    if (position) {
+                        // 转换后端 data 数组，添加颜色信息
+                        const formattedPieData = backendPieItem.data.map(d => ({
+                            name: d.name,
+                            value: d.value,
+                            color: sectorColors[d.name] || '#CCCCCC' // 如果没有预定义颜色，使用灰色
+                        }));
+
+                        processedPieSeriesData.push({
+                            name: provinceName,
+                            value: position, // 饼图中心点位置
+                            pieData: formattedPieData // 包含 name, value, color 的数组
+                        });
+                    }
+                }
+            })
+            pieSeriesData.value = processedPieSeriesData;
+        }else if(param1 === 'per') {
+
+            chinaProvincesMedicalStaffData.forEach(backendPieItem => {
+                const provinceName = provinceMapper.getName(backendPieItem.id);
+
+                if (provinceName && provinceName !== '未知') {
+                    const position = piePositions[provinceName];
+                    if (position) {
+                        // 转换后端 data 数组，添加颜色信息
+                        const formattedPieData = backendPieItem.data.map(d => ({
+                            name: d.name,
+                            value: d.value,
+                            color: sectorColors[d.name] || '#CCCCCC' // 如果没有预定义颜色，使用灰色
+                        }));
+
+                        processedPieSeriesData.push({
+                            name: provinceName,
+                            value: position, // 饼图中心点位置
+                            pieData: formattedPieData // 包含 name, value, color 的数组
+                        });
+                    }
+                }
+            })
+            pieSeriesData.value = processedPieSeriesData;
+        }else if(param1 === 'male') {
+
+            rawFetchedPieDataFromBackend.forEach(backendPieItem => {
+                const provinceName = provinceMapper.getName(backendPieItem.id);
+
+                if (provinceName && provinceName !== '未知') {
+                    const position = piePositions[provinceName];
+                    if (position) {
+                        // 转换后端 data 数组，添加颜色信息
+                        const formattedPieData = backendPieItem.data.map(d => ({
+                            name: d.name,
+                            value: d.value,
+                            color: sectorColors[d.name] || '#CCCCCC' // 如果没有预定义颜色，使用灰色
+                        }));
+
+                        processedPieSeriesData.push({
+                            name: provinceName,
+                            value: position, // 饼图中心点位置
+                            pieData: formattedPieData // 包含 name, value, color 的数组
+                        });
+                    }
+                }
+            })
+            pieSeriesData.value = processedPieSeriesData;
         }
         console.log("fetchsatterdata: 原始数据 (rawDataToMap):", rawDataToMap);
 
@@ -388,7 +1649,6 @@ export const useMapDataStore = defineStore('mapData', () => {
             }
         });
         console.log("fetchsatterdata: backendValueMapForScatter:", backendValueMapForScatter);
-
 
         // 遍历 updatedScatterData，并根据 backendValueMapForScatter 更新其 value 数组的最后一个值
         updatedScatterData.forEach(scatterItem => {
