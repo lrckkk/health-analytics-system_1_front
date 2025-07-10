@@ -62,8 +62,10 @@ import MultiLineChart from "@/components/MutipleLineCharts.vue";
 import request from "@/utils/request.js"; // 确保你的请求工具正确配置
 import { IdToNameMapper } from "@/utils/IdToNameMapper.js";
 import {useGrowthStore} from "@/utils/countgrow.js"; // 保持这个导入路径不变
-import Simpleline from '/src/components/simpleline.vue' // 请确保路径正确，可能需要调整
+import Simpleline from '/src/components/simpleline.vue'
+import {useAnalysisDataStore} from "@/stores/AnalysisData.js"; // 请确保路径正确，可能需要调整
 // --- Pinia Stores ---
+const analyseStore = useAnalysisDataStore();
 const regionStore = useRegionStore();
 const mapDataStore = useMapDataStore(); // 保持导入，以防将来需要
 const growthStore = useGrowthStore(); // 如果这个组件不直接使用，可以暂时移除
@@ -78,6 +80,7 @@ const loadData = () => {
   const mockData = regionStore.medicalData2Cache[regionStore.getRegionId];
   // **关键：将 medicaldata2Cache 数据存储到 growthStore 的 '1' 号键下**
   growthStore.setHistoricalData('1', mockData);
+  analyseStore.growthRates[1]=(growthStore.getAverageGrowthRate('1') * 100).toFixed(2);
 };
 const resultByIdDisplay = computed(() => {
   const data = mapDataStore.bedData; // 获取病床总数数据
@@ -87,6 +90,7 @@ const resultByIdDisplay = computed(() => {
     // 只有数据有效时才调用排名函数
     const result = getValueAndRankById(data, regionStore.getRegionId); // 查找 ID 为 5 的数据及其排名
     if (result) {
+      analyseStore.rankInfos[1]=result.rank;
       return `病床数: ${result.value}, 排名: ${result.rank}`;
     }
   }
