@@ -16,6 +16,8 @@ import Analyseforper from "@/components/Analyseforper.vue";
 import Annalyseforbed from "@/components/Annalyseforbed.vue";
 import Annalyseforser from "@/components/Annalyseforser.vue";
 import Analyseforpop from "@/components/Analyseforpop.vue";
+import Decide from "@/components/decide.vue";
+import DecisionSimulator from "@/components/DecisionSimulator.vue";
 
 
 
@@ -114,6 +116,16 @@ const routes = [
         path: '/annalyseforbed',
         component: Annalyseforbed
     },
+    {
+        name:'Decide',
+        path: '/decide',
+        component: Decide,
+    },
+    {
+        name:'Decideforp',
+        path:'/decideforp',
+        component: DecisionSimulator
+    }
 
 
 ]

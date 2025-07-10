@@ -67,6 +67,7 @@
 </template>
 
 <script setup>
+
 import {ref, onMounted, watch, computed, nextTick} from 'vue';
 import { useRegionStore } from '@/stores/RegionData.js';
 import { useMapDataStore } from '@/stores/TotalData.js';
@@ -108,12 +109,46 @@ const stats = computed(() => [
   }
 ]);
 
+import {ref, onMounted, watch, computed} from 'vue';
+import { useRegionStore } from '@/stores/RegionData.js'; // 导入区域数据 Pinia Store
+import { useMapDataStore } from '@/stores/TotalData.js'; // 导入总数据 Pinia Store (虽然在此组件中未使用其状态，但如果你后续需要，保持导入)
+import { provinceIdMap } from '@/utils/mapid.js'; // 导入省份 ID 映射
+import { getValueAndRankById, getRankOfGivenValue } from '@/utils/countround.js'; // 如果这些函数在这个组件中不直接使用，可以不导入
+import MultiLineChart from "@/components/MutipleLineCharts.vue";
+import request from "@/utils/request.js"; // 确保你的请求工具正确配置
+import { IdToNameMapper } from "@/utils/IdToNameMapper.js";
+import {useGrowthStore} from "@/utils/countgrow.js"; // 保持这个导入路径不变
+import Simpleline from '/src/components/simpleline.vue'
+import {useAnalysisDataStore} from "@/stores/AnalysisData.js"; // 请确保路径正确，可能需要调整
+// --- Pinia Stores ---
+const analyseStore = useAnalysisDataStore();
+const regionStore = useRegionStore();
+const mapDataStore = useMapDataStore(); // 保持导入，以防将来需要
+const growthStore = useGrowthStore(); // 如果这个组件不直接使用，可以暂时移除
+const medicalLoading = ref(true)
+const medicalbedData=ref([])
+const medicaldata2=ref([])
+
+// --- 响应式数据 ---
+const populationData = ref([]);
+const populationLoading = ref(true);
+const loadData = () => {
+  const mockData = regionStore.medicalData2Cache[regionStore.getRegionId];
+  // **关键：将 medicaldata2Cache 数据存储到 growthStore 的 '1' 号键下**
+  growthStore.setHistoricalData('1', mockData);
+  analyseStore.growthRates[1]=(growthStore.getAverageGrowthRate('1') * 100).toFixed(2);
+};
+
 const resultByIdDisplay = computed(() => {
   const data = mapDataStore.bedData;
   if (Array.isArray(data) && data.length > 0) {
     const result = getValueAndRankById(data, regionStore.getRegionId);
     if (result) {
+
       return `${result.value} (排名: ${result.rank})`;
+
+      analyseStore.rankInfos[1]=result.rank;
+
     }
   }
   return '数据加载中或无效 ID';

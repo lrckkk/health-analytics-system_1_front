@@ -81,6 +81,7 @@
 </template>
 
 <script setup>
+
 import {ref, onMounted, watch, computed, nextTick} from 'vue';
 import { useRegionStore } from '@/stores/RegionData.js';
 import { useMapDataStore } from '@/stores/TotalData.js';
@@ -91,6 +92,20 @@ import {getValueAndRankById} from "@/utils/countround.js";
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
+
+import {ref, onMounted, watch, computed} from 'vue';
+import { useRegionStore } from '@/stores/RegionData.js'; // 导入区域数据 Pinia Store
+import { useMapDataStore } from '@/stores/TotalData.js'; // 导入总数据 Pinia Store (虽然在此组件中未使用其状态，但如果你后续需要，保持导入)
+import { provinceIdMap } from '@/utils/mapid.js'; // 导入省份 ID 映射
+import { getValueAndRankById, getRankOfGivenValue } from '@/utils/countround.js'; // 如果这些函数在这个组件中不直接使用，可以不导入
+import MultiLineChart from "@/components/MutipleLineCharts.vue";
+import request from "@/utils/request.js"; // 确保你的请求工具正确配置
+import { IdToNameMapper } from "@/utils/IdToNameMapper.js";
+import {useGrowthStore} from "@/utils/countgrow.js";
+import {useAnalysisDataStore} from "@/stores/AnalysisData.js"
+import Simpleline from '/src/components/simpleline.vue' // 请确保路径正确，可能需要调整
+// --- Pinia Stores ---
+
 const regionStore = useRegionStore();
 const mapDataStore = useMapDataStore();
 const growthStore = useGrowthStore();
@@ -98,6 +113,7 @@ const growthStore = useGrowthStore();
 const medicalLoading = ref(true);
 const outData = ref([]);
 const inData = ref([]);
+
 const serviceDistributionData = ref([
   { serviceType: '门诊服务', percentage: 60 },
   { serviceType: '住院服务', percentage: 30 },
@@ -108,6 +124,20 @@ const serviceDistributionData = ref([
 const outChart = ref(null);
 const inChart = ref(null);
 const pieChart = ref(null);
+
+const analyseStore = useAnalysisDataStore();
+// --- 响应式数据 ---
+const populationData = ref([]);
+const populationLoading = ref(true);
+const loadData = () => {
+  const mockData = regionStore.inpatientavg[regionStore.getRegionId];
+  // **关键修改：将 outpatientavg 数据存储到 growthStore 的 '5' 号键下**
+  growthStore.setHistoricalData('5', mockData);
+  analyseStore.growthRates[5]=(growthStore.getAverageGrowthRate('5') * 100).toFixed(2);
+};
+const resultByIdDisplay = computed(() => {
+  const data = mapDataStore.inpatientAdmissions; // 获取住院次数数据
+
 
 const stats = computed(() => [
   {
@@ -148,7 +178,12 @@ const resultByIdDisplay2 = computed(() => {
   if (Array.isArray(data) && data.length > 0) {
     const result = getValueAndRankById(data, regionStore.getRegionId);
     if (result) {
+
       return `${result.value}次 (排名: ${result.rank})`;
+
+      analyseStore.rankInfos[5]=result.rank;
+      return ` 问诊次数为${result.value}, 排名: ${result.rank}`;
+
     }
   }
   return '数据加载中或无效 ID';

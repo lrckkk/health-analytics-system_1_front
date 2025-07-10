@@ -88,6 +88,7 @@ import { useGrowthStore } from '@/utils/countgrow.js';
 import Simpleline from '/src/components/simpleline.vue'
 import BarChart from "@/components/BarChart.vue";
 import PieChart from "@/components/PieChart.vue";
+
 import {getValueAndRankById} from "@/utils/countround.js";
 import { useRouter } from 'vue-router';
 
@@ -99,11 +100,24 @@ const growthStore = useGrowthStore();
 const medicalLoading = ref(true);
 const medicalData = ref([]);
 const medicalPersonnelData = ref([]);
+
+import BarChart from "@/components/BarChart.vue"; // 请确保路径正确，可能需要调整
+// --- Pinia Stores ---
+import {useAnalysisDataStore} from "@/stores/AnalysisData.js"
+const regionStore = useRegionStore();
+const mapDataStore = useMapDataStore(); // 保持导入，以防将来需要
+const growthStore = useGrowthStore(); // 如果这个组件不直接使用，可以暂时移除
+const medicalLoading = ref(true)
+const medicalData=ref();
+const medicalPersonnelData=ref();
+const analyseStore = useAnalysisDataStore();
+
 const marketShareData = ref([
   { company: '医生', share: 16 },
   { company: '护士', share: 20 },
   { company: '其他', share: 20 },
 ]);
+
 
 // 图表引用
 const avgChart = ref(null);
@@ -129,12 +143,28 @@ const stats = computed(() => [
   }
 ]);
 
+
+// --- 响应式数据 ---
+const populationData = ref([]);
+const populationLoading = ref(true);
+const loadData = () => {
+  const mockData = regionStore.barChartWidth[regionStore.getRegionId];
+  // **关键修改：将 barChartWidth 数据存储到 growthStore 的 '4' 号键下**
+  growthStore.setHistoricalData('4', mockData);
+  analyseStore.growthRates[4]=(growthStore.getAverageGrowthRate('4') * 100).toFixed(2);
+};
+
 const resultByIdDisplay = computed(() => {
   const data = mapDataStore.personnelData;
   if (Array.isArray(data) && data.length > 0) {
     const result = getValueAndRankById(data, regionStore.getRegionId);
     if (result) {
+
       return `${result.value}人 (排名: ${result.rank})`;
+
+      analyseStore.rankInfos[4]=result.rank;
+      return `医务人员总数 ${result.value}, 排名: ${result.rank}`;
+
     }
   }
   return '数据加载中或无效 ID';

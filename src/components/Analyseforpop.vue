@@ -92,6 +92,7 @@ import Simpleline from '/src/components/simpleline.vue'
 import PieChart from "@/components/PieChart.vue";
 import {getValueAndRankById} from "@/utils/countround.js";
 import { IdToNameMapper } from "@/utils/IdToNameMapper.js";
+
 import request from "@/utils/request.js";
 import {provinceIdMap} from "@/utils/mapid.js";
 import { useRouter } from 'vue-router';
@@ -105,6 +106,27 @@ const medicalLoading = ref(false);
 const populationLoading = ref(false);
 const populationData = ref([]);
 const singleLineData = ref([]);
+
+import {useGrowthStore} from "@/utils/countgrow.js";
+import Simpleline from '/src/components/simpleline.vue'
+import {useAnalysisDataStore} from "@/stores/AnalysisData.js"; // 请确保路径正确，可能需要调整
+// --- Pinia Stores ---
+const regionStore = useRegionStore();
+const mapDataStore = useMapDataStore(); // 保持导入，以防将来需要
+const growthStore = useGrowthStore(); // 如果这个组件不直接使用，可以暂时移除
+const medicalLoading = ref(true)
+const analyseStore = useAnalysisDataStore();
+// --- 响应式数据 ---
+const populationData = ref([]);
+const populationLoading = ref(true);
+const loadData = () => {
+  const mockData = regionStore.populationDataCache[regionStore.getRegionId];
+  // **关键修改：将人口数据缓存存储到 growthStore 的 '2' 号键下**
+  growthStore.setHistoricalData('2', mockData);
+  analyseStore.growthRates[2]=(growthStore.getAverageGrowthRate('2') * 100).toFixed(2);
+};
+// 假设这些是静态的，或者你会在组件加载后动态更新它们
+
 const marketShareData = ref([
   { company: '儿童（0-14）', share: 16 },
   { company: '青年（14-44）', share: 20 },
@@ -207,6 +229,7 @@ const handleProvinceChange = async (selectedIds) => {
   await fetchPopulationData(selectedIds || [regionStore.getRegionId]);
 };
 
+
 const loadSingleLineData = async () => {
   try {
     medicalLoading.value = true;
@@ -218,6 +241,19 @@ const loadSingleLineData = async () => {
     medicalLoading.value = false;
   } finally {
     medicalLoading.value = false;
+
+const resultByIdDisplay = computed(() => {
+  const data = mapDataStore.populationData; // 获取人口数据
+  console.log(data)
+  // 关键校验：确保数据是数组且不为空
+  if (Array.isArray(data) && data.length > 0) {
+    // 只有数据有效时才调用排名函数
+    const result = getValueAndRankById(data, regionStore.getRegionId); // 查找 ID 为 5 的数据及其排名
+    if (result) {
+      analyseStore.rankInfos[2]=result.rank;
+      return `人口总数: ${result.value}万人, 排名: ${result.rank}`;
+    }
+
   }
 };
 

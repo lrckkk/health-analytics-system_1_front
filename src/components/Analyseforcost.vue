@@ -91,6 +91,7 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const regionStore = useRegionStore();
+
 const mapDataStore = useMapDataStore();
 const growthStore = useGrowthStore();
 
@@ -128,12 +129,32 @@ const stats = computed(() => [
   }
 ]);
 
+
+const mapDataStore = useMapDataStore(); // 保持导入，以防将来需要
+const growthStore = useGrowthStore(); // 如果这个组件不直接使用，可以暂时移除
+const medicalLoading = ref(true)
+const medicalcostData=ref([])
+import {useAnalysisDataStore} from "@/stores/AnalysisData.js"
+const analyseStore = useAnalysisDataStore();
+const costData=ref([])
+const loadData = () => {
+  const mockData = regionStore.costDataCache[regionStore.getRegionId];
+  // **关键修改：将 costDataCache 数据存储到 growthStore 的 '3' 号键下**
+  growthStore.setHistoricalData('3', mockData);
+  analyseStore.growthRates[3]=(growthStore.getAverageGrowthRate('3') * 100).toFixed(2);
+};
+
 const resultByIdDisplay = computed(() => {
   const data = mapDataStore.totalCostData;
   if (Array.isArray(data) && data.length > 0) {
     const result = getValueAndRankById(data, regionStore.getRegionId);
     if (result) {
+
       return `${result.value}万元 (排名: ${result.rank})`;
+
+      analyseStore.rankInfos[3]=result.rank;
+      return `医疗费用: ${result.value}万元, 排名: ${result.rank}`;
+
     }
   }
   return '数据加载中或无效 ID';
