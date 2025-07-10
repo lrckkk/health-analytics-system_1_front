@@ -168,9 +168,21 @@ export default {
     };
 
     const navigateToMyRoute = () => {
-      router.push({
-        name: 'Text'
-      });
+      // 从localStorage获取用户信息
+      const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+
+      // 检查用户角色
+      if (userInfo.role === 'ADMIN' || userInfo.role === 'ANALYST') {
+        router.push({
+          name: 'Text'
+        });
+      } else {
+        ElMessage.error({
+          message: '权限不足，仅管理员和分析师可访问此功能',
+          customClass: 'tech-message',
+          duration: 3000
+        });
+      }
     };
 
     const navigateToProfile = () => {

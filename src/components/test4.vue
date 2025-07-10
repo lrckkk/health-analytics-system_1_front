@@ -14,6 +14,11 @@
       </div>
     </div>
 
+    <!-- 新增标题 -->
+    <div class="analysis-title">
+      综合分析界面
+    </div>
+
     <!-- 使用 Collapse 子组件 -->
     <div class="collapse-container">
       <Collapse title="人口分析" :initial-open="false">
@@ -75,6 +80,7 @@ import router from "@/pages/user/router.js";
 import { useAnalysisDataStore } from '@/stores/AnalysisData.js';
 import { useRegionStore } from '@/stores/RegionData.js';
 import { useDecisionStore } from '@/stores/useDecisionStore';
+import {ElMessage} from "element-plus";
 
 const analysisStore = useAnalysisDataStore();
 const decisionStore = useDecisionStore();
@@ -85,6 +91,19 @@ const navigateBack = () => {
 };
 
 const trybu = async() => {
+  // 从localStorage获取用户信息
+  const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+
+  // 检查用户角色
+  if (userInfo.role !== 'ADMIN') {
+    ElMessage.error({
+      message: '权限不足，仅管理员可访问决策分析功能',
+      customClass: 'tech-message',
+      duration: 3000
+    });
+    return;
+  }
+
   const currentRegionId = regionStore.getRegionId;
   try {
     await decisionStore.fetchInitialData(currentRegionId);
@@ -94,7 +113,11 @@ const trybu = async() => {
     });
   } catch (error) {
     console.error("[test4.vue] 预加载决策模拟器数据失败：", error);
-    alert("无法进入决策模拟器，数据加载出现问题。");
+    ElMessage.error({
+      message: "无法进入决策模拟器，数据加载出现问题",
+      customClass: 'tech-message',
+      duration: 3000
+    });
   }
 };
 
@@ -119,6 +142,31 @@ watch(
   position: relative;
   display: flex;
   flex-direction: column;
+}
+
+/* 新增标题样式 */
+.analysis-title {
+  font-size: 28px;
+  font-weight: 600;
+  text-align: center;
+  margin: 60px 0 20px 0;
+  color: #00e0ff;
+  text-shadow: 0 0 10px rgba(0, 224, 255, 0.5);
+  letter-spacing: 1px;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.analysis-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00e0ff, transparent);
+  border-radius: 2px;
 }
 
 .back-button {
@@ -229,7 +277,7 @@ watch(
 }
 
 .collapse-container {
-  margin-top: 60px;
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -354,8 +402,13 @@ watch(
 
 /* 响应式调整 */
 @media (max-width: 768px) {
+  .analysis-title {
+    font-size: 22px;
+    margin: 50px 0 15px 0;
+  }
+
   .collapse-container {
-    margin-top: 80px;
+    margin-top: 15px;
   }
 
   .decision-button {

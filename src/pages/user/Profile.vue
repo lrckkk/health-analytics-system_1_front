@@ -502,7 +502,7 @@ onMounted(() => {
   // fetchUserPermissions();
 });
 </script>
-<style scoped  lang="scss">
+<style  lang="scss">
 $tech-bg: #0a1220;
 $tech-card-bg: rgba(22, 32, 72, 0.9);
 $tech-primary: #00f0ff;

@@ -657,7 +657,7 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
 
 .captcha-image {
   position: relative;
-  width: 130px;
+  width: 180px;
   height: 44px;
   cursor: pointer;
   border: 1px solid $tech-border;
