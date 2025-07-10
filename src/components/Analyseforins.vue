@@ -72,9 +72,11 @@ import { IdToNameMapper } from "@/utils/IdToNameMapper.js";
 import {useGrowthStore} from "@/utils/countgrow.js"; // 请确保路径正确，从 @/stores 导入
 import Simpleline from '/src/components/simpleline.vue'
 import PieChart from "@/components/PieChart.vue"; // 请确保路径正确，可能需要调整
+import {useAnalysisDataStore} from "@/stores/AnalysisData.js"
 // --- Pinia Stores ---
 const regionStore = useRegionStore();
 const mapDataStore = useMapDataStore(); // 保持导入，以防将来需要
+const analyseStore = useAnalysisDataStore();
 const growthStore = useGrowthStore(); // 如果这个组件不直接使用，可以暂时移除
 const medicalLoading = ref(true)
 const medicalData = ref([])
@@ -87,6 +89,7 @@ const loadData = () => {
   // 保持这里不变，但请注意此处的 mockData 仍需要是一个数组才能被 setHistoricalData 处理
   // 并且 setHistoricalData 需要一个 key，这里假定其内部逻辑处理了
   growthStore.setHistoricalData('0', mockData); // 明确将数据存储到 '0' 键
+  analyseStore.growthRates[0]=(growthStore.getAverageGrowthRate('0') * 100).toFixed(2);
 };
 const marketShareData = ref([
   { company: '3甲', share: 16 },
@@ -102,6 +105,7 @@ const resultByIdDisplay = computed(() => {
     // 只有数据有效时才调用排名函数
     const result = getValueAndRankById(data, regionStore.getRegionId); // 查找 ID 为 5 的数据及其排名
     if (result) {
+      analyseStore.rankInfos[0]=result.rank;
       return `机构总数: ${result.value}万人, 排名: ${result.rank}`;
     }
   }

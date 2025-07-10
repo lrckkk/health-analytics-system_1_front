@@ -75,12 +75,14 @@ import Simpleline from '/src/components/simpleline.vue'
 import PieChart from "@/components/PieChart.vue";
 import BarChart from "@/components/BarChart.vue"; // 请确保路径正确，可能需要调整
 // --- Pinia Stores ---
+import {useAnalysisDataStore} from "@/stores/AnalysisData.js"
 const regionStore = useRegionStore();
 const mapDataStore = useMapDataStore(); // 保持导入，以防将来需要
 const growthStore = useGrowthStore(); // 如果这个组件不直接使用，可以暂时移除
 const medicalLoading = ref(true)
 const medicalData=ref();
 const medicalPersonnelData=ref();
+const analyseStore = useAnalysisDataStore();
 const marketShareData = ref([
   { company: '医生', share: 16 },
   { company: '护士', share: 20 },
@@ -94,6 +96,7 @@ const loadData = () => {
   const mockData = regionStore.barChartWidth[regionStore.getRegionId];
   // **关键修改：将 barChartWidth 数据存储到 growthStore 的 '4' 号键下**
   growthStore.setHistoricalData('4', mockData);
+  analyseStore.growthRates[4]=(growthStore.getAverageGrowthRate('4') * 100).toFixed(2);
 };
 const resultByIdDisplay = computed(() => {
   const data = mapDataStore.personnelData; // 获取人口数据
@@ -103,6 +106,7 @@ const resultByIdDisplay = computed(() => {
     // 只有数据有效时才调用排名函数
     const result = getValueAndRankById(data, regionStore.getRegionId); // 查找 ID 为 5 的数据及其排名
     if (result) {
+      analyseStore.rankInfos[4]=result.rank;
       return `医务人员总数 ${result.value}, 排名: ${result.rank}`;
     }
   }
