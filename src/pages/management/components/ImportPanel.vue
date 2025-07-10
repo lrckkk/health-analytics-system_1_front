@@ -1,8 +1,8 @@
 <template>
-  <div class="import-panel">
+  <div class="panel-content">
     <h2 class="title">数据导入</h2>
     <AddFiles ref="addFilesRef" />
-    <el-divider/>
+    <hr class="divider" />
     <CategoryCards
       :categories="categories"
       :usedCategories="usedCategories"
@@ -11,9 +11,9 @@
       :removeFileFromCategory="removeFileFromCategory"
     />
     <div class="bottom-right">
-      <el-button type="primary" @click="submitUpload" :disabled="allFiles.length === 0">
+      <button class="upload-btn" @click="submitUpload" :disabled="allFiles.length === 0">
         上传
-      </el-button>
+      </button>
     </div>
   </div>
 </template>
@@ -34,23 +34,63 @@ const allFiles = computed(() => addFilesRef.value?.allFiles || [])
 
 function submitUpload() {
   if (allFiles.value.length === 0) return
-  alert(`上传 ${allFiles.value.length} 个文件`)
+  addFilesRef.value?.uploadAllFilesByCategory && addFilesRef.value.uploadAllFilesByCategory()
 }
 </script>
 
 <style scoped>
-.import-panel {
-  padding: 24px 0;
+.panel-content {
+  user-select: none;
+  cursor: default;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 213, 255, 0.15);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.08);
+  margin-bottom: 0;
 }
-h2 {
-  margin: 0 0 16px 0;
-  font-weight: 600;
-  color: #a0eaff;
+.divider {
+  border: none;
+  border-top: 1px solid #00d5ff33;
+  margin: 18px 0 18px 0;
 }
-
 .bottom-right {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
+}
+.upload-btn {
+  padding: 6px 24px;
+  border-radius: 4px;
+  border: none;
+  background: #00d5ff33;
+  color: #00bcd4;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.upload-btn:disabled {
+  background: #eee;
+  color: #aaa;
+  cursor: not-allowed;
+  opacity: 1;
+}
+.upload-btn:not(:disabled):hover {
+  background: #00bcd4;
+  color: #fff;
+}
+select, .panel-content select {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #00d5ff33;
+  background: rgba(255,255,255,0.08);
+  color: #222;
+  font-size: 15px;
+  outline: none;
+  transition: border 0.2s;
+}
+select:focus, .panel-content select:focus {
+  border: 1.5px solid #00bcd4;
 }
 </style>

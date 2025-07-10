@@ -8,8 +8,9 @@ import Scroll from "./scroll.vue"
 
 import ManagementPage from "@/pages/management/ManagementPage.vue";
 
-import Text from "../../components/test4.vue"
+import Text from "../../components/test.vue"
 import Profile from './Profile.vue';
+
 import Analyseforins from "@/components/Analyseforins.vue";
 import Analyseforcost from "@/components/Analyseforcost.vue";
 import Analyseforper from "@/components/Analyseforper.vue";
@@ -18,6 +19,7 @@ import Annalyseforser from "@/components/Annalyseforser.vue";
 import Analyseforpop from "@/components/Analyseforpop.vue";
 import Decide from "@/components/decide.vue";
 import DecisionSimulator from "@/components/DecisionSimulator.vue";
+
 
 
 
@@ -63,28 +65,24 @@ const routes = [
         name:'Scroll',
         path: '/scroll',
 
-        component: Scroll,
-        meta: { requiresAuth: true } // 必须加这一行
+        component: Scroll
     },
     {
         path: '/manage',
         name: 'ManagementPage',
-        component: ManagementPage,
-        meta: { requiresAuth: true } // 必须加这一行
+        component: ManagementPage
     },
-
-
     {
         name:'Text',
         path: '/text',
-        component: Text,
-        meta: { requiresAuth: true } // 必须加这一行
+        component: Text
     },
     {
         name: 'Profile',
         path: '/profile',
         component: Profile,
         meta: { requiresAuth: true }
+
     },
     {
         name: 'Analyseforins',
@@ -125,6 +123,7 @@ const routes = [
         name:'Decideforp',
         path:'/decideforp',
         component: DecisionSimulator
+
     }
 
 
