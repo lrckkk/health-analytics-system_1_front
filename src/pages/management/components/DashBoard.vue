@@ -1,119 +1,70 @@
 <template>
   <div class="data-panel-management">
-    <el-select
-        v-model="selectedUserId"
-        placeholder="请选择用户"
-        style="width: 220px; margin-bottom: 24px;"
-        clearable
-        filterable
-        :loading="loadingUsers"
-        :disabled="loadingUsers"
-        @change="handleUserChange"
-        append-to-body
-    >
-      <el-option
-          v-for="user in users"
-          :key="user.id"
-          :label="user.name"
-          :value="user.id"
-      />
-    </el-select>
-
-    <div v-if="selectedUserId === null" class="empty-state">
-      <p>请选择一个用户以定制其数据面板视图。</p>
+    <div class="user-select-group">
+      <el-select v-model="selectedUserId" placeholder="请选择用户" :disabled="loadingUsers" filterable style="width: 220px;">
+        <el-option v-for="user in users" :key="user.userId" :label="user.username" :value="user.userId" />
+      </el-select>
     </div>
-
-    <div v-else class="dashboard">
-      <h3>{{ currentUser?.name }} 的定制数据面板</h3>
-
-      <el-checkbox-group v-model="selectedWidgets" @change="handleWidgetChange">
-        <el-checkbox label="number" border>数字牌</el-checkbox>
-        <el-checkbox label="pie" border>扇形统计图</el-checkbox>
-        <el-checkbox label="bar" border>条形统计图</el-checkbox>
-        <el-checkbox label="line" border>折线统计图</el-checkbox>
-        <el-checkbox label="stack" border>条形分布图</el-checkbox>
-        <el-checkbox label="doughnut"  border>环形分布图</el-checkbox>
+    <div class="dashboard" v-if="selectedUserId">
+      <el-checkbox-group v-model="selectedTypes" style="margin-bottom: 18px;">
+        <el-checkbox v-for="w in allTypes" :key="w.type" :label="w.type">{{ w.label }}</el-checkbox>
       </el-checkbox-group>
-
-      <div class="widgets-container" style="margin-top: 20px;">
-        <div v-if="selectedWidgets.includes('number')" class="widget chart-widget">
-          <h4>数字牌</h4>
-          <!-- 这里你可以用图表库比如 ECharts / Chart.js 来做真实图表 -->
-          <p>这里显示图表数据...</p>
-        </div>
-
-        <div v-if="selectedWidgets.includes('pie')" class="widget stats-widget">
-          <h4>扇形统计图</h4>
-          <p>这里显示统计数据...</p>
-        </div>
-
-        <div v-if="selectedWidgets.includes('bar')" class="widget logs-widget">
-          <h4>条形统计图</h4>
-          <p>这里显示日志摘要...</p>
-        </div>
-        <div v-if="selectedWidgets.includes('line')" class="widget logs-widget">
-          <h4>折线统计图</h4>
-          <p>这里显示日志摘要...</p>
-        </div>
-        <div v-if="selectedWidgets.includes('stack')" class="widget logs-widget">
-          <h4>条形分布图</h4>
-          <p>这里显示日志摘要...</p>
-        </div>
-        <div v-if="selectedWidgets.includes('doughnut')" class="widget logs-widget">
-          <h4>环形统计图</h4>
-          <p>这里显示日志摘要...</p>
-        </div>
-      </div>
+      <PanelEditor
+        v-model:widgets="userPanelConfig[selectedUserId]"
+        :allowed-types="selectedTypes"
+        :user-id="selectedUserId"
+        @save="handlePanelSave(selectedUserId)"
+      />
+    </div>
+    <div v-else class="empty-state">
+      <p>请选择用户以定制其数据面板视图。</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, onMounted } from 'vue'
+import request from '@/utils/request'
+import PanelEditor from '@/components/PanelEditor.vue'
 
-// 模拟用户数据，真实环境你可能从接口请求
-const users = ref([
-  { id: 1, name: '普通用户' },
-  { id: 2, name: '分析员' },
-  { id: 3, name: 'wdf' }
-])
-
+const users = ref([])
 const loadingUsers = ref(false)
 const selectedUserId = ref(null)
 
-// 模拟保存每个用户定制的面板控件
-const userWidgets = ref({
-  1: ['chart', 'stats'],
-  2: ['logs'],
-  3: ['chart', 'logs', 'stats']
-})
+const allTypes = [
+  { type: 'number', label: '数字牌' },
+  { type: 'pie', label: '扇形统计图' },
+  { type: 'bar', label: '条形统计图' },
+  { type: 'line', label: '折线统计图' },
+  { type: 'stack', label: '条形分布图' },
+  { type: 'doughnut', label: '环形分布图' },
+]
 
-// 当前用户对象
-const currentUser = computed(() => {
-  return users.value.find(u => u.id === selectedUserId.value) || null
-})
+const userPanelConfig = ref({})
+const selectedTypes = ref(allTypes.map(t => t.type))
 
-// 当前用户的已选控件（复选框绑定）
-const selectedWidgets = ref([])
-
-// 监听用户切换，初始化控件状态
-watch(selectedUserId, (newId) => {
-  if (newId && userWidgets.value[newId]) {
-    selectedWidgets.value = [...userWidgets.value[newId]]
-  } else {
-    selectedWidgets.value = []
+onMounted(async () => {
+  loadingUsers.value = true
+  try {
+    const res = await request.get('/api/admin/users')
+    users.value = res.data || []
+    if (users.value.length) {
+      selectedUserId.value = users.value[0].userId
+      users.value.forEach(u => {
+        if (!userPanelConfig.value[u.userId]) userPanelConfig.value[u.userId] = []
+      })
+    }
+  } catch (e) {
+    users.value = []
+  } finally {
+    loadingUsers.value = false
   }
 })
 
-// 用户切换事件
-function handleUserChange(id) {
-  // 这里也可以同步调用接口，获取该用户的面板配置
-}
-
-// 控件选择变更，保存配置
-function handleWidgetChange(newWidgets) {
-  if (selectedUserId.value) {
-    userWidgets.value[selectedUserId.value] = [...newWidgets]
+function handlePanelSave(userId) {
+  return (config) => {
+    userPanelConfig.value[userId] = config
+    window.$message?.success?.('保存成功！')
   }
 }
 </script>
@@ -123,34 +74,27 @@ function handleWidgetChange(newWidgets) {
   padding: 30px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
+  background: #f8fbfd;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px 0 rgba(0, 213, 255, 0.08);
 }
-
+.user-select-group {
+  margin-bottom: 24px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px 20px 8px 20px;
+  box-shadow: 0 1px 6px 0 rgba(0, 213, 255, 0.06);
+}
+.dashboard {
+  background: #fff;
+  border-radius: 10px;
+  padding: 24px 18px 18px 18px;
+  box-shadow: 0 2px 12px 0 rgba(0, 213, 255, 0.07);
+}
 .empty-state {
-  margin-top: 20px;
-  font-style: italic;
-  color: #999;
-}
-
-.dashboard h3 {
-  margin-bottom: 16px;
-}
-
-.widgets-container {
-  display: flex;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-.widget {
-  flex: 1 1 300px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 16px;
-  background: #f9f9f9;
-  box-sizing: border-box;
-}
-
-.widget h4 {
-  margin-bottom: 12px;
+  color: #aaa;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 16px;
 }
 </style>
