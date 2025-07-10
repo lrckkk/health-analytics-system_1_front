@@ -286,8 +286,8 @@ const updateChart = () => {
     grid: {
       left: '5%',
       right: '10%',
-      bottom: '0%',
-      top: '28%',
+      bottom: '20%',
+      top: '18%',
       // position: 'center',
       containLabel: true
     },

@@ -79,6 +79,31 @@
             <span class="label">人口数量:</span>
             <span class="value">{{ formatValue(currentYearData.populationData?.count, true) }}</span>
           </div>
+
+          <div class="data-item">
+            <span class="label">每万人床位:</span>
+            <span class="value">{{ formatValue(currentYearData.bedavg?.count) }}</span>
+          </div>
+          <div class="data-item">
+            <span class="label">每万人门诊:</span>
+            <span class="value">{{ formatValue(currentYearData.outpatientavg?.count) }}</span>
+          </div>
+          <div class="data-item">
+            <span class="label">每万人住院:</span>
+            <span class="value">{{ formatValue(currentYearData.inpatientavg?.count) }}</span>
+          </div>
+          <div class="data-item">
+            <span class="label">每万人机构:</span>
+            <span class="value">{{ formatValue(currentYearData.institutionavg?.count) }}</span>
+          </div>
+          <div class="data-item">
+            <span class="label">人均医疗费:</span>
+            <span class="value">{{ formatValue(currentYearData.costavg?.count) }}</span>
+          </div>
+          <div class="data-item">
+            <span class="label">每万人人员:</span>
+            <span class="value">{{ formatValue(currentYearData.personnelavg?.count) }}</span>
+          </div>
         </div>
 
         <h4 class="section-title mt-4">
@@ -88,30 +113,49 @@
         <el-table
             :data="Object.values(historicalData)"
             style="width: 100%"
-            max-height="600"
+            max-height="450"
             class="futuristic-table"
         >
-          <el-table-column prop="year" label="年份" width="90" fixed sortable></el-table-column>
-          <el-table-column label="医疗机构" width="130">
+          <el-table-column prop="year" label="年份" width="77" fixed sortable></el-table-column>
+          <el-table-column label="医疗机构" width="78">
             <template #default="{ row }">{{ formatValue(row.medicalData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="病床数量" width="130">
+          <el-table-column label="病床数量" width="78">
             <template #default="{ row }">{{ formatValue(row.medicalData2?.count) }}</template>
           </el-table-column>
-          <el-table-column label="医疗花费" width="130">
+          <el-table-column label="医疗花费" width="78">
             <template #default="{ row }">{{ formatValue(row.costData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="医疗人员" width="130">
+          <el-table-column label="医疗人员" width="78">
             <template #default="{ row }">{{ formatValue(row.personnelData?.count) }}</template>
           </el-table-column>
-          <el-table-column label="门诊量" width="130">
+          <el-table-column label="门诊量" width="78">
             <template #default="{ row }">{{ formatValue(row.serviceData?.outpatientVisits) }}</template>
           </el-table-column>
-          <el-table-column label="住院量" width="130">
+          <el-table-column label="住院量" width="78">
             <template #default="{ row }">{{ formatValue(row.serviceData?.inpatientAdmissions) }}</template>
           </el-table-column>
-          <el-table-column label="人口数量" width="130">
+          <el-table-column label="人口数量" width="78">
             <template #default="{ row }">{{ formatValue(row.populationData?.count, true) }}</template>
+          </el-table-column>
+
+          <el-table-column label="每万人床位" width="90">
+            <template #default="{ row }">{{ formatValue(row.bedavg?.count) }}</template>
+          </el-table-column>
+          <el-table-column label="每万人门诊" width="90">
+            <template #default="{ row }">{{ formatValue(row.outpatientavg?.count) }}</template>
+          </el-table-column>
+          <el-table-column label="每万人住院" width="90">
+            <template #default="{ row }">{{ formatValue(row.inpatientavg?.count) }}</template>
+          </el-table-column>
+          <el-table-column label="每万人机构" width="90">
+            <template #default="{ row }">{{ formatValue(row.institutionavg?.count) }}</template>
+          </el-table-column>
+          <el-table-column label="人均医疗费" width="90">
+            <template #default="{ row }">{{ formatValue(row.costavg?.count) }}</template>
+          </el-table-column>
+          <el-table-column label="每万人人员" width="90">
+            <template #default="{ row }">{{ formatValue(row.personnelavg?.count) }}</template>
           </el-table-column>
         </el-table>
       </div>
@@ -121,7 +165,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed, nextTick } from 'vue';
-import { useRegionStore } from '@/stores/RegionData.js';
+import { useRegionStore } from '@/stores/RegionData.js'; // 确保路径正确
 import { ElCard, ElButton, ElTable, ElTableColumn, ElIcon, ElLoading } from 'element-plus';
 import { Calendar, TrendCharts } from '@element-plus/icons-vue';
 
@@ -165,7 +209,7 @@ const formatValue = (value, addWanSuffix = false) => {
 };
 
 /**
- * 异步获取并处理所有六种数据类型。
+ * 异步获取并处理所有数据类型，包括新增的平均数据。
  * 将数据整合到 historicalData 对象中，并更新可用年份。
  */
 const fetchAndProcessAllData = async () => {
@@ -182,21 +226,35 @@ const fetchAndProcessAllData = async () => {
   currentYearData.value = {};
 
   try {
-    // 并发请求所有数据
+    // 并发请求所有数据，包括新增的平均数据
     const [
       medicalData,
       medicalData2,
       costData,
-      personnelData, // 在 store 中对应 fetchbarChartWidthIfNeeded
+      personnelData,
       serviceData,
-      populationData
+      populationData,
+      // --- 新增：平均数据请求 ---
+      bedavgData,
+      outpatientavgData,
+      inpatientavgData,
+      institutionavgData,
+      costavgData,
+      personnelavgData
     ] = await Promise.all([
       regionStore.fetchMedicalDataIfNeeded(regionId),
       regionStore.fetchMedicalData2IfNeeded(regionId),
       regionStore.fetchCostDataIfNeeded(regionId),
-      regionStore.fetchbarChartWidthIfNeeded(regionId),
+      regionStore.fetchbarChartWidthIfNeeded(regionId), // 对应 medical personnel 数据
       regionStore.fetchserviceDataIfNeeded(regionId),
       regionStore.fetchPopulationDataIfNeeded(regionId),
+      // --- 新增：平均数据请求 Pinia action ---
+      regionStore.fetchbedavgIfNeeded(regionId),
+      regionStore.fetchoutpatientavgIfNeeded(regionId),
+      regionStore.fetchoinpatientavgavgIfNeeded(regionId),
+      regionStore.fetchinstitutionavgIfNeeded(regionId),
+      regionStore.fetchcostavgIfNeeded(regionId),
+      regionStore.fetchpersonnelavgIfNeeded(regionId)
     ]);
 
     // 将数据整合到 historicalData 对象中
@@ -227,12 +285,22 @@ const fetchAndProcessAllData = async () => {
       });
     };
 
+    // 现有数据合并
     mergeData(medicalData, 'medicalData');
     mergeData(medicalData2, 'medicalData2');
     mergeData(costData, 'costData');
-    mergeData(personnelData, 'personnelData');
+    mergeData(personnelData, 'personnelData'); // 确认这里使用 'personnelData'
     mergeData(serviceData, 'serviceData');
     mergeData(populationData, 'populationData');
+
+    // --- 新增：平均数据合并 ---
+    mergeData(bedavgData, 'bedavg');
+    mergeData(outpatientavgData, 'outpatientavg');
+    mergeData(inpatientavgData, 'inpatientavg');
+    mergeData(institutionavgData, 'institutionavg');
+    mergeData(costavgData, 'costavg');
+    mergeData(personnelavgData, 'personnelavg');
+    // --- 新增数据合并结束 ---
 
     // 更新并排序可用年份
     availableYears.value = Array.from(allYears).sort((a, b) => parseInt(a) - parseInt(b));
@@ -279,14 +347,21 @@ const exportDataToTxt = () => {
   let exportContent = `--- ${regionName} (ID: ${regionId}) 历年医疗数据概览 ---\n`;
   exportContent += `导出时间: ${new Date().toLocaleString()}\n\n`;
 
-  // 定义数据类型到中文标签的映射
+  // 定义数据类型到中文标签的映射，包括新增项
   const dataLabels = {
     medicalData: '医疗机构数量',
     medicalData2: '病床数量',
     costData: '医疗花费',
     personnelData: '医疗人员',
     serviceData: '医疗服务',
-    populationData: '人口数量'
+    populationData: '人口数量',
+    // --- 新增标签 ---
+    bedavg: '每万人床位',
+    outpatientavg: '每万人门诊诊疗人次',
+    inpatientavg: '每万人住院人数',
+    institutionavg: '每万人医疗机构',
+    costavg: '人均医疗费用',
+    personnelavg: '每万人医疗人员数'
   };
 
   // 遍历所有年份的数据
@@ -296,32 +371,49 @@ const exportDataToTxt = () => {
     const yearData = historicalData.value[year];
     exportContent += `=== 年份: ${year} ===\n`;
 
-    // 医疗机构数据
+    // 现有数据
     if (yearData.medicalData?.count !== undefined) {
       exportContent += `  ${dataLabels.medicalData}: ${formatValue(yearData.medicalData.count)}\n`;
     }
-    // 病床数量
     if (yearData.medicalData2?.count !== undefined) {
       exportContent += `  ${dataLabels.medicalData2}: ${formatValue(yearData.medicalData2.count)}\n`;
     }
-    // 医疗花费
     if (yearData.costData?.count !== undefined) {
       exportContent += `  ${dataLabels.costData}: ${formatValue(yearData.costData.count)}\n`;
     }
-    // 医疗人员
     if (yearData.personnelData?.count !== undefined) {
       exportContent += `  ${dataLabels.personnelData}: ${formatValue(yearData.personnelData.count)}\n`;
     }
-    // 医疗服务 (门诊量和住院量)
     if (yearData.serviceData?.outpatientVisits !== undefined || yearData.serviceData?.inpatientAdmissions !== undefined) {
       exportContent += `  ${dataLabels.serviceData}:\n`;
       exportContent += `    门诊量: ${formatValue(yearData.serviceData?.outpatientVisits)}\n`;
       exportContent += `    住院量: ${formatValue(yearData.serviceData?.inpatientAdmissions)}\n`;
     }
-    // 人口数量
     if (yearData.populationData?.count !== undefined) {
       exportContent += `  ${dataLabels.populationData}: ${formatValue(yearData.populationData.count, true)}\n`;
     }
+
+    // --- 新增数据 for TXT ---
+    if (yearData.bedavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.bedavg}: ${formatValue(yearData.bedavg.count)}\n`;
+    }
+    if (yearData.outpatientavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.outpatientavg}: ${formatValue(yearData.outpatientavg.count)}\n`;
+    }
+    if (yearData.inpatientavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.inpatientavg}: ${formatValue(yearData.inpatientavg.count)}\n`;
+    }
+    if (yearData.institutionavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.institutionavg}: ${formatValue(yearData.institutionavg.count)}\n`;
+    }
+    if (yearData.costavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.costavg}: ${formatValue(yearData.costavg.count)}\n`;
+    }
+    if (yearData.personnelavg?.count !== undefined) {
+      exportContent += `  ${dataLabels.personnelavg}: ${formatValue(yearData.personnelavg.count)}\n`;
+    }
+    // --- 新增数据 for TXT 结束 ---
+
     exportContent += '\n'; // 每年数据之间添加空行
   });
 
@@ -336,7 +428,7 @@ const exportDataToTxt = () => {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 
-  console.log(`Data exported to ${a.download}`);
+  console.log(`数据已导出到 ${a.download}`);
 };
 
 /**
@@ -349,9 +441,8 @@ const exportDataToExcel = () => {
   }
 
   const regionName = regionStore.getDisplayRegion;
-  // const regionId = regionStore.getRegionId; // 暂时用不到，但可以用于文件名
 
-  // 定义 Excel 表格的列头
+  // 定义 Excel 表格的列头，包括新增项
   const headers = [
     "年份",
     "医疗机构数量",
@@ -360,7 +451,14 @@ const exportDataToExcel = () => {
     "医疗人员",
     "门诊量",
     "住院量",
-    "人口数量"
+    "人口数量",
+    // --- 新增表头 ---
+    "每万人床位",
+    "每万人门诊",
+    "每万人住院",
+    "每万人机构",
+    "人均医疗费",
+    "每万人人员"
   ];
 
   // 为 Excel 准备数据
@@ -374,7 +472,14 @@ const exportDataToExcel = () => {
       formatValue(yearData.personnelData?.count),
       formatValue(yearData.serviceData?.outpatientVisits),
       formatValue(yearData.serviceData?.inpatientAdmissions),
-      formatValue(yearData.populationData?.count, true)
+      formatValue(yearData.populationData?.count, true),
+      // --- 新增数据 for Excel rows ---
+      formatValue(yearData.bedavg?.count),
+      formatValue(yearData.outpatientavg?.count),
+      formatValue(yearData.inpatientavg?.count),
+      formatValue(yearData.institutionavg?.count),
+      formatValue(yearData.costavg?.count),
+      formatValue(yearData.personnelavg?.count)
     ];
   });
 
@@ -395,7 +500,7 @@ const exportDataToExcel = () => {
   const fileName = `${regionName}_历年医疗数据.xlsx`;
   saveAs(new Blob([wbout], { type: 'application/octet-stream' }), fileName);
 
-  console.log(`Data exported to ${fileName}`);
+  console.log(`数据已导出到 ${fileName}`);
 };
 
 
@@ -417,33 +522,233 @@ onMounted(() => {
   // 初始数据获取已由 selectedRegionId 的 immediate watch 触发
 });
 </script>
+<style scoped lang="scss">
+/* 全局覆盖Element表格样式 - 增强特效 */
+.el-table.futuristic-table {
+  --el-table-border-color: rgba(100, 220, 255, 0.2);
+  --el-table-header-bg-color: rgba(0, 53, 102, 0.8);
+  --el-table-tr-bg-color: rgba(0, 40, 80, 0.7);
+  --el-table-row-hover-bg-color: rgba(0, 180, 255, 0.1);
+
+  th.el-table__cell {
+    background-color: var(--el-table-header-bg-color);
+    color: #7DF9FF;
+    font-weight: bold;
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #7DF9FF, transparent);
+      animation: headerGlow 3s linear infinite;
+    }
+  }
+
+  .el-table__inner-wrapper::before {
+    background-color: var(--el-table-border-color);
+  }
+
+  tr {
+    background-color: var(--el-table-tr-bg-color);
+    color: #CAF0F8;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background-color: var(--el-table-row-hover-bg-color) !important;
+      transform: translateX(2px);
+    }
+  }
+
+  td {
+    border-bottom-color: rgba(100, 220, 255, 0.1);
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(125, 249, 255, 0.05), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+}
+
+/* 全局覆盖Element按钮样式 - 增强特效 */
+.el-button.futuristic-button {
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+            to bottom right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0) 45%,
+            rgba(255, 255, 255, 0.15) 48%,
+            rgba(255, 255, 255, 0.15) 52%,
+            rgba(255, 255, 255, 0) 55%,
+            rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(30deg);
+    animation: buttonShine 3s infinite linear;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+
+  &.export-button {
+    background: linear-gradient(90deg, rgba(0, 150, 255, 0.8), rgba(0, 200, 255, 0.6));
+    border-color: rgba(74, 207, 255, 0.7);
+    text-shadow: 0 0 5px rgba(0, 200, 255, 0.5);
+
+    &:hover {
+      background: linear-gradient(90deg, rgba(0, 180, 255, 0.9), rgba(0, 220, 255, 0.7));
+      box-shadow: 0 0 15px rgba(74, 207, 255, 0.6), 0 0 30px rgba(0, 180, 255, 0.3);
+    }
+  }
+
+  &.export-excel-button {
+    background: linear-gradient(90deg, rgba(100, 100, 255, 0.8), rgba(125, 95, 255, 0.6));
+    border-color: rgba(125, 95, 255, 0.7);
+    text-shadow: 0 0 5px rgba(125, 95, 255, 0.5);
+
+    &:hover {
+      background: linear-gradient(90deg, rgba(120, 120, 255, 0.9), rgba(145, 95, 255, 0.7));
+      box-shadow: 0 0 15px rgba(125, 95, 255, 0.6), 0 0 30px rgba(145, 95, 255, 0.3);
+    }
+  }
+}
+</style>
 
 <style scoped lang="scss">
 // 定义科技感主题颜色变量
-$tech-blue: #03045E;        // 深蓝色，作为基础背景
-$tech-cyan: #7DF9FF;        // 亮青色，用于标题和突出显示
-$tech-lightblue: #90E0EF;   // 浅蓝色，用于次要文本和边框
-$tech-darkblue: #023E8A;    // 较深的蓝色，用于卡片和表格背景
-$tech-text: #CAF0F8;        // 浅色文本，接近白色
+$tech-blue: #03045E;
+$tech-cyan: #7DF9FF;
+$tech-lightblue: #90E0EF;
+$tech-darkblue: #023E8A;
+$tech-text: #CAF0F8;
+$tech-highlight: rgba(0, 180, 255, 0.3);
+$tech-purple: rgba(125, 95, 255, 0.6);
+
+// 新增动画定义
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 5px rgba(125, 249, 255, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(125, 249, 255, 0.6); }
+}
+
+@keyframes headerGlow {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes buttonShine {
+  0% { transform: translateX(-100%) rotate(30deg); }
+  100% { transform: translateX(100%) rotate(30deg); }
+}
+
+@keyframes dataGridPulse {
+  0%, 100% { box-shadow: 0 0 0 rgba($tech-cyan, 0); }
+  50% { box-shadow: 0 0 10px rgba($tech-cyan, 0.3); }
+}
 
 .province-data-viewer-card {
   width: 100%;
-  max-width: 1200px; /* 保持最大宽度 */
-  margin: 10px auto; /* 缩小外边距 */
+  max-width: 1232px;
+  margin: 10px auto;
   border: none;
-  background: linear-gradient(135deg, $tech-blue 0%, $tech-darkblue 100%); /* 渐变背景 */
-  box-shadow: 0 0 20px rgba(0, 180, 216, 0.5); /* 科技感阴影 */
+  background: linear-gradient(135deg, $tech-blue 0%, $tech-darkblue 100%);
+  box-shadow:
+      0 0 20px rgba(0, 180, 216, 0.5),
+      0 10px 30px rgba(0, 0, 0, 0.5);
   border-radius: 8px;
-  color: $tech-text; /* 整体文字颜色 */
+  color: $tech-text;
+  border: 1px solid rgba(74, 207, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  animation: pulseGlow 4s infinite;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(circle at 20% 30%, rgba(0, 240, 255, 0.1) 0%, transparent 30%),
+        radial-gradient(circle at 80% 70%, $tech-purple 0%, transparent 30%);
+    z-index: 0;
+    animation: float 8s ease-in-out infinite;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+            to bottom right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0) 45%,
+            rgba(255, 255, 255, 0.05) 48%,
+            rgba(255, 255, 255, 0.05) 52%,
+            rgba(255, 255, 255, 0) 55%,
+            rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(30deg);
+    animation: buttonShine 8s infinite linear;
+    z-index: 0;
+  }
 
   :deep(.el-card__header) {
-    padding: 10px 15px; /* 缩小内边距 */
-    border-bottom: 1px solid rgba(72, 202, 228, 0.3); /* 底部边框 */
-    background: rgba(0, 53, 102, 0.3); /* 头部背景 */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap; /* 允许换行 */
+    padding: 10px 15px;
+    border-bottom: 1px solid rgba(72, 202, 228, 0.3);
+    background: rgba(0, 53, 102, 0.5);
+    backdrop-filter: blur(5px);
+    position: relative;
+    z-index: 1;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, $tech-cyan, transparent);
+      animation: headerGlow 6s linear infinite;
+    }
   }
 
   .card-header {
@@ -452,70 +757,119 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px; /* 缩小间距 */
+    gap: 8px;
   }
 
   .futuristic-title {
-    color: $tech-cyan; /* 标题颜色 */
-    font-size: 16px; /* 缩小字体大小 */
+    color: $tech-cyan;
+    font-size: 16px;
     margin: 0;
     font-weight: 500;
-    text-shadow: 0 0 8px rgba($tech-cyan, 0.5); /* 标题阴影 */
+    text-shadow: 0 0 8px rgba($tech-cyan, 0.5);
     display: flex;
     align-items: center;
-    flex-shrink: 0; /* 防止标题缩小 */
+    position: relative;
+    animation: float 3s ease-in-out infinite;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, $tech-cyan, transparent);
+    }
   }
 
   .region-id-display {
-    font-size: 0.7em; /* 缩小字体大小 */
+    font-size: 0.7em;
     opacity: 0.7;
-    margin-left: 6px; /* 缩小边距 */
+    margin-left: 6px;
+    color: $tech-lightblue;
+    text-shadow: 0 0 4px rgba($tech-lightblue, 0.3);
   }
 
   .controls {
     display: flex;
-    gap: 10px; /* 缩小间距 */
-    flex-wrap: wrap; /* 允许控件换行 */
+    gap: 10px;
+    flex-wrap: wrap;
     align-items: center;
-    margin-left: auto; /* 推到右侧 */
+    margin-left: auto;
   }
 
-  /* 新增：年份选择按钮容器样式 */
   .year-selection-buttons {
     display: flex;
-    gap: 5px; /* 按钮间距 */
+    gap: 8px;
     flex-wrap: wrap;
     align-items: center;
 
     &.is-disabled {
       opacity: 0.6;
-      pointer-events: none; /* 禁用鼠标事件 */
+      pointer-events: none;
     }
   }
 
-  /* 新增：单个年份按钮样式 */
   .futuristic-year-button {
-    background: rgba(0, 119, 182, 0.3); /* 按钮背景 */
-    border: 1px solid rgba(72, 202, 228, 0.5); /* 按钮边框 */
+    background: rgba(0, 119, 182, 0.3);
+    border: 1px solid rgba(72, 202, 228, 0.5);
     color: $tech-text;
-    padding: 4px 8px; /* 缩小内边距 */
+    padding: 4px 8px;
     border-radius: 5px;
     font-size: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 0 4px rgba(125, 249, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, transparent, rgba($tech-cyan, 0.1));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: -1;
+    }
 
     &:hover:not(:disabled) {
-      background: rgba(0, 119, 182, 0.5);
+      background: rgba(0, 180, 255, 0.4);
       box-shadow: 0 0 8px rgba(125, 249, 255, 0.4);
+      transform: translateY(-1px);
+
+      &::before {
+        opacity: 1;
+      }
     }
 
     &.is-active:not(:disabled) {
-      background: linear-gradient(90deg, #007bff, #00c0ff); /* 激活状态渐变背景 */
+      background: linear-gradient(90deg, #007bff, #00c0ff);
       border-color: #00aaff;
       color: white;
       font-weight: bold;
       box-shadow: 0 0 10px rgba(0, 123, 255, 0.6);
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: $tech-cyan;
+        animation: pulse 1.5s infinite;
+      }
+
+      &::before {
+        background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.2));
+        opacity: 1;
+      }
     }
 
     &:disabled {
@@ -524,74 +878,45 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
     }
   }
 
-  /* 导出TXT按钮样式 */
-  .futuristic-button.export-button {
+  .futuristic-button {
+    &.export-button {
+      background: linear-gradient(90deg, rgba(0, 150, 255, 0.8), rgba(0, 200, 255, 0.6));
+      border: 1px solid rgba(74, 207, 255, 0.7);
+      color: white;
+      text-shadow: 0 0 5px rgba(0, 200, 255, 0.5);
 
-    background: linear-gradient(90deg, #007bff, #00c0ff); /* 蓝色渐变，与TXT按钮区分 */
-    border: 1px solid #00aaff;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 5px;
-    font-size: 12px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-    flex-shrink: 0;
+      &:hover {
+        background: linear-gradient(90deg, rgba(0, 180, 255, 0.9), rgba(0, 220, 255, 0.7));
+        box-shadow: 0 0 15px rgba(74, 207, 255, 0.6), 0 0 30px rgba(0, 180, 255, 0.3);
+      }
+    }
 
-    &:hover {
-      background: linear-gradient(90deg, #2ea043, #3cb353);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    &.export-excel-button {
+      background: linear-gradient(90deg, rgba(100, 100, 255, 0.8), rgba(125, 95, 255, 0.6));
+      border: 1px solid rgba(125, 95, 255, 0.7);
+      color: white;
+      text-shadow: 0 0 5px rgba(125, 95, 255, 0.5);
+
+      &:hover {
+        background: linear-gradient(90deg, rgba(120, 120, 255, 0.9), rgba(145, 95, 255, 0.7));
+        box-shadow: 0 0 15px rgba(125, 95, 255, 0.6), 0 0 30px rgba(145, 95, 255, 0.3);
+      }
     }
-    &:active {
-      transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    }
-    &.is-disabled {
-      opacity: 0.6;
+
+    &:disabled {
+      background: #4a4a4a !important;
+      border-color: #666 !important;
+      box-shadow: none !important;
       cursor: not-allowed;
-      background: #4a4a4a;
-      border-color: #666;
-      box-shadow: none;
+      text-shadow: none !important;
     }
   }
-
-  /* 新增：导出 Excel 按钮的样式 */
-  .futuristic-button.export-excel-button {
-    background: linear-gradient(90deg, #238636, #2ea043); /* 绿色渐变 */
-    border: 1px solid #4CAF50;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 5px;
-    font-size: 12px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-    flex-shrink: 0;
-
-    &:hover {
-      background: linear-gradient(90deg, #00c0ff, #00d4ff);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
-    &:active {
-      transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    }
-    &.is-disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      background: #4a4a4a;
-      border-color: #666;
-      box-shadow: none;
-    }
-  }
-
 
   .data-content {
-    padding: 15px; /* 缩小内边距 */
-    min-height: 200px; /* 缩小最小高度 */
-    position: relative; /* 用于加载动画叠加 */
+    padding: 15px;
+    min-height: 200px;
+    position: relative;
+    z-index: 1;
   }
 
   .empty-placeholder {
@@ -599,52 +924,147 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 120px; /* 缩小最小高度 */
+    min-height: 120px;
     color: rgba($tech-lightblue, 0.7);
-    font-size: 14px; /* 缩小字体大小 */
+    font-size: 14px;
     text-align: center;
-    padding: 15px; /* 缩小内边距 */
+    padding: 15px;
+    position: relative;
+
+    &::before {
+      content: 'NO DATA';
+      position: absolute;
+      font-size: 60px;
+      font-weight: bold;
+      color: rgba($tech-darkblue, 0.3);
+      z-index: -1;
+      user-select: none;
+    }
   }
 
   .section-title {
     color: $tech-cyan;
-    font-size: 15px; /* 缩小字体大小 */
-    margin-top: 10px; /* 缩小上边距 */
-    margin-bottom: 8px; /* 缩小下边距 */
+    font-size: 15px;
+    margin-top: 10px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 6px; /* 缩小间距 */
-    text-shadow: 0 0 4px rgba($tech-cyan, 0.4); /* 缩小阴影 */
+    gap: 6px;
+    text-shadow: 0 0 4px rgba($tech-cyan, 0.4);
+    position: relative;
+    padding-bottom: 5px;
 
     .el-icon {
-      font-size: 1.1em; /* 缩小图标大小 */
+      font-size: 1.1em;
+      color: $tech-cyan;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, $tech-cyan, transparent 80%);
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, $tech-cyan, transparent);
+      animation: headerGlow 4s linear infinite;
+      opacity: 0.5;
     }
   }
 
   .current-year-data-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* 自动适应列宽，最小180px */
-    gap: 8px; /* 缩小间距 */
-    margin-bottom: 10px; /* 缩小下边距 */
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+    animation: dataGridPulse 4s infinite;
 
     .data-item {
-      background-color: rgba($tech-darkblue, 0.5); /* 数据项背景 */
-      border: 1px solid rgba($tech-lightblue, 0.3); /* 数据项边框 */
-      border-radius: 5px; /* 缩小圆角 */
-      padding: 4px; /* 进一步减少内边距 */
+      background-color: rgba($tech-darkblue, 0.5);
+      border: 1px solid rgba($tech-lightblue, 0.2);
+      border-radius: 5px;
+      padding: 4px;
       text-align: left;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* 缩小阴影 */
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, transparent, rgba($tech-cyan, 0.1));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: $tech-cyan;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+      }
+
+      &:hover {
+        border-color: $tech-cyan;
+        box-shadow: 0 0 10px rgba($tech-cyan, 0.3);
+        transform: translateY(-2px);
+
+        &::before {
+          opacity: 0.3;
+        }
+
+        &::after {
+          transform: scaleX(1);
+        }
+      }
 
       .label {
-        font-size: 10px; /* 进一步减小字体大小 */
+        font-size: 10px;
         color: $tech-lightblue;
         display: block;
-        margin-bottom: 0px; /* 进一步减少下边距 */
+        margin-bottom: 0px;
       }
+
       .value {
-        font-size: 13px; /* 进一步减小字体大小 */
+        font-size: 13px;
         font-weight: bold;
         color: $tech-cyan;
+        text-shadow: 0 0 5px rgba($tech-cyan, 0.3);
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -2px;
+          left: 0;
+          width: 100%;
+          height: 1px;
+          background: linear-gradient(90deg, $tech-cyan, transparent);
+        }
       }
     }
   }
@@ -653,23 +1073,59 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
     background-color: rgba($tech-darkblue, 0.3);
     border: 1px solid rgba($tech-lightblue, 0.2);
     border-radius: 8px;
-    overflow: hidden; /* 确保圆角和边框在滚动时也适用 */
+    overflow: hidden;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+              135deg,
+              rgba(0, 180, 255, 0.05) 0%,
+              transparent 50%,
+              rgba(125, 95, 255, 0.05) 100%
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
 
     :deep(.el-table__inner-wrapper) {
-      border-radius: 8px; /* 保持内部圆角 */
+      border-radius: 8px;
+      position: relative;
+      z-index: 1;
     }
 
     :deep(.el-table__header-wrapper) {
-      background-color: rgba($tech-darkblue, 0.8);
       .el-table__header {
         th {
           background-color: transparent;
           color: $tech-cyan;
           font-weight: bold;
           border-bottom: 1px solid rgba($tech-lightblue, 0.3);
-          text-align: center; /* 表头文本居中 */
-          padding: 8px 0; /* 缩小表头内边距 */
-          font-size: 13px; /* 缩小表头字体 */
+          text-align: center;
+          padding: 8px 0;
+          font-size: 13px;
+          position: relative;
+          overflow: hidden;
+
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, $tech-cyan, transparent);
+            animation: headerGlow 3s linear infinite;
+          }
+
+          &.is-sortable:hover {
+            background: rgba($tech-highlight, 0.5);
+          }
         }
       }
     }
@@ -677,20 +1133,52 @@ $tech-text: #CAF0F8;        // 浅色文本，接近白色
     :deep(.el-table__body-wrapper) {
       .el-table__body {
         td {
-          background-color: rgba($tech-darkblue, 0.9); /* 深蓝色背景 */
-          color: white; /* 白色文字 */
-          border-bottom: 1px solid rgba($tech-lightblue, 0.1); /* 调整边框颜色 */
-          text-align: center; /* 内容居中 */
-          padding: 6px 0; /* 缩小单元格内边距 */
-          font-size: 12px; /* 缩小单元格字体 */
+          background-color: rgba($tech-darkblue, 0.9);
+          color: $tech-text;
+          border-bottom: 1px solid rgba($tech-lightblue, 0.1);
+          text-align: center;
+          padding: 6px 0;
+          font-size: 12px;
+          transition: all 0.2s ease;
+          position: relative;
+
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(125, 249, 255, 0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
         }
+
         tr {
           &:hover {
-            background-color: rgba($tech-lightblue, 0.1) !important; /* 悬停时稍微亮一点的背景 */
+            td {
+              background-color: rgba($tech-lightblue, 0.1) !important;
+              color: $tech-cyan;
+
+              &::before {
+                opacity: 1;
+              }
+            }
           }
         }
       }
     }
+
+    :deep(.el-table__empty-block) {
+      background-color: rgba($tech-darkblue, 0.5);
+      color: $tech-text;
+    }
   }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
 }
 </style>

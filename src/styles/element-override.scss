@@ -66,3 +66,68 @@
   }
 }
 
+.el-message {
+  background: rgba(16, 26, 60, 0.95) !important;
+  border: none !important;
+  box-shadow:
+          0 0 15px rgba(0, 240, 255, 0.6),
+          0 0 30px rgba(125, 95, 255, 0.3) !important;
+  backdrop-filter: blur(10px);
+  border-radius: 12px !important;
+  padding: 16px 24px !important;
+  min-width: 200px !important;
+  animation:
+          messageSlideIn 0.4s forwards,
+          messagePulse 2s infinite alternate;
+
+  /* 文字样式 */
+  .el-message__content {
+    color: #00f0ff !important;
+    font-size: 15px;
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+    position: relative;
+    padding-left: 28px;
+
+    &::before {
+      content: "⚠";
+      position: absolute;
+      left: 0;
+      animation: iconPulse 1.5s infinite;
+    }
+  }
+
+  /* 错误消息专属样式 */
+  &.el-message--error {
+    background: rgba(60, 16, 32, 0.95) !important;
+    .el-message__content {
+      color: #ff4d7d !important;
+      text-shadow: 0 0 8px rgba(255, 77, 125, 0.5);
+      &::before { content: "✖"; }
+    }
+  }
+
+  /* 成功消息专属样式 */
+  &.el-message--success {
+    background: rgba(16, 60, 32, 0.95) !important;
+    .el-message__content {
+      color: #4dff7d !important;
+      text-shadow: 0 0 8px rgba(77, 255, 125, 0.5);
+      &::before { content: "✓"; }
+    }
+  }
+}
+
+/* 动画定义 */
+@keyframes messageSlideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes messagePulse {
+  0% { box-shadow: 0 0 15px rgba(0, 240, 255, 0.6); }
+  100% { box-shadow: 0 0 25px rgba(0, 240, 255, 0.9); }
+}
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+

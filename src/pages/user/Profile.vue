@@ -1,5 +1,11 @@
 <template>
   <div class="profile-container">
+    <!-- 添加返回按钮 -->
+    <div class="back-button" @click="goBack">
+      <el-icon class="back-icon"><ArrowLeft /></el-icon>
+      <span class="back-text">返回主页</span>
+      <div class="back-hover-effect"></div>
+    </div>
     <div class="tech-background">
       <div class="bg-grid"></div>
       <div class="bg-particles"></div>
@@ -221,14 +227,16 @@
                 :rules="passwordRules"
                 ref="passwordFormRef"
                 class="tech-form"
+                autocomplete="off"
             >
-              <el-form-item label="原密码" prop="oldPassword">
+              <el-form-item label="原密码" prop="oldPassword" class="password-form-item">
                 <el-input
                     type="password"
                     v-model="passwordForm.oldPassword"
                     placeholder="请输入原密码"
                     show-password
                     class="tech-input"
+                    autocomplete="new-password"
                 >
                   <template #prefix>
                     <el-icon><Lock /></el-icon>
@@ -236,13 +244,14 @@
                 </el-input>
               </el-form-item>
 
-              <el-form-item label="新密码" prop="newPassword">
+              <el-form-item label="新密码" prop="newPassword" class="password-form-item">
                 <el-input
                     type="password"
                     v-model="passwordForm.newPassword"
                     placeholder="请输入新密码"
                     show-password
                     class="tech-input"
+                    autocomplete="new-password"
                 >
                   <template #prefix>
                     <el-icon><Lock /></el-icon>
@@ -250,13 +259,14 @@
                 </el-input>
               </el-form-item>
 
-              <el-form-item label="确认密码" prop="confirmPassword">
+              <el-form-item label="确认密码" prop="confirmPassword" class="password-form-item">
                 <el-input
                     type="password"
                     v-model="passwordForm.confirmPassword"
                     placeholder="请再次输入新密码"
                     show-password
                     class="tech-input"
+                    autocomplete="new-password"
                 >
                   <template #prefix>
                     <el-icon><Lock /></el-icon>
@@ -301,13 +311,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { User, Lock, Message, Iphone, Location, Key, Warning } from '@element-plus/icons-vue';
+import { ArrowLeft, Lock, Message, Iphone, Location, Key, Warning } from '@element-plus/icons-vue';
 import request from '@/utils/request';
-
+import { useRouter } from 'vue-router';
 // 新增状态控制
+const router = useRouter();
 const showSaveConfirmDialog = ref(false);
 const pendingSave = ref(false);
-
+const goBack = () => {
+  router.push('/province');
+};
 // 角色映射
 const roleMap = {
   ADMIN: '管理员',
@@ -519,6 +532,9 @@ $tech-dialog-border: rgba(16, 26, 60, 0.9);
   font-size: 18px;
   text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
 }
+
+
+
 </style>
 <style scoped lang="scss">
 /* 科技风样式变量 */
@@ -532,6 +548,14 @@ $tech-border: rgba(0, 240, 255, 0.4);
 $tech-highlight: rgba(0, 240, 255, 0.2);
 $tech-dialog-border: rgba(16, 26, 60, 0.9);
 
+.password-form-item {
+  :deep(.el-form-item__label) {
+    color: $tech-primary; // 使用科技蓝作为标签颜色
+    font-weight: 500;
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+    padding-right: 10px;
+  }
+}
 .profile-container {
   display: flex;
   justify-content: center;
@@ -631,37 +655,6 @@ $tech-dialog-border: rgba(16, 26, 60, 0.9);
   }
 }
 
-.tech-dialog {
-  :deep(.el-dialog) {
-    background: $tech-card-bg;
-    border-radius: 12px;
-    border: 1px solid $tech-border;
-    box-shadow:
-        0 0 30px rgba(0, 240, 255, 0.4),
-        0 0 60px rgba(125, 95, 255, 0.3);
-  }
-
-  :deep(.el-dialog__header) {
-    border-bottom: 1px solid $tech-border;
-    padding: 15px 20px;
-    margin: 0;
-    background: rgba(16, 26, 60, 0.7);
-
-    .el-dialog__title {
-      color: $tech-primary;
-      font-size: 18px;
-      text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
-    }
-  }
-
-  :deep(.el-dialog__body) {
-    padding: 0;
-  }
-
-  :deep(.el-dialog__footer) {
-    padding: 0;
-  }
-}
 
 .dialog-tech-container {
   position: relative;
@@ -733,20 +726,6 @@ $tech-dialog-border: rgba(16, 26, 60, 0.9);
   color: $tech-text;
 }
 
-.password-dialog {
-  .tech-form {
-    width: 100%;
-    padding: 0 10px;
-
-    :deep(.el-form-item) {
-      margin-bottom: 18px !important;
-    }
-
-    :deep(.el-input) {
-      width: 100%;
-    }
-  }
-}
 
 .dialog-tech-footer {
   display: flex;
@@ -798,19 +777,6 @@ $tech-dialog-border: rgba(16, 26, 60, 0.9);
   margin: 0;
   line-height: 1.6;
   text-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
-}
-
-.tech-form,
-.tech-input,
-.tech-button {
-  :deep(*) {
-    margin: 0;
-    padding: 0;
-    border: none;
-    outline: none;
-    box-shadow: none;
-    background: transparent;
-  }
 }
 
 :deep(.el-input__wrapper) {
@@ -1321,6 +1287,51 @@ $tech-dialog-border: rgba(16, 26, 60, 0.9);
 @keyframes glowPulse {
   0% { opacity: 0.6; transform: scale(0.9); }
   100% { opacity: 1; transform: scale(1.1); }
+}
+
+/* 在原有样式后添加返回按钮样式 */
+.back-button {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background: rgba(22, 32, 72, 0.8);
+  border: 1px solid $tech-primary;
+  border-radius: 8px;
+  color: $tech-primary;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+
+  &:hover {
+    background: rgba(0, 240, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+
+    .back-hover-effect {
+      transform: translateX(100%);
+    }
+  }
+
+  .back-icon {
+    margin-right: 8px;
+    font-size: 20px;
+  }
+
+  .back-hover-effect {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: all 0.6s ease;
+  }
 }
 </style>
 

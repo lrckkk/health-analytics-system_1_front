@@ -1,12 +1,17 @@
 <template>
   <div class="ranking-list-container">
     <h4 v-if="title" class="ranking-title">{{ title }}</h4>
-    <ul v-if="displayData.length" class="ranking-list">
+    <ul
+        v-if="displayData.length"
+        class="ranking-list"
+        ref="listElement"
+    >
       <li
           v-for="item in displayData"
           :key="item.id"
           class="ranking-item"
           :class="{ 'is-selected': item.id === selectedRegionId }"
+          :ref="setItemRef(item.id)"
       >
         <span class="rank">{{ item.rank }}</span>
         <span class="name">{{ item.regionName }}</span>
@@ -20,7 +25,7 @@
 </template>
 
 <script setup>
-import { computed, toRefs } from 'vue';
+import { computed, toRefs, ref, onMounted, nextTick, watch } from 'vue';
 import { provinceIdMap } from '@/utils/mapid.js';
 
 const props = defineProps({
@@ -39,6 +44,14 @@ const props = defineProps({
 });
 
 const { data, selectedRegionId } = toRefs(props);
+const listElement = ref(null);
+const itemRefs = ref({});
+
+const setItemRef = (id) => (el) => {
+  if (el) {
+    itemRefs.value[id] = el;
+  }
+};
 
 const provinceIdToNameMap = Object.entries(provinceIdMap).reduce((acc, [id, name]) => {
   acc[id] = name;
@@ -92,9 +105,42 @@ const formatValue = (value) => {
   if (value === null || value === undefined) return 'N/A';
   return value.toLocaleString();
 };
+
+// 滚动到选中的项目
+const scrollToSelectedItem = () => {
+  nextTick(() => {
+    if (listElement.value && selectedRegionId.value && itemRefs.value[selectedRegionId.value]) {
+      const list = listElement.value;
+      const item = itemRefs.value[selectedRegionId.value];
+
+      // 计算滚动位置，使选中项位于中间
+      const listHeight = list.clientHeight;
+      const itemHeight = item.clientHeight;
+      const itemOffset = item.offsetTop;
+
+      const scrollTop = itemOffset - (listHeight / 2) + (itemHeight / 2);
+
+      list.scrollTo({
+        top: scrollTop,
+        behavior: 'smooth'
+      });
+    }
+  });
+};
+
+// 初始加载时滚动到选中项
+onMounted(() => {
+  scrollToSelectedItem();
+});
+
+// 当selectedRegionId变化时也滚动到选中项
+watch(selectedRegionId, () => {
+  scrollToSelectedItem();
+});
 </script>
 
 <style scoped>
+/* 原有样式保持不变 */
 .ranking-list-container {
   -webkit-user-select: none;
   -moz-user-select: none;

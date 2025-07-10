@@ -19,6 +19,7 @@
               v-model="form.username"
               placeholder="请输入用户名"
               class="futuristic-input"
+              autocomplete="off"
           >
             <template #prefix>
               <el-icon><User /></el-icon>
@@ -34,6 +35,7 @@
               placeholder="请输入密码"
               show-password
               class="futuristic-input"
+              autocomplete="new-password"
           >
             <template #prefix>
               <el-icon><Lock /></el-icon>
@@ -42,25 +44,25 @@
         </el-form-item>
 
         <!-- 角色选择框 -->
-        <el-form-item label="角色" class="futuristic-form-item">
-          <div class="role-selector">
-            <div
-                v-for="role in roleOptions"
-                :key="role.value"
-                class="role-option"
-                :class="{ 'active': form.role === role.value }"
-                @click="form.role = role.value"
-            >
-              <div class="role-icon">
-                <el-icon>
-                  <component :is="roleIcons[role.value]" />
-                </el-icon>
-              </div>
-              <span class="role-label">{{ role.label }}</span>
-              <div class="active-indicator"></div>
-            </div>
-          </div>
-        </el-form-item>
+<!--        <el-form-item label="角色" class="futuristic-form-item">-->
+<!--          <div class="role-selector">-->
+<!--            <div-->
+<!--                v-for="role in roleOptions"-->
+<!--                :key="role.value"-->
+<!--                class="role-option"-->
+<!--                :class="{ 'active': form.role === role.value }"-->
+<!--                @click="form.role = role.value"-->
+<!--            >-->
+<!--              <div class="role-icon">-->
+<!--                <el-icon>-->
+<!--                  <component :is="roleIcons[role.value]" />-->
+<!--                </el-icon>-->
+<!--              </div>-->
+<!--              <span class="role-label">{{ role.label }}</span>-->
+<!--              <div class="active-indicator"></div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </el-form-item>-->
 
         <!-- 验证码 -->
         <el-form-item label="验证码" class="futuristic-form-item">
@@ -141,12 +143,14 @@ import { Refresh, User, Lock, Key, Avatar, UserFilled, Setting, View, Connection
 import axios from 'axios';
 import request from '@/utils/request';
 import { useRoute } from 'vue-router';
+
 // 角色图标映射
 const roleIcons = {
   ADMIN: Setting,
   ANALYST: View,
   USER: User,
 };
+
 const route = useRoute();
 // 响应式数据
 const form = ref({
@@ -175,27 +179,43 @@ const handleRegister = () => {
 // 表单验证
 const validateForm = () => {
   if (!form.value.username) {
-    ElMessage.error('请输入用户名');
+    ElMessage.error({
+      message: '请输入用户名',
+      customClass: 'tech-message',
+      duration: 3000
+    });
     return false;
   }
 
   if (!form.value.password) {
-    ElMessage.error('请输入密码');
+    ElMessage.error({
+      message: '请输入密码',
+      customClass: 'tech-message',
+      duration: 3000
+    });
     return false;
   }
 
-  if (!form.value.role) {
-    ElMessage.error('请选择角色');
-    return false;
-  }
+  // if (!form.value.role) {
+  //   ElMessage.error('请选择角色');
+  //   return false;
+  // }
 
-  if (form.value.role === 'ADMIN' && (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value)) {
-    ElMessage.error('验证码错误');
-    refreshCaptcha();
-    return false;
-  }
+  // if (form.value.role === 'ADMIN' && (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value)) {
+  //   ElMessage.error({
+  //     message: '验证码错误',
+  //     customClass: 'tech-message',
+  //     duration: 3000
+  //   });
+  //   refreshCaptcha();
+  //   return false;
+  // }
   if (!form.value.code || form.value.code.toUpperCase() !== captchaToken.value) {
-    ElMessage.error('验证码错误');
+    ElMessage.error({
+      message: '验证码错误',
+      customClass: 'tech-message',
+      duration: 3000
+    });
     refreshCaptcha();
     return false;
   }
@@ -252,7 +272,12 @@ const generateCaptcha = async () => {
 
   } catch (error) {
     console.error('生成验证码失败:', error);
-    ElMessage.error('验证码生成失败');
+    ElMessage.error({
+      message: '验证码生成失败',
+      customClass: 'tech-message',
+      duration: 3000
+    });
+
   }
 };
 
@@ -281,15 +306,41 @@ const handleLogin = async () => {
       console.log('存储的token:', localStorage.getItem('jwt_token')); // 确认存储成功
       localStorage.setItem('user_info', JSON.stringify(response.data.user));
       console.log('[路由守卫] token:', localStorage.getItem('jwt_token')) // 检查 token 是否正确
-      ElMessage.success('登录成功');
+      ElMessage.success({
+        message: '登录成功',
+        customClass: 'tech-message',
+        duration: 3000
+      });
       await router.push({ name: 'province' });
-    } else {
-      ElMessage.error(response.message || '登录失败');
+    }
+    else if (response.code === 401 && response.message.includes("Redis")) {
+      ElMessage.error({
+        message: '系统维护中，请稍后再试',
+        customClass: 'tech-message',
+        duration: 3000
+      });
+    }
+
+
+
+    else {
+      ElMessage.error({
+        message: '登录失败,请检查账号和密码1',
+        customClass: 'tech-message',
+        duration: 3000
+      });
       refreshCaptcha();
     }
+
+
+
   } catch (error) {
     console.error('登录失败:', error);
-    ElMessage.error(error.message || '登录失败，请重试');
+    ElMessage.error({
+      message: '登录失败,请检查账号和密码2',
+      customClass: 'tech-message',
+      duration: 3000
+    });
     refreshCaptcha();
   } finally {
     loading.value = false;
@@ -842,4 +893,5 @@ $tech-highlight: rgba(0, 240, 255, 0.2);
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+
 </style>
