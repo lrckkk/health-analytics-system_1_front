@@ -21,8 +21,8 @@
       <el-button size="small" @click="resetFilters">重置</el-button>
     </div>
     <el-table
-      :data="filteredLogs"
-      v-if="filteredLogs.length > 0"
+      :data="logs"
+      v-if="logs.length > 0"
       stripe
       border
       class="log-table user-table"
@@ -42,14 +42,33 @@
       :table-layout="'fixed'"
       :max-height="420"
     >
-      <el-table-column prop="timestamp" label="时间" width="180" />
+      <el-table-column prop="id" label="ID" width="80" />
+      <el-table-column prop="time" label="时间" width="180" />
       <el-table-column prop="level" label="级别" width="100">
         <template #default="scope">
-          <el-tag :type="levelType(scope.row.level)">{{ levelText(scope.row.level) }}</el-tag>
+          <el-tag :type="levelType(scope.row.level)" disable-transitions>{{ levelText(scope.row.level) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="source" label="来源" width="160" />
-      <el-table-column prop="content" label="日志内容" min-width="20" />
+      <el-table-column prop="source" label="来源" width="220" />
+      <el-table-column prop="content" label="日志内容" min-width="120" />
+      <el-table-column prop="important" label="重要" width="60">
+        <template #default="scope">
+          <el-tag v-if="scope.row.important" type="warning" disable-transitions>是</el-tag>
+          <span v-else>否</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="dangerous" label="危险" width="60">
+        <template #default="scope">
+          <el-tag v-if="scope.row.dangerous" type="danger" disable-transitions>是</el-tag>
+          <span v-else>否</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="status" label="已读" width="60">
+        <template #default="scope">
+          <el-tag v-if="scope.row.status" type="success" disable-transitions>是</el-tag>
+          <span v-else>否</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="140">
         <template #default="scope">
           <div class="op-btns">
@@ -116,8 +135,9 @@ const fetchLogs = async () => {
     // 构造查询参数
     const params = {}
     if (dateRange.value && dateRange.value.length === 2) {
-      params.startTime = dateRange.value[0]
-      params.endTime = dateRange.value[1]
+      // 只传递日期部分并补全为T00:00:00
+      params.startTime = dateRange.value[0] ? dateRange.value[0].toISOString().slice(0, 10) + 'T00:00:00' : undefined
+      params.endTime = dateRange.value[1] ? dateRange.value[1].toISOString().slice(0, 10) + 'T00:00:00' : undefined
     }
     if (selectedLevel.value) params.level = selectedLevel.value
     if (sourceFilter.value) params.source = sourceFilter.value
@@ -136,6 +156,11 @@ const fetchLogs = async () => {
   } catch (e) {
     logs.value = []
   }
+}
+
+// 新增：搜索按钮调用 fetchLogs
+function searchLogs() {
+  fetchLogs();
 }
 
 const fetchLogDetail = async (id) => {
