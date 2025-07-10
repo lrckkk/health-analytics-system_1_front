@@ -1,338 +1,225 @@
 <template>
-  <div class="no-scroll">
-    <div class="cat-manager">
+  <div class="panel-content">
+    <div class="manager-block">
       <h2>数据分类管理</h2>
-      <el-form @submit.prevent="addTag" class="add-tag-form" :inline="true">
-        <el-form-item>
-          <el-input
-              v-model="newTagName"
-              placeholder="新增种类名称"
-              :disabled="loading"
-              @keyup.enter="addTag"
-              clearable
-              size="medium"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button
-              type="primary"
-              @click="addTag"
-              :disabled="!newTagName.trim() || loading"
-              size="medium"
-          >
-            添加种类
-          </el-button>
-        </el-form-item>
-      </el-form>
-      <el-divider>已添加的数据分类</el-divider>
-      <el-empty v-if="!tags.length && !loading" description="还没有种类" />
-      <el-table
-        v-else
-        :data="tags"
-        v-loading="loading"
-        element-loading-text="操作中..."
-        class="table-flex"
-        :row-style="rowStyle"
-        border
-      >
-        <el-table-column label="标签名称" prop="name" min-width="240">
-          <template #default="{ row }">
-            <div v-if="editId === row.id" style="display:flex; gap:8px; align-items:center;">
-              <el-input
-                  v-model="editName"
-                  size="small"
-                  @keyup.enter="saveEdit(row)"
-                  :disabled="loading"
-                  style="flex:1"
-              />
-              <el-button
-                  type="success"
-                  size="small"
-                  icon="el-icon-check"
-                  @click="saveEdit(row)"
-                  :disabled="!editName.trim() || loading"
-              />
-              <el-button
-                  type="danger"
-                  size="small"
-                  icon="el-icon-close"
-                  @click="cancelEdit"
-                  :disabled="loading"
-              />
-            </div>
-            <div v-else style="display:flex; justify-content: space-between; align-items:center;">
-              <span>{{ row.name }}</span>
-              <div>
-                <el-button
-                    type="primary"
-                    size="small"
-                    icon="el-icon-edit"
-                    @click="startEdit(row)"
-                    :disabled="loading"
-                />
-                <el-button
-                    type="danger"
-                    size="small"
-                    icon="el-icon-delete"
-                    @click="deleteTag(row)"
-                    :disabled="loading"
-                />
-              </div>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div class="input-row">
+        <input v-model="newCatName" :disabled="catLoading" placeholder="新增分类名称" @keyup.enter="addCat" />
+        <button @click="addCat" :disabled="!newCatName.trim() || catLoading">添加分类</button>
+      </div>
+      <table v-if="cats.length" class="user-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>分类名称</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="cat in cats" :key="cat.id">
+            <td>{{ cat.id }}</td>
+            <td>{{ cat.name }}</td>
+            <td>
+              <button @click="deleteCat(cat)" :disabled="catLoading">删除</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-text">暂无分类数据</div>
     </div>
-    <div class="tag-manager">
+    <div class="manager-block">
       <h2>数据标签管理</h2>
-      <el-form @submit.prevent="addTag" class="add-tag-form" :inline="true">
-        <el-form-item>
-          <el-input
-              v-model="newTagName"
-              placeholder="新增标签名称"
-              :disabled="loading"
-              @keyup.enter="addTag"
-              clearable
-              size="medium"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button
-              type="primary"
-              @click="addTag"
-              :disabled="!newTagName.trim() || loading"
-              size="medium"
-          >
-            添加标签
-          </el-button>
-        </el-form-item>
-      </el-form>
-      <el-divider>已添加的数据标签</el-divider>
-      <el-empty v-if="!tags.length && !loading" description="还没有标签" />
-      <el-table
-        v-else
-        :data="tags"
-        v-loading="loading"
-        element-loading-text="操作中..."
-        class="table-flex"
-        :row-style="rowStyle"
-        border
-      >
-        <el-table-column label="标签名称" prop="name" min-width="240">
-          <template #default="{ row }">
-            <div v-if="editId === row.id" style="display:flex; gap:8px; align-items:center;">
-              <el-input
-                  v-model="editName"
-                  size="small"
-                  @keyup.enter="saveEdit(row)"
-                  :disabled="loading"
-                  style="flex:1"
-              />
-              <el-button
-                  type="success"
-                  size="small"
-                  icon="el-icon-check"
-                  @click="saveEdit(row)"
-                  :disabled="!editName.trim() || loading"
-              />
-              <el-button
-                  type="danger"
-                  size="small"
-                  icon="el-icon-close"
-                  @click="cancelEdit"
-                  :disabled="loading"
-              />
-            </div>
-            <div v-else style="display:flex; justify-content: space-between; align-items:center;">
-              <span>{{ row.name }}</span>
-              <div>
-                <el-button
-                    type="primary"
-                    size="small"
-                    icon="el-icon-edit"
-                    @click="startEdit(row)"
-                    :disabled="loading"
-                />
-                <el-button
-                    type="danger"
-                    size="small"
-                    icon="el-icon-delete"
-                    @click="deleteTag(row)"
-                    :disabled="loading"
-                />
-              </div>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div class="input-row">
+        <input v-model="newTagName" :disabled="tagLoading" placeholder="新增标签名称" @keyup.enter="addTag" />
+        <button @click="addTag" :disabled="!newTagName.trim() || tagLoading">添加标签</button>
+      </div>
+      <table v-if="tags.length" class="user-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>标签名称</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="tag in tags" :key="tag.id">
+            <td>{{ tag.id }}</td>
+            <td>{{ tag.name }}</td>
+            <td>
+              <button @click="deleteTag(tag)" :disabled="tagLoading">删除</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else class="empty-text">暂无标签数据</div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import request from '@/utils/request'
+
+const cats = ref([])
+const newCatName = ref('')
+const catLoading = ref(false)
+const fetchCats = async () => {
+  catLoading.value = true
+  try {
+    const res = await request.get('/api/cat')
+    cats.value = Array.isArray(res) ? res : (res.data || [])
+  } catch (e) {
+    cats.value = []
+  } finally {
+    catLoading.value = false
+  }
+}
+const addCat = async () => {
+  if (!newCatName.value.trim()) return
+  catLoading.value = true
+  try {
+    await request.post(`/api/cat?name=${encodeURIComponent(newCatName.value.trim())}`)
+    newCatName.value = ''
+    await fetchCats()
+  } catch (e) {
+    alert('添加分类失败: ' + e)
+  } finally {
+    catLoading.value = false
+  }
+}
+const deleteCat = async (row) => {
+  if (!confirm(`确定要删除分类“${row.name}”吗？`)) return
+  catLoading.value = true
+  try {
+    await request.delete(`/api/cat/${row.id}`)
+    await fetchCats()
+  } catch (e) {
+    alert('删除分类失败: ' + e)
+  } finally {
+    catLoading.value = false
+  }
+}
 
 const tags = ref([])
 const newTagName = ref('')
-const loading = ref(false)
-
-const editId = ref(null)
-const editName = ref('')
-
-function rowStyle() {
-  return {
-    color: '#e7faff',
-    fontSize: '14px'
-  }
-}
-
-async function loadTags() {
-  loading.value = true
+const tagLoading = ref(false)
+const fetchTags = async () => {
+  tagLoading.value = true
   try {
-    const res = await axios.get('/api/tags')
-    tags.value = (res.data || []).filter(t => t.id && t.name)
+    const res = await request.get('/api/tag')
+    tags.value = Array.isArray(res) ? res : (res.data || [])
   } catch (e) {
-    ElMessage.error('加载标签失败')
-    console.error(e)
+    tags.value = []
   } finally {
-    loading.value = false
+    tagLoading.value = false
   }
 }
-
-async function addTag() {
-  const name = newTagName.value.trim()
-  if (!name) return
-
-  loading.value = true
+const addTag = async () => {
+  if (!newTagName.value.trim()) return
+  tagLoading.value = true
   try {
-    const res = await axios.post('/api/tags', { name })
-    tags.value.push(res.data)
+    await request.post(`/api/tag?name=${encodeURIComponent(newTagName.value.trim())}`)
     newTagName.value = ''
-    ElMessage.success('添加成功')
+    await fetchTags()
   } catch (e) {
-    ElMessage.error('添加标签失败')
-    console.error(e)
+    alert('添加标签失败: ' + e)
   } finally {
-    loading.value = false
+    tagLoading.value = false
   }
 }
-
-function startEdit(tag) {
-  editId.value = tag.id
-  editName.value = tag.name
-}
-
-function cancelEdit() {
-  editId.value = null
-  editName.value = ''
-}
-
-async function saveEdit(tag) {
-  const name = editName.value.trim()
-  if (!name) {
-    ElMessage.warning('标签名称不能为空')
-    return
-  }
-
-  loading.value = true
+const deleteTag = async (row) => {
+  if (!confirm(`确定要删除标签“${row.name}”吗？`)) return
+  tagLoading.value = true
   try {
-    await axios.put(`/api/tags/${tag.id}`, { name })
-    const index = tags.value.findIndex(t => t.id === tag.id)
-    if (index !== -1) tags.value[index].name = name
-    cancelEdit()
-    ElMessage.success('更新成功')
+    await request.delete(`/api/tag/${row.id}`)
+    await fetchTags()
   } catch (e) {
-    ElMessage.error('更新标签失败')
-    console.error(e)
+    alert('删除标签失败: ' + e)
   } finally {
-    loading.value = false
-  }
-}
-
-async function deleteTag(tag) {
-  try {
-    await ElMessageBox.confirm(
-        `确认删除标签 "${tag.name}" 吗？`,
-        '提示',
-        {
-          confirmButtonText: '删除',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-    )
-  } catch {
-    return
-  }
-
-  loading.value = true
-  try {
-    await axios.delete(`/api/tags/${tag.id}`)
-    tags.value = tags.value.filter(t => t.id !== tag.id)
-    ElMessage.success('删除成功')
-  } catch (e) {
-    ElMessage.error('删除标签失败')
-    console.error(e)
-  } finally {
-    loading.value = false
+    tagLoading.value = false
   }
 }
 
 onMounted(() => {
-  loadTags()
+  fetchCats()
+  fetchTags()
 })
 </script>
 
 <style scoped>
-.no-scroll {
-  width: 81vw;
-  height: 98vh;
-  overflow: hidden;
-  display: flex;
-  min-width: 0;
-  min-height: 0;
-}
-.cat-manager, .tag-manager {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 16px 12px;
-  box-sizing: border-box;
-  color: #e7faff;
+.panel-content {
   user-select: none;
   cursor: default;
-  /* 让两栏之间有间隔 */
+  background: rgba(255, 255, 255, 0.06);
+  padding: 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 213, 255, 0.15);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.08);
+  display: flex;
+  gap: 40px;
 }
-.cat-manager {
-  max-width: 50vw;
-  border-right: 1px solid #2a3b4d;
+.manager-block {
+  flex: 1;
 }
-.tag-manager {
-  max-width: 50vw;
-}
-.table-flex {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 0;
-  width: 100%;
-  overflow: auto;
-}
-h2 {
-  margin: 0 0 16px 0;
-  font-weight: 600;
-  color: #a0eaff;
-}
-.add-tag-form {
+.input-row {
+  display: flex;
+  gap: 12px;
   margin-bottom: 16px;
 }
-.el-divider {
-  margin: 0 0 16px 0;
+.input-row input {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #00d5ff33;
+  background: rgba(255,255,255,0.08);
+  color: #00bcd4;
+  font-size: 15px;
+  font-weight: 500;
 }
-.el-empty__description {
-  color: #9ecfff !important;
-  font-style: italic;
+.input-row button {
+  padding: 6px 16px;
+  border-radius: 4px;
+  border: none;
+  background: #00d5ff33;
+  color: #00bcd4;
+  cursor: pointer;
+  font-size: 15px;
+}
+.input-row button:disabled {
+  background: #00d5ff22;
+  color: #b2ebf2;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.user-table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+  background: rgba(255,255,255,0.08);
+}
+.user-table th, .user-table td {
+  border: 1px solid #00d5ff33;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 15px;
+}
+.user-table th {
+  background: rgba(0,213,255,0.08);
+}
+.user-table button {
+  margin-right: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: none;
+  background: #00d5ff33;
+  color: #00bcd4;
+  cursor: pointer;
+}
+.user-table button:hover {
+  background: #00bcd4;
+  color: #fff;
+}
+.empty-text {
+  color: #888;
+  margin: 20px 0;
+  text-align: center;
 }
 </style>

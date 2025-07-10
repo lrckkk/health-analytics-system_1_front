@@ -52,16 +52,30 @@
           <el-option label="信息" value="info" />
         </el-select>
       </div>
-      <el-table :data="filteredLogs" :cell-style="{color: '#222', fontSize: '15px', background: '#fff'}" style="width: 100%; margin-top: 12px;" height="260">
-        <el-table-column prop="time" label="时间" width="160" />
-        <el-table-column prop="level" label="级别" width="80">
+      <el-table
+        :data="filteredLogs"
+        size="small"
+        stripe
+        border
+        class="log-table"
+        :cell-style="bodyCellStyle"
+        :header-cell-style="headerCellStyle"
+        style="width: 100%; margin-top: 12px; border-radius:10px;"
+        max-height="240"
+        show-overflow-tooltip
+        table-layout="fixed"
+        empty-text="暂无日志"
+        scrollbar-always-on
+      >
+        <el-table-column prop="time" label="时间" width="140" />
+        <el-table-column prop="level" label="级别" width="70">
           <template #default="scope">
-            <el-tag :type="levelType(scope.row.level)">{{ levelText(scope.row.level) }}</el-tag>
+            <el-tag :type="levelType(scope.row.level)" size="small">{{ levelText(scope.row.level) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="message" label="内容" />
-        <el-table-column prop="source" label="来源" width="120" />
-        <el-table-column label="操作" width="80">
+        <el-table-column prop="content" label="内容" min-width="80" max-width="180" />
+        <el-table-column prop="source" label="来源" width="100" />
+        <el-table-column label="操作" width="70">
           <template #default="scope">
             <el-button type="text" size="small" @click="showDetail(scope.row)">详情</el-button>
           </template>
@@ -73,7 +87,7 @@
       <div v-if="currentLog">
         <p><b>时间：</b>{{ currentLog.time }}</p>
         <p><b>级别：</b>{{ levelText(currentLog.level) }}</p>
-        <p><b>内容：</b>{{ currentLog.message }}</p>
+        <p><b>内容：</b>{{ currentLog.content }}</p>
         <p><b>来源：</b>{{ currentLog.source }}</p>
         <p><b>状态：</b>{{ currentLog.status }}</p>
       </div>
@@ -84,41 +98,79 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
 import * as echarts from 'echarts'
+import request from '@/utils/request'
 
-// mock 日志统计数据
-const logStats = ref({
-  error: 20,
-  warn: 15,
-  info: 65,
-})
-const totalLogs = computed(() => logStats.value.error + logStats.value.warn + logStats.value.info)
-const todayLogs = ref(12)
-const unhandledLogs = ref(5)
-const criticalLogs = ref(2)
+const logStats = ref({ error: 0, warn: 0, info: 0 })
+const totalLogs = ref(0)
+const todayLogs = ref(0)
+const unhandledLogs = ref(0)
+const criticalLogs = ref(0)
+const trendData = ref({ dates: [], error: [], warn: [], info: [] })
+const logs = ref([])
 
-// mock 日志趋势数据
-const trendData = ref({
-  dates: ['07-01','07-02','07-03','07-04','07-05','07-06','07-07','07-08'],
-  error: [2,3,1,4,2,3,2,3],
-  warn: [1,2,2,1,3,2,1,3],
-  info: [8,7,9,6,8,7,8,9],
-})
-
-// mock 最新日志
-const logs = ref([
-  { time: '2025-07-08 10:01', level: 'error', message: '数据库连接失败', source: '服务A', status: '未处理' },
-  { time: '2025-07-08 09:55', level: 'warn', message: '内存使用率高', source: '服务B', status: '未处理' },
-  { time: '2025-07-08 09:50', level: 'info', message: '用户登录成功', source: '服务C', status: '已处理' },
-  { time: '2025-07-08 09:45', level: 'error', message: '接口超时', source: '服务A', status: '未处理' },
-  { time: '2025-07-08 09:40', level: 'info', message: '时任务完成', source: '服务D', status: '已处理' },
-  { time: '2025-07-08 09:35', level: 'warn', message: '磁盘空间不足', source: '服务B', status: '已处理' },
-])
+// 新增：日志级别分布数据
+const levelDistribution = ref([])
 
 const filterLevel = ref('')
 const filteredLogs = computed(() => {
   if (!filterLevel.value) return logs.value
   return logs.value.filter(l => l.level === filterLevel.value)
 })
+
+const fetchStats = async () => {
+  const res = await request.get('/api/logs/stats')
+  if (res) {
+    // 兼容你的新数据结构
+    totalLogs.value = res.total || 0
+    todayLogs.value = res.today || 0
+    unhandledLogs.value = res.unprocessed || 0
+    criticalLogs.value = res.dangerous || 0
+    // 处理日志级别分布
+    if (Array.isArray(res.levelDistribution)) {
+      levelDistribution.value = res.levelDistribution
+      // 统计各级别数量
+      const stats = { error: 0, warn: 0, info: 0 }
+      res.levelDistribution.forEach(item => {
+        if (item.level === 'ERROR') stats.error = item.count
+        else if (item.level === 'WARN') stats.warn = item.count
+        else if (item.level === 'INFO') stats.info = item.count
+      })
+      logStats.value = stats
+    } else {
+      logStats.value = res.levelStats || { error: 0, warn: 0, info: 0 }
+    }
+  }
+}
+const fetchTrend = async (start, end) => {
+  const params = {}
+  if (start && end) {
+    params.start = start
+    params.end = end
+  }
+  const res = await request.get('/api/logs/trend', { params })
+  if (Array.isArray(res)) {
+    trendData.value = {
+      dates: res.map(item => item.date),
+      total: res.map(item => item.count)
+    }
+  }
+}
+const fetchImportant = async () => {
+  let url = '/api/logs/important'
+  if (filterLevel.value) url = `/api/logs/important/${filterLevel.value}`
+  const res = await request.get(url)
+  logs.value = Array.isArray(res) ? res : (res.data || [])
+}
+
+onMounted(() => {
+  fetchStats()
+  fetchTrend()
+  fetchImportant()
+  initChart()
+  initTrend()
+})
+
+watch(filterLevel, () => fetchImportant())
 
 const chartRef = ref(null)
 const trendRef = ref(null)
@@ -128,6 +180,17 @@ let trendInstance = null
 function initChart() {
   if (!chartRef.value) return
   chartInstance = echarts.init(chartRef.value)
+  // 使用 levelDistribution 渲染饼图
+  const pieData = levelDistribution.value.length > 0
+    ? levelDistribution.value.map(item => ({
+        value: item.count,
+        name: item.level === 'ERROR' ? '错误' : item.level === 'WARN' ? '警告' : '信息'
+      }))
+    : [
+        { value: logStats.value.error, name: '错误' },
+        { value: logStats.value.warn, name: '警告' },
+        { value: logStats.value.info, name: '信息' },
+      ]
   const option = {
     tooltip: { trigger: 'item' },
     legend: { bottom: 0 },
@@ -136,11 +199,7 @@ function initChart() {
         name: '日志级别',
         type: 'pie',
         radius: '50%',
-        data: [
-          { value: logStats.value.error, name: '错误' },
-          { value: logStats.value.warn, name: '警告' },
-          { value: logStats.value.info, name: '信息' },
-        ],
+        data: pieData,
         emphasis: {
           itemStyle: {
             shadowBlur: 10,
@@ -163,9 +222,7 @@ function initTrend() {
     xAxis: { type: 'category', data: trendData.value.dates },
     yAxis: { type: 'value' },
     series: [
-      { name: '错误', type: 'line', data: trendData.value.error, smooth: true, color: '#f56c6c' },
-      { name: '警告', type: 'line', data: trendData.value.warn, smooth: true, color: '#e6a23c' },
-      { name: '信息', type: 'line', data: trendData.value.info, smooth: true, color: '#409eff' },
+      { name: '总数', type: 'line', data: trendData.value.total, smooth: true, color: '#409eff' }
     ]
   }
   trendInstance.setOption(option)
@@ -192,9 +249,37 @@ function levelText(level) {
 
 const detailVisible = ref(false)
 const currentLog = ref(null)
-function showDetail(row) {
+async function showDetail(row) {
+  // 调用 markLogAsRead
+  try {
+    await request.get(`/api/logs/${row.id}`)
+    // 可选：本地状态同步为已读
+    if (row.status !== undefined) row.status = 1
+  } catch (e) {}
   currentLog.value = row
   detailVisible.value = true
+}
+
+function headerCellStyle() {
+  return {
+    background: 'rgba(0,213,255,0.08)',
+    color: '#222',
+    fontWeight: 'bold',
+    border: '1px solid #00d5ff33',
+    padding: '6px 10px',
+    fontSize: '14px',
+    fontFamily: 'inherit',
+  };
+}
+function bodyCellStyle() {
+  return {
+    background: 'transparent',
+    color: '#222',
+    border: '1px solid #00d5ff33',
+    padding: '6px 10px',
+    fontSize: '14px',
+    fontFamily: 'inherit',
+  };
 }
 
 </script>
@@ -225,5 +310,41 @@ function showDetail(row) {
   width: 100%;
   height: 180px;
 }
-
+.log-table {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 10px;
+  border: 1px solid #00d5ff33;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.08);
+  table-layout: fixed;
+  word-break: break-all;
+  background: rgba(255,255,255,0.08) !important;
+  font-size: 13px;
+}
+:deep(.el-table__header) {
+  background: rgba(0,213,255,0.08) !important;
+}
+:deep(.el-table__cell),
+:deep(.el-table th),
+:deep(.el-table td) {
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  min-height: 22px !important;
+  height: 22px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: transparent !important;
+  color: #222;
+  font-size: 13px !important;
+}
+:deep(.el-tag) {
+  background: #b2ebf2 !important;
+  color: #00bcd4 !important;
+  border: none !important;
+  font-size: 12px !important;
+  height: 18px !important;
+  line-height: 18px !important;
+  padding: 0 5px !important;
+}
 </style>
