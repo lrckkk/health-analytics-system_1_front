@@ -62,6 +62,7 @@ import MultiLineChart from "@/components/MutipleLineCharts.vue";
 import request from "@/utils/request.js"; // 确保你的请求工具正确配置
 import { IdToNameMapper } from "@/utils/IdToNameMapper.js";
 import {useGrowthStore} from "@/utils/countgrow.js";
+import {useAnalysisDataStore} from "@/stores/AnalysisData.js"
 import Simpleline from '/src/components/simpleline.vue' // 请确保路径正确，可能需要调整
 // --- Pinia Stores ---
 const regionStore = useRegionStore();
@@ -70,14 +71,15 @@ const growthStore = useGrowthStore(); // 如果这个组件不直接使用，可
 const medicalLoading = ref(true)
 const outData=ref([]);
 const inData = ref([]);
-
+const analyseStore = useAnalysisDataStore();
 // --- 响应式数据 ---
 const populationData = ref([]);
 const populationLoading = ref(true);
 const loadData = () => {
-  const mockData = regionStore.outpatientavg[regionStore.getRegionId];
+  const mockData = regionStore.inpatientavg[regionStore.getRegionId];
   // **关键修改：将 outpatientavg 数据存储到 growthStore 的 '5' 号键下**
   growthStore.setHistoricalData('5', mockData);
+  analyseStore.growthRates[5]=(growthStore.getAverageGrowthRate('5') * 100).toFixed(2);
 };
 const resultByIdDisplay = computed(() => {
   const data = mapDataStore.inpatientAdmissions; // 获取住院次数数据
@@ -103,6 +105,7 @@ const resultByIdDisplay2 = computed(() => {
     // 只有数据有效时才调用排名函数
     const result = getValueAndRankById(data, regionStore.getRegionId); // 查找 ID 为 5 的数据及其排名
     if (result) {
+      analyseStore.rankInfos[5]=result.rank;
       return ` 问诊次数为${result.value}, 排名: ${result.rank}`;
     }
   }
