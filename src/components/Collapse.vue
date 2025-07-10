@@ -76,7 +76,7 @@ const toggleCollapse = () => {
 }
 
 .component-content {
-  max-height: 1800px; /* 足够高以显示内容，确保大于内容的实际高度 */
+  max-height: 2600px; /* 足够高以显示内容，确保大于内容的实际高度 */
   padding: 0 20px;
   opacity: 1;
   box-sizing: border-box; /* 包含padding在内的盒模型 */

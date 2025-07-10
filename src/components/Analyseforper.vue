@@ -66,7 +66,7 @@
             :title="`医疗人员组成 - ${regionStore.getDisplayRegion}`"
             name-field="company"
             value-field="share"
-            height="450px"
+            height="500px"
             rose-type="radius"
         />
       </div>

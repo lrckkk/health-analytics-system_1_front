@@ -8,7 +8,7 @@ import Scroll from "./scroll.vue"
 
 import ManagementPage from "@/pages/management/ManagementPage.vue";
 
-import Text from "../../components/test.vue"
+import Text from "../../components/test4.vue"
 import Profile from './Profile.vue';
 
 import Analyseforins from "@/components/Analyseforins.vue";

@@ -208,8 +208,6 @@ const initChart = (mode) => {
           // 使用 visualMapMax.value 作为除数，或者一个安全默认值
           const divisor = (visualMapMax.value !== 0) ? visualMapMax.value : 1;
 
-          // 调整乘数因子和最小尺寸，使点更大
-          // 这里的逻辑可以根据实际数据分布进行微调
           const baseSize = 8; // 基础大小
           const scaleFactor = 30; // 缩放因子，可以调整以控制点大小的整体范围
           return Math.max((dataVal / divisor) * scaleFactor + baseSize, baseSize);
