@@ -130,7 +130,7 @@ const stats = computed(() => [
         : '数据不足或增长率为零'
   },
   {
-    label: '下一年估算值',
+    label: '下一年每万人医疗人员估算值',
     value: growthStore.getEstimatedNextYearValue('4') !== null
         ? growthStore.getEstimatedNextYearValue('4')?.toFixed(2)
         : '无法估算(数据不足)'

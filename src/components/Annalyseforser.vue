@@ -112,9 +112,9 @@ const stats = computed(() => [
         : '数据不足或增长率为零'
   },
   {
-    label: '门诊估算值',
+    label: '每万人门诊估算值',
     value: growthStore.getEstimatedNextYearValue('5') !== null
-        ? `${growthStore.getEstimatedNextYearValue('5')?.toFixed(2)} (${growthStore.getNextYear('5')}年)`
+        ? `${growthStore.getEstimatedNextYearValue('5')?.toFixed(2)} (2021年)`
         : '无法估算(数据不足)'
   }
 ]);
