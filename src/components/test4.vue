@@ -93,11 +93,11 @@ const navigateBack = () => {
 const trybu = async() => {
   // 从localStorage获取用户信息
   const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
-
+  console.log(userInfo);
   // 检查用户角色
-  if (userInfo.role !== 'ADMIN') {
+  if (userInfo.role !== 'ADMIN'&& userInfo.role !== 'ANALYST') {
     ElMessage.error({
-      message: '权限不足，仅管理员可访问决策分析功能',
+      message: '权限不足，仅管理员和分析师可访问决策分析功能',
       customClass: 'tech-message',
       duration: 3000
     });

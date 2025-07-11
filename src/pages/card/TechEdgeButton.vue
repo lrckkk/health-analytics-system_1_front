@@ -19,6 +19,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import {ElMessage} from "element-plus";
 const props = defineProps({
   position: {
     type: String,
@@ -38,6 +39,18 @@ let hoverInterval = null;
 const positionClass = computed(() => `position-${props.position}`);
 
 const handleClick = () => {
+  // 获取用户信息
+  const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+  // 检查用户角色 - 只有管理员和分析师可以访问
+  if (userInfo.role !== 'ADMIN' && userInfo.role !== 'ANALYST') {
+    ElMessage.error({
+      message: '权限不足，仅管理员和分析师可访问此功能',
+      customClass: 'tech-message',
+      duration: 3000
+    });
+    return;
+  }
+
   // 添加点击动画效果
   const button = document.querySelector(`.tech-edge-button.position-${props.position}`);
   if (button) {
