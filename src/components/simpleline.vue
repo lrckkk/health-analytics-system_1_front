@@ -260,14 +260,19 @@ const updateChart = () => {
   })
   // 格式化数字显示
   const formatNumber = (value) => {
-    if (value >= 100000000) {
-      return (value / 100000000).toFixed(1) + '亿'
-    } else if (value >= 10000) {
-      return (value / 10000).toFixed(1) + '万'
-    } else if (value >= 1000) {
-      return (value / 1000).toFixed(1) + '千'
+    // 处理小数情况
+    if (Math.abs(value) < 1 && value !== 0) {
+      return value.toFixed(3); // 显示2位小数
     }
-    return Math.round(value) // 小于1000的直接取整
+
+    if (value >= 100000000) {
+      return (value / 100000000).toFixed(1) + '亿';
+    } else if (value >= 10000) {
+      return (value / 10000).toFixed(1) + '万';
+    } else if (value >= 1000) {
+      return (value / 1000).toFixed(1) + '千';
+    }
+    return Math.round(value); // 小于1000的直接取整
   }
   const option = {
     backgroundColor: 'transparent',

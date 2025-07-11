@@ -7,10 +7,22 @@
 <script setup>
 import { Setting } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
-
+import { ElMessage } from 'element-plus'
 const router = useRouter()
-
 const goToManagement = () => {
+  // 获取用户信息
+  const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+
+  // 检查用户角色 - 只有管理员可以访问
+  if (userInfo.role !== 'ADMIN') {
+    ElMessage.error({
+      message: '权限不足，仅管理员可访问系统设置',
+      customClass: 'tech-message',
+      duration: 3000
+    });
+    return;
+  }
+
   router.push('/manage')
 }
 </script>
