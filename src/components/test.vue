@@ -97,13 +97,13 @@ const getSingleValueById = (dataArray, id) => {
 const getRadarChartOptions = () => {
   // 雷达图的各项指标配置
   const indicator = [
-    { name: '医疗机构数量', max: 100000, color: '#a0e0ff' },
-    { name: '医疗人员数量', max: 1500000, color: '#a0e0ff' },
-    { name: '病床总数', max: 1000000, color: '#a0e0ff' },
-    { name: '医疗花费', max: 100000000000, color: '#a0e0ff' },
-    { name: '门诊就诊人次', max: 100000000, color: '#a0e0ff' },
-    { name: '住院就诊人次', max: 10000000, color: '#a0e0ff' },
-    { name: '人口数量', max: 150000000, color: '#a0e0ff' }
+    { name: '医疗机构数量', max: 30200, color: '#a0e0ff' },
+    { name: '医疗人员数量', max: 1000000, color: '#a0e0ff' },
+    { name: '病床总数', max: 650000, color: '#a0e0ff' },
+    { name: '人均医疗花费', max: 6000, color: '#a0e0ff' },
+    { name: '门诊就诊人次', max: 40000, color: '#a0e0ff' },
+    { name: '住院就诊人次', max: 2000, color: '#a0e0ff' },
+    { name: '人口数量', max: 15000, color: '#a0e0ff' }
   ];
 
   const seriesData = []; // 雷达图系列数据
@@ -365,7 +365,7 @@ onBeforeUnmount(() => {
 <style scoped>
 /* CSS 样式与之前相同 */
 .radar-chart-container {
-  width: 50%;
+  width: 100%;
   height: 600px;
 
   display: flex;

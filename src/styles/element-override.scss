@@ -65,8 +65,11 @@
     }
   }
 }
-
 .el-message {
+  position: fixed !important;
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
   background: rgba(16, 26, 60, 0.95) !important;
   border: none !important;
   box-shadow:
@@ -79,6 +82,7 @@
   animation:
           messageSlideIn 0.4s forwards,
           messagePulse 2s infinite alternate;
+  z-index: 9999 !important;
 
   /* 文字样式 */
   .el-message__content {
@@ -119,8 +123,8 @@
 
 /* 动画定义 */
 @keyframes messageSlideIn {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { transform: translate(-50%, -20px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
 }
 @keyframes messagePulse {
   0% { box-shadow: 0 0 15px rgba(0, 240, 255, 0.6); }

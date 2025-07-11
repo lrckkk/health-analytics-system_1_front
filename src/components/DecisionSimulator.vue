@@ -1,129 +1,203 @@
 <template>
   <div class="decision-simulator-container">
-    <h1>医疗决策模拟器</h1>
-    <hr/>
+    <!-- 新增返回按钮 -->
+    <div class="back-button" @click="navigateBack">
+      <div class="back-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="back-text">返回</div>
+      <div class="button-effects">
+        <div class="effect-circle"></div>
+        <div class="effect-particles"></div>
+      </div>
+    </div>
+
+    <h1 class="main-title">医疗决策模拟器</h1>
+    <hr class="title-divider"/>
 
     <div class="budget-section">
-      <h2>经费设定</h2>
-      <p>2020年医用支出下限: <strong>{{ decisionStore.initialMedicalExpenseLowerBound.toFixed(2) }} 万元</strong></p>
-      <div>
-        <label for="upperLimit">设定决策经费上限 (万元): </label>
-        <input
-            id="upperLimit"
-            type="number"
-            v-model.number="upperLimitInput"
-            :min="decisionStore.initialMedicalExpenseLowerBound"
-            @input="updateBudgetUpperLimit"
-        />
-        <button @click="setBudget" :disabled="!upperLimitInput || upperLimitInput < decisionStore.initialMedicalExpenseLowerBound">设定经费</button>
-        <button @click="resetSimulator" class="reset-button" :disabled="!isResetButtonEnabled">一键重置</button>
+      <h2 class="section-title">经费设定</h2>
+      <div class="budget-content">
+        <p class="budget-info">2020年医用支出下限: <strong>{{ decisionStore.initialMedicalExpenseLowerBound.toFixed(2) }} 万元</strong></p>
+        <div class="budget-controls">
+          <label for="upperLimit" class="budget-info">设定决策经费上限 (万元): </label>
+          <input
+              id="upperLimit"
+              type="number"
+              v-model.number="upperLimitInput"
+              :min="decisionStore.initialMedicalExpenseLowerBound"
+              @input="updateBudgetUpperLimit"
+              class="tech-input"
+          />
+          <button
+              @click="setBudget"
+              :disabled="!upperLimitInput || upperLimitInput < decisionStore.initialMedicalExpenseLowerBound"
+              class="tech-button"
+          >设定经费</button>
+          <button
+              @click="resetSimulator"
+              class="tech-button reset-button"
+              :disabled="!isResetButtonEnabled"
+          >一键重置</button>
+        </div>
+        <div v-if="decisionStore.isBudgetSet" class="budget-details">
+          <p>
+            您的总决策经费: <strong>{{ decisionStore.totalDecisionBudget.toFixed(2) }} 万元</strong><br/>
+            当前剩余经费: <strong>{{ decisionStore.currentRemainingBudget.toFixed(2) }} 万元</strong> ({{ decisionStore.remainingBudgetPercentage.toFixed(2) }}%)
+          </p>
+          <div class="budget-bar-wrapper">
+            <div class="budget-bar" :style="{ width: (100 - decisionStore.remainingBudgetPercentage).toFixed(2) + '%' }"></div>
+          </div>
+          <p v-if="decisionStore.isBudgetSet && decisionStore.currentRemainingBudget <= 0" class="budget-alert">
+            经费已用尽，请提升经费上限或停止决策。
+          </p>
+        </div>
       </div>
-      <p v-if="decisionStore.isBudgetSet">
-        您的总决策经费: <strong>{{ decisionStore.totalDecisionBudget.toFixed(2) }} 万元</strong><br/>
-        当前剩余经费: <strong>{{ decisionStore.currentRemainingBudget.toFixed(2) }} 万元</strong> ({{ decisionStore.remainingBudgetPercentage.toFixed(2) }}%)
-      </p>
-      <div class="budget-bar-wrapper">
-        <div class="budget-bar" :style="{ width: (100 - decisionStore.remainingBudgetPercentage).toFixed(2) + '%' }"></div>
-      </div>
-      <p v-if="decisionStore.isBudgetSet && decisionStore.currentRemainingBudget <= 0" class="budget-alert">
-        经费已用尽，请提升经费上限或停止决策。
-      </p>
     </div>
 
-    <hr/>
+    <hr class="section-divider"/>
 
     <div class="projection-section">
-      <h2>数据预测</h2>
-      <label for="projectionYear">选择预测年份: </label>
-      <input type="number" id="projectionYear" v-model.number="decisionStore.selectedYearForProjection" min="2021" max="2050">
-      <p>（基准年份：2020年）</p>
+      <h2 class="section-title">数据预测</h2>
+      <div class="projection-content">
+        <label for="projectionYear" class="budget-info">选择预测年份: </label>
+        <input
+            type="number"
+            id="projectionYear"
+            v-model.number="decisionStore.selectedYearForProjection"
+            min="2021"
+            max="2050"
+            class="tech-input"
+        >
+        <p class="base-year">（基准年份：2020年）</p>
+      </div>
     </div>
 
-    <hr/>
+    <hr class="section-divider"/>
 
     <div class="metrics-section">
-      <h2>各项指标决策</h2>
-      <div v-for="(metricName, metricIndex) in decisionStore.METRIC_NAMES" :key="metricIndex" class="metric-card">
-        <h3>{{ metricName }}</h3>
-        <p>原始增长率: <strong>{{ decisionStore.initialGrowthRates[metricIndex]?.toFixed(2) || 'N/A' }}%</strong></p>
-        <p>当前增长率: <strong :style="{ color: (decisionStore.currentGrowthRates[metricIndex] && decisionStore.currentGrowthRates[metricIndex] < 0) ? 'red' : 'green' }">{{ decisionStore.currentGrowthRates[metricIndex]?.toFixed(2) || 'N/A' }}%</strong></p>
-        <p>
-          预测 {{ decisionStore.selectedYearForProjection }} 年数据:<br>
-
-          原始预测: <strong>{{ decisionStore.projectedDataComparison.original[metricIndex] ? decisionStore.projectedDataComparison.original[metricIndex].toFixed(2) : 'N/A' }}</strong><br>
-          <div>
-          <span v-if="metricIndex===0">排名：{{getRankOfGivenValue(mapDataStore.institutionData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
-            <span v-if="metricIndex===1">排名：{{getRankOfGivenValue(mapDataStore.bedData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
-            <span v-if="metricIndex===2">排名：{{getRankOfGivenValue(mapDataStore.populationData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
-            <span v-if="metricIndex===3">排名：{{getRankOfGivenValue(mapDataStore.totalCostData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
-            <span v-if="metricIndex===4">排名：{{getRankOfGivenValue(mapDataStore.personnelData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
-            <span v-if="metricIndex===5">排名：{{getRankOfGivenValue(mapDataStore.inpatientAdmissions, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+      <h2 class="section-title">各项指标决策</h2>
+      <div class="metrics-grid">
+        <div v-for="(metricName, metricIndex) in decisionStore.METRIC_NAMES" :key="metricIndex" class="metric-card">
+          <h3 class="metric-title">{{ metricName }}</h3>
+          <div class="metric-data">
+            <p style="color: #00e0ff;">原始增长率: <strong>{{ decisionStore.initialGrowthRates[metricIndex]?.toFixed(2) || 'N/A' }}%</strong></p>
+            <p style="color: #00e0ff;">当前增长率: <strong :style="{ color: (decisionStore.currentGrowthRates[metricIndex] && decisionStore.currentGrowthRates[metricIndex] < 0) ? '#ff4d4f' : '#52c41a' }">{{ decisionStore.currentGrowthRates[metricIndex]?.toFixed(2) || 'N/A' }}%</strong></p>
+            <div class="projection-data" style="color: #00e0ff;">
+              <p>
+                预测 {{ decisionStore.selectedYearForProjection }} 年数据:<br>
+                原始预测: <strong>{{ decisionStore.projectedDataComparison.original[metricIndex] ? decisionStore.projectedDataComparison.original[metricIndex].toFixed(2) : 'N/A' }}</strong><br>
+                <span v-if="metricIndex===0">排名：{{getRankOfGivenValue(mapDataStore.institutionData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+                <span v-if="metricIndex===1">排名：{{getRankOfGivenValue(mapDataStore.bedData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+                <span v-if="metricIndex===2">排名：{{getRankOfGivenValue(mapDataStore.populationData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+                <span v-if="metricIndex===3">排名：{{getRankOfGivenValue(mapDataStore.totalCostData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+                <span v-if="metricIndex===4">排名：{{getRankOfGivenValue(mapDataStore.personnelData, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+                <span v-if="metricIndex===5">排名：{{getRankOfGivenValue(mapDataStore.inpatientAdmissions, decisionStore.projectedDataComparison.original[metricIndex].toFixed(2)).rank}}</span>
+              </p>
+              <p>
+                当前预测: <strong>{{ decisionStore.projectedDataComparison.current[metricIndex] ? decisionStore.projectedDataComparison.current[metricIndex].toFixed(2) : 'N/A' }}</strong><br>
+                <span v-if="metricIndex===0">排名：{{getRankOfGivenValue(mapDataStore.institutionData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+                <span v-if="metricIndex===1">排名：{{getRankOfGivenValue(mapDataStore.bedData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+                <span v-if="metricIndex===2">排名：{{getRankOfGivenValue(mapDataStore.populationData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+                <span v-if="metricIndex===3">排名：{{getRankOfGivenValue(mapDataStore.totalCostData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+                <span v-if="metricIndex===4">排名：{{getRankOfGivenValue(mapDataStore.personnelData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+                <span v-if="metricIndex===5">排名：{{getRankOfGivenValue(mapDataStore.inpatientAdmissions, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
+              </p>
+              <span
+                  v-if="decisionStore.projectedDataComparison.current[metricIndex] > decisionStore.projectedDataComparison.original[metricIndex]"
+                  class="change-indicator positive"
+              > (↑ {{ (decisionStore.projectedDataComparison.current[metricIndex] - decisionStore.projectedDataComparison.original[metricIndex]).toFixed(2) }})</span>
+              <span
+                  v-else-if="decisionStore.projectedDataComparison.current[metricIndex] < decisionStore.projectedDataComparison.original[metricIndex]"
+                  class="change-indicator negative"
+              > (↓ {{ (decisionStore.projectedDataComparison.original[metricIndex] - decisionStore.projectedDataComparison.current[metricIndex]).toFixed(2) }})</span>
+            </div>
           </div>
-          当前预测: <strong>{{ decisionStore.projectedDataComparison.current[metricIndex] ? decisionStore.projectedDataComparison.current[metricIndex].toFixed(2) : 'N/A' }}</strong>
-          <div>
-          <span v-if="metricIndex===0">排名：{{getRankOfGivenValue(mapDataStore.institutionData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
-            <span v-if="metricIndex===1">排名：{{getRankOfGivenValue(mapDataStore.bedData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
-            <span v-if="metricIndex===2">排名：{{getRankOfGivenValue(mapDataStore.populationData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
-            <span v-if="metricIndex===3">排名：{{getRankOfGivenValue(mapDataStore.totalCostData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
-            <span v-if="metricIndex===4">排名：{{getRankOfGivenValue(mapDataStore.personnelData, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
-            <span v-if="metricIndex===5">排名：{{getRankOfGivenValue(mapDataStore.inpatientAdmissions, decisionStore.projectedDataComparison.current[metricIndex].toFixed(2)).rank}}</span>
-          </div>
-          <span v-if="decisionStore.projectedDataComparison.current[metricIndex] > decisionStore.projectedDataComparison.original[metricIndex]" style="color: green; font-weight: bold;"> (↑ {{ (decisionStore.projectedDataComparison.current[metricIndex] - decisionStore.projectedDataComparison.original[metricIndex]).toFixed(2) }})</span>
-          <span v-else-if="decisionStore.projectedDataComparison.current[metricIndex] < decisionStore.projectedDataComparison.original[metricIndex]" style="color: red; font-weight: bold;"> (↓ {{ (decisionStore.projectedDataComparison.original[metricIndex] - decisionStore.projectedDataComparison.current[metricIndex]).toFixed(2) }})</span>
-        </p>
 
-        <p class="description">
-          **分析描述**: {{ getMetricDescription(metricIndex) }}
-        </p>
+          <p class="metric-description">
+            **分析描述**: {{ getMetricDescription(metricIndex) }}
+          </p>
 
-        <div class="policy-buttons">
-          <div v-for="(policyDef, policyIndex) in decisionStore.POLICY_DEFINITIONS_BY_METRIC[metricIndex]" :key="policyDef.id" class="policy-button-group">
-            <button
-                @click="handlePolicyClick(metricIndex, policyIndex)"
-                :disabled="!decisionStore.isPolicyButtonEnabled(metricIndex, policyIndex) || !decisionStore.isBudgetSet || decisionStore.currentRemainingBudget <= 0"
-                :class="{
-                'policy-p0': policyIndex === 0,
-                'policy-p1': policyIndex === 1,
-                'policy-p2': policyIndex === 2,
-                'policy-p3': policyIndex === 3,
-                'policy-p4': policyIndex === 4,
-                'policy-p5': policyIndex === 5,
-                'is-selected': isPolicySelected(metricIndex, policyIndex)
-              }"
-                :title="getPolicyDescription(metricIndex, policyIndex)"
-            >
-              {{ policyDef.name }}
-            </button>
+          <div class="policy-buttons">
+            <div v-for="(policyDef, policyIndex) in decisionStore.POLICY_DEFINITIONS_BY_METRIC[metricIndex]" :key="policyDef.id" class="policy-button-group">
+              <button
+                  @click="handlePolicyClick(metricIndex, policyIndex)"
+                  :disabled="!decisionStore.isPolicyButtonEnabled(metricIndex, policyIndex) || !decisionStore.isBudgetSet || decisionStore.currentRemainingBudget <= 0"
+                  :class="[
+                    'policy-button',
+                    `policy-p${policyIndex}`,
+                    { 'is-selected': isPolicySelected(metricIndex, policyIndex) }
+                  ]"
+                  :title="getPolicyDescription(metricIndex, policyIndex)"
+              >
+                {{ policyDef.name }}
+              </button>
 
-            <div v-if="selectedPolicyForSelection.metricIndex === metricIndex && selectedPolicyForSelection.policyIndex === policyIndex && policyDef.affectCount > 1" class="affected-metrics-selector">
-              <p>选择额外影响的指标 (共需选择 {{ policyDef.affectCount - 1 }} 个):</p>
-              <div class="checkbox-group">
-                <label v-for="(otherMetricName, otherMetricIndex) in decisionStore.METRIC_NAMES" :key="otherMetricIndex">
-                  <input
-                      type="checkbox"
-                      :value="otherMetricIndex"
-                      v-model="temporaryAffectedMetrics"
-                      :disabled="
-                                otherMetricIndex === metricIndex ||
-                                !policyDef.additionalAffectedPool.includes(otherMetricIndex) ||
-                                (temporaryAffectedMetrics.length >= (policyDef.affectCount - 1) && !temporaryAffectedMetrics.includes(otherMetricIndex))
-                            "
-                  />
-                  {{ otherMetricName }}
-                </label>
+              <div v-if="selectedPolicyForSelection.metricIndex === metricIndex && selectedPolicyForSelection.policyIndex === policyIndex && policyDef.affectCount > 1" class="affected-metrics-selector">
+                <p class="selector-title">选择额外影响的指标 (共需选择 {{ policyDef.affectCount - 1 }} 个):</p>
+                <div class="checkbox-group">
+                  <label v-for="(otherMetricName, otherMetricIndex) in decisionStore.METRIC_NAMES" :key="otherMetricIndex"
+                         class="checkbox-label"
+                         :class="{
+             'disabled': otherMetricIndex === metricIndex ||
+                        !policyDef.additionalAffectedPool.includes(otherMetricIndex) ||
+                        (temporaryAffectedMetrics.length >= (policyDef.affectCount - 1) &&
+                        !temporaryAffectedMetrics.includes(otherMetricIndex))
+           }">
+                    <input
+                        type="checkbox"
+                        :value="otherMetricIndex"
+                        v-model="temporaryAffectedMetrics"
+                        :disabled="
+            otherMetricIndex === metricIndex ||
+            !policyDef.additionalAffectedPool.includes(otherMetricIndex) ||
+            (temporaryAffectedMetrics.length >= (policyDef.affectCount - 1) &&
+            !temporaryAffectedMetrics.includes(otherMetricIndex))
+          "
+                        class="checkbox-input"
+                    />
+                    <span class="checkbox-text">{{ otherMetricName }}</span>
+                    <span class="checkbox-icon"></span>
+                  </label>
+                </div>
+                <div class="selector-buttons">
+                  <button @click="confirmApplyPolicy"
+                          :disabled="temporaryAffectedMetrics.length !== (policyDef.affectCount - 1)"
+                          class="confirm-button">
+                    <span style="color: #00e0ff;">确认应用</span>
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <button @click="cancelSelection" class="cancel-button">
+                    <span style="color: #00e0ff;">取消</span>
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <button @click="confirmApplyPolicy" :disabled="temporaryAffectedMetrics.length !== (policyDef.affectCount - 1)">确认应用</button>
-              <button @click="cancelSelection">取消</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <hr/>
+    <hr class="section-divider"/>
 
     <div class="report-section">
-      <button @click="generateReport">生成决策报告</button>
+      <button @click="generateReport" class="report-button">
+        <span class="button-text">生成决策报告</span>
+        <span class="button-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 16L12 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 12L16 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <div class="button-hover-effect"></div>
+      </button>
     </div>
   </div>
 </template>
@@ -134,7 +208,7 @@ import { useDecisionStore } from '@/stores/useDecisionStore';
 import { metricDescriptions } from '@/utils/metricDescriptions'; // 确保路径正确
 import {getRankOfGivenValue} from "@/utils/countround.js";
 import { useMapDataStore } from '@/stores/TotalData.js';
-
+import router from "@/pages/user/router.js";
 const decisionStore = useDecisionStore();
 const mapDataStore = useMapDataStore();
 
@@ -145,6 +219,10 @@ const selectedPolicyForSelection = ref({
   policyIndex: null,
 });
 const temporaryAffectedMetrics = ref([]);
+// 新增导航方法
+const navigateBack = () => {
+  router.push('/text');
+};
 
 // 计算属性：启用重置按钮
 const isResetButtonEnabled = computed(() => {
@@ -332,289 +410,710 @@ const generateReport = () => {
   URL.revokeObjectURL(link.href); // 释放URL对象
 };
 </script>
-
 <style scoped>
-/* Main container styles */
+/* 基础样式 */
 .decision-simulator-container {
-  font-family: 'Arial', sans-serif;
-  max-width: 1200px;
-  margin: 20px auto;
+  font-family: 'Inter', sans-serif, 'Microsoft YaHei', 'PingFang SC';
+  max-width: 1250px;
+  margin: 0 auto;
   padding: 30px;
-  background-color: #f9f9f9;
+  background: linear-gradient(135deg, #0a192f 0%, #000a1a 100%);
   border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 180, 255, 0.2);
+  color: #e0f2f7;
+  position: relative;
 }
 
-h1, h2 {
-  color: #2c3e50;
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 10px;
+/* 返回按钮样式 - 与test4.vue保持一致 */
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  padding: 8px 15px 8px 10px;
+  background: rgba(3, 4, 94, 0.5);
+  border: 1px solid rgba(74, 207, 255, 0.3);
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  z-index: 10;
+  box-shadow: 0 0 10px rgba(74, 207, 255, 0.1);
+}
+
+.back-button:hover {
+  background: rgba(3, 4, 94, 0.8);
+  border-color: rgba(74, 207, 255, 0.6);
+  box-shadow: 0 0 20px rgba(74, 207, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.back-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  color: #00e0ff;
+  transition: all 0.3s ease;
+}
+
+.back-text {
+  color: #00e0ff;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.button-effects {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 30px;
+}
+
+.effect-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: rgba(0, 224, 255, 0.4);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.6s ease-out;
+}
+
+.back-button:hover .effect-circle {
+  transform: translate(-50%, -50%) scale(15);
+  opacity: 0;
+}
+
+.effect-particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(circle, rgba(0, 224, 255, 0.8) 1px, transparent 1px);
+  background-size: 10px 10px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.back-button:hover .effect-particles {
+  opacity: 0.3;
+  animation: particlesMove 2s linear infinite;
+}
+
+@keyframes particlesMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 20px 20px; }
+}
+
+/* 标题样式 */
+.main-title {
+  text-align: center;
+  color: #00e0ff;
+  font-size: 2.2rem;
   margin-bottom: 20px;
+  text-shadow: 0 0 10px rgba(0, 224, 255, 0.5);
+  letter-spacing: 1px;
+  position: relative;
+  padding-bottom: 15px;
 }
 
-hr {
+.main-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #00e0ff, transparent);
+  border-radius: 3px;
+}
+
+.title-divider, .section-divider {
   border: 0;
   height: 1px;
-  background-color: #eee;
-  margin: 30px 0;
+  background: linear-gradient(90deg, transparent, rgba(0, 224, 255, 0.5), transparent);
+  margin: 25px 0;
 }
 
-/* Section styles */
-.budget-section, .projection-section {
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 8px;
+/* 各部分通用样式 */
+.section-title {
+  text-align: center;
+  color: #00e0ff;
+  font-size: 1.5rem;
   margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  display: inline-block;
+  width: 100%;
 }
 
-/* Form elements */
-label {
-  font-weight: bold;
-  margin-right: 10px;
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: rgba(0, 224, 255, 0.7);
 }
 
-input[type="number"] {
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-right: 10px;
-  width: 120px;
+.budget-section, .projection-section, .metrics-section {
+  background: rgba(3, 4, 94, 0.2);
+  border-radius: 8px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(74, 207, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 180, 255, 0.1);
+  transition: all 0.3s ease;
 }
 
-/* Button general styles */
-button {
-  padding: 10px 15px;
-  background-color: #3498db; /* Default blue */
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, opacity 0.3s ease, transform 0.2s ease;
+.budget-section:hover, .projection-section:hover, .metrics-section:hover {
+  box-shadow: 0 0 20px rgba(0, 180, 255, 0.2);
+  border-color: rgba(74, 207, 255, 0.3);
 }
 
-button:hover:not(:disabled) {
-  background-color: #2980b9;
-  transform: translateY(-1px);
+/* 预算部分样式 */
+.budget-content {
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-/* Disabled button styles */
-button:disabled {
-  background-color: #cccccc;
-  color: #888888;
-  cursor: not-allowed;
-  opacity: 0.7;
-  box-shadow: none;
-  transform: none;
+.budget-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 15px;
+  margin: 20px 0;
 }
 
-.budget-alert {
-  color: #e74c3c;
-  font-weight: bold;
-  margin-top: 10px;
+.budget-info, .budget-details p {
+  margin: 10px 0;
+  line-height: 1.6;
+  color: #00e0ff;
 }
 
-/* Budget progress bar */
+.budget-details {
+  margin-top: 20px;
+}
+
 .budget-bar-wrapper {
   width: 100%;
   height: 20px;
-  background-color: #e0e0e0;
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 10px;
   overflow: hidden;
-  margin-top: 15px;
-  border: 1px solid #bbb;
+  margin: 15px 0;
+  border: 1px solid rgba(74, 207, 255, 0.3);
 }
 
 .budget-bar {
   height: 100%;
-  background-color: #e74c3c; /* Red for used portion */
+  background: linear-gradient(90deg, #ff4d4f, #f5222d);
   width: 0%;
-  float: left;
-  transition: width 0.5s ease-out;
+  transition: width 0.5s ease-out, background 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Metric display blocks */
-.metrics-section {
+.budget-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+  rgba(255,255,255,0) 0%,
+  rgba(255,255,255,0.3) 50%,
+  rgba(255,255,255,0) 100%);
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.budget-alert {
+  color: #ff4d4f;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  background: rgba(255, 77, 79, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid #ff4d4f;
+  animation: pulseAlert 1.5s infinite;
+}
+
+@keyframes pulseAlert {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+/* 预测部分样式 */
+.projection-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.base-year {
+  color: #8b949e;
+  font-size: 0.9em;
+}
+
+/* 指标卡片样式 */
+.metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 25px;
+  gap: 20px;
+  margin-top: 20px;
 }
 
 .metric-card {
-  background-color: #ffffff;
-  padding: 25px;
+  background: rgba(3, 4, 94, 0.3);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 1px solid #eee;
+  padding: 20px;
+  border: 1px solid rgba(74, 207, 255, 0.2);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.metric-card h3 {
-  color: #333;
+.metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 180, 255, 0.2);
+  border-color: rgba(74, 207, 255, 0.4);
+}
+
+.metric-title {
+  color: #00e0ff;
+  font-size: 1.2rem;
   margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(74, 207, 255, 0.3);
+}
+
+.metric-data {
   margin-bottom: 15px;
 }
 
-.metric-card p {
-  margin-bottom: 8px;
-  line-height: 1.6;
-  font-size: 0.95em;
+.metric-data p {
+  margin: 8px 0;
 }
 
-.metric-card strong {
-  color: #34495e;
+.projection-data {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  border-radius: 6px;
+  margin: 10px 0;
 }
 
-.description {
+.change-indicator {
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+.positive {
+  color: #52c41a;
+}
+
+.negative {
+  color: #ff4d4f;
+}
+
+.metric-description {
   font-style: italic;
-  color: #555;
-  margin-top: 15px;
-  padding-top: 10px;
-  border-top: 1px dashed #eee;
+  color: #00e0ff;
+  font-size: 0.9em;
+  padding: 10px 0;
+  border-top: 1px dashed rgba(74, 207, 255, 0.3);
 }
 
-/* Policy button layout */
+/* 政策按钮样式 */
 .policy-buttons {
-  margin-top: 20px;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  margin-top: 15px;
 }
 
 .policy-button-group {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
   flex: 1 1 auto;
-  min-width: 120px;
+  min-width: 100px;
 }
 
-.policy-button-group button {
+.policy-button {
   width: 100%;
-  border: 1px solid transparent;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  text-align: center;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
 }
 
-/* Specific policy styles */
-.policy-p0 { background-color: #f39c12; } /* Yellow - lowest tier */
-.policy-p1 { background-color: #27ae60; } /* Green */
-.policy-p2 { background-color: #1abc9c; } /* Teal */
-.policy-p3 { background-color: #3498db; } /* Blue */
-.policy-p4 { background-color: #9b59b6; } /* Purple */
-.policy-p5 { background-color: #e74c3c; } /* Red - highest tier/worst case */
-
-/* Hover effect for enabled policy buttons */
-.policy-button-group button:hover:not(:disabled) {
-  opacity: 0.8;
+.policy-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-/* Selected button effect */
-.policy-button-group button.is-selected {
-  border: 2px solid #ffee00;
-  box-shadow: 0 0 10px rgba(255, 255, 0, 0.7), 0 0 5px rgba(255, 255, 0, 0.5);
-  transform: scale(1.02);
-  transition: all 0.2s ease-in-out;
-  font-weight: bold;
-  color: #fff;
+.policy-button:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
-/* 确保选中样式覆盖禁用样式 */
-.policy-button-group button:disabled.is-selected {
-  border: 2px solid #999;
-  box-shadow: none;
-  transform: none;
-  font-weight: normal;
-  color: #ccc;
-  background-color: #e0e0e0;
+.policy-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-/* 重置按钮特定样式 */
-.reset-button {
-  background-color: #f0ad4e; /* 警告或中性颜色 */
-  margin-left: 10px;
+.policy-p0 { background-color: #faad14; } /* 黄色 */
+.policy-p1 { background-color: #52c41a; } /* 绿色 */
+.policy-p2 { background-color: #13c2c2; } /* 青色 */
+.policy-p3 { background-color: #1890ff; } /* 蓝色 */
+.policy-p4 { background-color: #722ed1; } /* 紫色 */
+.policy-p5 { background-color: #f5222d; } /* 红色 */
+
+.policy-button.is-selected {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #00e0ff;
+  animation: pulseSelected 1.5s infinite;
 }
 
-.reset-button:hover:not(:disabled) {
-  background-color: #ec971f;
+@keyframes pulseSelected {
+  0% { box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0, 224, 255, 0.7); }
+  50% { box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0, 224, 255, 0.9); }
+  100% { box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0, 224, 255, 0.7); }
 }
 
-/* 额外受影响指标选择器样式 */
+/* 受影响指标选择器 - 改进样式 */
 .affected-metrics-selector {
   position: absolute;
   top: 100%;
   left: 0;
-  background-color: #f0f8ff;
-  border: 1px solid #a8dadc;
+  right: 0;
+  min-width: 280px;
+  background: rgba(3, 4, 94, 0.95);
+  border: 1px solid rgba(74, 207, 255, 0.5);
   border-radius: 8px;
   padding: 15px;
   margin-top: 5px;
   z-index: 10;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  width: 250px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
 }
 
-.affected-metrics-selector p {
-  margin-bottom: 10px;
-  font-weight: bold;
-  color: #457b9d;
-  font-size: 0.9em;
-}
-
-.affected-metrics-selector .checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 15px;
-}
-
-.affected-metrics-selector label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: normal;
-  font-size: 0.85em;
-  color: #333;
-  cursor: pointer;
-}
-
-.affected-metrics-selector input[type="checkbox"] {
-  transform: scale(1.2);
-  cursor: pointer;
-}
-
-.affected-metrics-selector button {
-  margin-right: 10px;
-  padding: 8px 12px;
-  font-size: 0.85em;
-  width: auto;
-}
-
-.affected-metrics-selector button:first-of-type {
-  background-color: #28a745;
-}
-.affected-metrics-selector button:first-of-type:hover:not(:disabled) {
-  background-color: #218838;
-}
-
-.affected-metrics-selector button:last-of-type {
-  background-color: #dc3545;
-}
-.affected-metrics-selector button:last-of-type:hover:not(:disabled) {
-  background-color: #c82333;
-}
-
-/* 新增：报告部分样式 */
-.report-section {
-  margin-top: 30px;
+.selector-title {
+  color: #00e0ff;
+  font-size: 0.95em;
+  margin-bottom: 12px;
+  font-weight: 500;
   text-align: center;
 }
 
-.report-section button {
-  background-color: #28a745; /* 绿色按钮 */
-  padding: 12px 25px;
-  font-size: 1.1em;
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 5px;
 }
 
-.report-section button:hover:not(:disabled) {
-  background-color: #218838;
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85em;
+  color: #00e0ff;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  position: relative;
+  background: rgba(0, 224, 255, 0.05);
+  border: 1px solid rgba(74, 207, 255, 0.2);
+}
+
+.checkbox-label:hover:not(.disabled) {
+  background: rgba(0, 224, 255, 0.1);
+  border-color: rgba(74, 207, 255, 0.4);
+}
+
+.checkbox-label.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  color: #8b949e;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.checkbox-input {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid rgba(74, 207, 255, 0.5);
+  border-radius: 4px;
+  background: transparent;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.checkbox-input:checked {
+  background: rgba(0, 224, 255, 0.3);
+  border-color: #00e0ff;
+}
+
+.checkbox-input:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #00e0ff;
+  font-size: 12px;
+}
+
+.checkbox-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.checkbox-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+}
+
+.checkbox-icon {
+  display: none;
+}
+
+.selector-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.confirm-button, .cancel-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.confirm-button {
+  background: linear-gradient(135deg, rgba(0, 224, 255, 0.8) 0%, rgba(24, 144, 255, 0.8) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 180, 255, 0.3);
+}
+
+.confirm-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 180, 255, 0.4);
+}
+
+.confirm-button:disabled {
+  background: rgba(140, 140, 140, 0.5);
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
+
+.confirm-button svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+.cancel-button {
+  background: transparent;
+  color: #e0f2f7;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.cancel-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.cancel-button svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+}
+
+/* 输入框样式 */
+.tech-input {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(74, 207, 255, 0.3);
+  border-radius: 6px;
+  color: #00e0ff;
+  transition: all 0.3s ease;
+}
+
+.tech-input:focus {
+  outline: none;
+  border-color: #00e0ff;
+  box-shadow: 0 0 0 2px rgba(0, 224, 255, 0.2);
+}
+
+/* 按钮样式 */
+.tech-button {
+  padding: 10px 20px;
+  background: rgba(0, 150, 255, 0.2);
+  border: 1px solid rgba(74, 207, 255, 0.5);
+  border-radius: 6px;
+  color: #e0f2f7;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.tech-button:hover:not(:disabled) {
+  background: rgba(0, 150, 255, 0.4);
+  box-shadow: 0 0 10px rgba(0, 224, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.tech-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.reset-button {
+  background: rgba(255, 150, 0, 0.2);
+  border-color: rgba(255, 180, 0, 0.5);
+}
+
+.reset-button:hover:not(:disabled) {
+  background: rgba(255, 150, 0, 0.4);
+  box-shadow: 0 0 10px rgba(255, 180, 0, 0.3);
+}
+/* 修改报告按钮部分 - 增加上边距和下边距 */
+.report-section {
+  text-align: center;
+  margin-top: 50px;  /* 从原来的30px增加到50px */
+  margin-bottom: 30px; /* 新增底部边距保持整齐 */
+  position: relative;
+  z-index: 1; /* 确保按钮在正常层级 */
+}
+.report-button {
+  position: relative;
+  padding: 12px 30px;
+  background: linear-gradient(90deg, rgba(0, 224, 255, 0.8) 0%, rgba(125, 95, 255, 0.8) 100%);
+  border: none;
+  border-radius: 50px;
+  color: #0a192f;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 224, 255, 0.4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+}
+
+.report-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 30px rgba(0, 224, 255, 0.7);
+}
+
+.button-text {
+  position: relative;
+  z-index: 2;
+  margin-right: 10px;
+}
+
+.button-icon {
+  width: 18px;
+  height: 18px;
+  color: #0a192f;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.button-hover-effect {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 1;
+}
+
+.report-button:hover .button-hover-effect {
+  opacity: 1;
+  animation: shine 1.5s infinite;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .decision-simulator-container {
+    padding: 20px;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .budget-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .checkbox-group {
+    grid-template-columns: 1fr;
+  }
+
+  .affected-metrics-selector {
+    min-width: 100%;
+  }
 }
 </style>
